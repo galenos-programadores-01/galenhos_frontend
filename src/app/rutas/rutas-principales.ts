@@ -71,6 +71,14 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Evolución Médica' },
       },
       {
+        path: 'ListaEspera',
+        loadComponent: () =>
+          import(
+            '../modulos/solicitud-qx/adaptadores/entrada/ui/paginas/lista-espera-qx.component'
+          ).then((m) => m.ListaEsperaQxComponent),
+        data: { title: 'Lista de Espera QX' },
+      },
+      {
         path: '**',
         component: PaginaConstruccionComponent,
         data: { title: 'Módulo en desarrollo' },
