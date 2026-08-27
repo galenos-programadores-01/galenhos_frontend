@@ -41,7 +41,7 @@ export class InterconsultasComponent implements OnInit {
 
   public readonly interconsultaForm: FormGroup = this.fb.group({
     prioridad: ['', Validators.required],
-    idEspecialidad: ['', Validators.required],
+    IdEspecialidad: ['', Validators.required],
     idMedicoDestino: [''],
     chkOpinion: [false],
     chkManejo: [false],
@@ -84,16 +84,16 @@ export class InterconsultasComponent implements OnInit {
     this.especialidades.set(lista);
   }
 
-  async cambiarEspecialidad(idEspecialidad: number): Promise<void> {
+  async cambiarEspecialidad(IdEspecialidad: number): Promise<void> {
     this.interconsultaForm.patchValue({ idMedicoDestino: '' });
     this.medicos.set([]);
 
-    if (!idEspecialidad) return;
+    if (!IdEspecialidad) return;
 
     this.medicosCargando.set(true);
     const lista =
       await this.interconsultaService.listarMedicosPorEspecialidad(
-        idEspecialidad,
+        IdEspecialidad,
       );
     this.medicos.set(lista);
     this.medicosCargando.set(false);
@@ -150,7 +150,7 @@ export class InterconsultasComponent implements OnInit {
 
     const request: Interconsulta = {
       idAtencionOrigen: idAtencion,
-      idEspecialidad: Number(formData.idEspecialidad),
+      IdEspecialidad: Number(formData.IdEspecialidad),
       idMedicoDestino: formData.idMedicoDestino
         ? Number(formData.idMedicoDestino)
         : 0,
@@ -165,7 +165,7 @@ export class InterconsultasComponent implements OnInit {
     if (exito) {
       this.interconsultaForm.reset({
         prioridad: '',
-        idEspecialidad: '',
+        IdEspecialidad: '',
         idMedicoDestino: '',
         chkOpinion: false,
         chkManejo: false,
@@ -192,10 +192,10 @@ export class InterconsultasComponent implements OnInit {
     }
   }
 
-  obtenerNombreEspecialidad(idEspecialidad: number): string {
+  obtenerNombreEspecialidad(IdEspecialidad: number): string {
     const especialidad = this.especialidades().find(
-      (e) => e.idEspecialidad === idEspecialidad,
+      (e) => e.IdEspecialidad === IdEspecialidad,
     );
-    return especialidad?.nombre ?? `Esp. #${idEspecialidad}`;
+    return especialidad?.nombre ?? `Esp. #${IdEspecialidad}`;
   }
 }

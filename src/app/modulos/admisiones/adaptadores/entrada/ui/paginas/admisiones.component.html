@@ -23,7 +23,7 @@
       </div>
       <div>
         <label for="selEsp" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Especialidad</label>
-        <app-select-global id="selEsp" [(ngModel)]="idEspecialidad">
+        <app-select-global id="selEsp" [(ngModel)]="IdEspecialidad">
           <option value="0">Todas</option>
           @for (e of especialidades; track e.id) {
             <option [value]="e.id">{{ e.nombre }}</option>

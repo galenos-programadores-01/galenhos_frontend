@@ -55,7 +55,7 @@ export interface PendientesAdmisionParams {
   filtro?: string;
   nroCta?: number;
   idDepartamento?: number;
-  idEspecialidad?: number;
+  IdEspecialidad?: number;
   idServicio?: number;
   idTipoServicio?: number;
 }
@@ -173,8 +173,8 @@ export class TriajeApiService {
     if (params.nroCta) query.append('nroCta', String(params.nroCta));
     if (params.idDepartamento)
       query.append('idDepartamento', String(params.idDepartamento));
-    if (params.idEspecialidad)
-      query.append('idEspecialidad', String(params.idEspecialidad));
+    if (params.IdEspecialidad)
+      query.append('IdEspecialidad', String(params.IdEspecialidad));
     if (params.idServicio)
       query.append('idServicio', String(params.idServicio));
     if (params.idTipoServicio)
@@ -255,9 +255,9 @@ export class TriajeApiService {
     );
   }
 
-  medicosPorEspecialidad(idEspecialidad: number): Promise<IFilaBackend[]> {
+  medicosPorEspecialidad(IdEspecialidad: number): Promise<IFilaBackend[]> {
     return this.apiClient.request<IFilaBackend[]>(
-      `/api/v1/triaje/medicos/${idEspecialidad}`,
+      `/api/v1/triaje/medicos/${IdEspecialidad}`,
     );
   }
 
