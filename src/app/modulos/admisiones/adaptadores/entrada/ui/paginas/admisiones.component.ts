@@ -116,7 +116,7 @@ export class AdmisionesComponent implements OnInit {
   );
   filtro = '';
   idDepartamento = '0';
-  idEspecialidad = '0';
+  IdEspecialidad = '0';
   idServicio = '0';
 
   departamentos: ICatalogoNombre[] = [];
@@ -194,8 +194,8 @@ export class AdmisionesComponent implements OnInit {
         filtro: this.filtro || undefined,
         idDepartamento:
           this.idDepartamento !== '0' ? Number(this.idDepartamento) : undefined,
-        idEspecialidad:
-          this.idEspecialidad !== '0' ? Number(this.idEspecialidad) : undefined,
+        IdEspecialidad:
+          this.IdEspecialidad !== '0' ? Number(this.IdEspecialidad) : undefined,
         idServicio:
           this.idServicio !== '0' ? Number(this.idServicio) : undefined,
       });
@@ -227,18 +227,18 @@ export class AdmisionesComponent implements OnInit {
   }
 
   async cargarMedicos(item: IFilaBackend) {
-    let idEspecialidad = campoNum(item, [
+    let IdEspecialidad = campoNum(item, [
       'IdEspecialidad',
-      'idEspecialidad',
+      'IdEspecialidad',
       'Especialidad',
     ]);
-    if (!idEspecialidad) idEspecialidad = Number(this.idEspecialidad) || 0;
+    if (!IdEspecialidad) IdEspecialidad = Number(this.IdEspecialidad) || 0;
 
     this.cargandoMedicos = true;
     this.errorMedicos = '';
     try {
       const medicos =
-        await this.triajeApi.medicosPorEspecialidad(idEspecialidad);
+        await this.triajeApi.medicosPorEspecialidad(IdEspecialidad);
       if (Array.isArray(medicos)) {
         this.medicosDisponibles = medicos.filter(
           (v, i, a) => a.findIndex((t) => t.idMedico === v.idMedico) === i,
@@ -292,10 +292,10 @@ export class AdmisionesComponent implements OnInit {
       this.errorAdmision = 'El nombre del acompañante es obligatorio.';
       return;
     }
-    if (!this.formAdmision.telefonoAcompanante.trim()) {
-      this.errorAdmision = 'El teléfono del acompañante es obligatorio.';
-      return;
-    }
+    // if (!this.formAdmision.telefonoAcompanante.trim()) {
+    //   this.errorAdmision = 'El teléfono del acompañante es obligatorio.';
+    //   return;
+    // }
     if (!this.formAdmision.direccionPaciente.trim()) {
       this.errorAdmision = 'La dirección del paciente es obligatoria.';
       return;

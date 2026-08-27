@@ -34,13 +34,13 @@
         <!-- Especialidad -->
         <div class="flex flex-col">
           <label for="ic-especialidad" class="text-[12px] font-bold text-green-600 mb-1">Especialidad:</label>
-          <select id="ic-especialidad" formControlName="idEspecialidad"
+          <select id="ic-especialidad" formControlName="IdEspecialidad"
             (change)="onEspecialidadChange($event)"
             class="w-full border border-slate-300 rounded-sm p-1.5 text-[12px] text-slate-800 focus:ring-1 focus:ring-green-500 focus:outline-none"
-            [class.border-red-300]="interconsultaForm.get('idEspecialidad')?.invalid && interconsultaForm.get('idEspecialidad')?.touched">
+            [class.border-red-300]="interconsultaForm.get('IdEspecialidad')?.invalid && interconsultaForm.get('IdEspecialidad')?.touched">
             <option value="">--SELECCIONAR--</option>
-            @for (esp of especialidades(); track esp.idEspecialidad) {
-              <option [value]="esp.idEspecialidad">{{ esp.nombre }}</option>
+            @for (esp of especialidades(); track esp.IdEspecialidad) {
+              <option [value]="esp.IdEspecialidad">{{ esp.nombre }}</option>
             }
           </select>
         </div>
@@ -135,7 +135,7 @@
           </ng-template>
 
           <ng-template appColumnaTemplate="especialidadCustom" let-ic>
-            <span class="font-medium text-slate-800">{{ obtenerNombreEspecialidad(ic.idEspecialidad) }}</span>
+            <span class="font-medium text-slate-800">{{ obtenerNombreEspecialidad(ic.IdEspecialidad) }}</span>
           </ng-template>
 
           <ng-template appColumnaTemplate="motivoCustom" let-ic>
