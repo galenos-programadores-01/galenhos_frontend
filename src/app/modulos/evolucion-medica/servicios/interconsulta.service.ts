@@ -4,7 +4,7 @@ import { ApiClientService } from '../../../compartido/api-client/api-client.serv
 export interface Interconsulta {
   idInterconsulta?: number;
   idAtencionOrigen: number;
-  idEspecialidad: number;
+  IdEspecialidad: number;
   idMedicoDestino: number;
   motivo: string;
   fechaSolicitud?: string;
@@ -109,11 +109,11 @@ export class InterconsultaService {
   }
 
   async listarMedicosPorEspecialidad(
-    idEspecialidad: number,
+    IdEspecialidad: number,
   ): Promise<MedicoInterconsulta[]> {
     try {
       const data = await this.api.request<MedicoInterconsulta[]>(
-        `/api/v1/interconsultas/medicos/${idEspecialidad}`,
+        `/api/v1/interconsultas/medicos/${IdEspecialidad}`,
         { method: 'GET' },
       );
       return data || [];
@@ -125,7 +125,7 @@ export class InterconsultaService {
 }
 
 export interface EspecialidadInterconsulta {
-  idEspecialidad: number;
+  IdEspecialidad: number;
   nombre?: string | null;
   descripcionLarga?: string | null;
 }

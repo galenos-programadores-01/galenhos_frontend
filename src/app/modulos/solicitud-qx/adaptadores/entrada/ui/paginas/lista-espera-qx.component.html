@@ -1,7 +1,7 @@
 <div class="gp-in" style="display: flex; flex-direction: column; gap: 18px;">
 
   <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 10px; align-items: end;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto auto; gap: 10px; align-items: end;">
       <div>
         <label for="fecha-inicio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha inicio</label>
         <input id="fecha-inicio" type="date" [(ngModel)]="fechaInicio"
@@ -16,6 +16,16 @@
         <label for="paciente" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Paciente</label>
         <input id="paciente" [(ngModel)]="paciente" (keydown.enter)="cargarLista()" placeholder="Nombre del paciente"
                style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div>
+        <label for="filtro-especialidad" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Especialidad</label>
+        <select id="filtro-especialidad" [(ngModel)]="filtroEspecialidad"
+                style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+          <option [ngValue]="null">Todas</option>
+          @for (esp of especialidades; track esp.idEspecialidad) {
+            <option [ngValue]="esp.idEspecialidad">{{ esp.nombre }}</option>
+          }
+        </select>
       </div>
       <button type="button" (click)="cargarLista()" [disabled]="cargando"
               style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #263c7a; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;"
@@ -32,6 +42,17 @@
               style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #059669; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">
         <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" /></svg>
         <span>Nuevo</span>
+      </button>
+      <button type="button" (click)="exportarExcel()" [disabled]="exportando"
+              style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #1d4ed8; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;"
+              [style.opacity]="exportando ? 0.7 : 1">
+        @if (exportando) {
+          <svg aria-hidden="true" style="animation: spin 1s linear infinite;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+          <span>Exportando...</span>
+        } @else {
+          <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          <span>Exportar Excel</span>
+        }
       </button>
     </div>
 
@@ -66,16 +87,35 @@
           <span style="font-weight: 600; color: #07153a;">{{ campo(p, ['Paciente', 'paciente']) || '—' }}</span>
         </ng-template>
 
-        <ng-template appColumnaTemplate="fechaNacimientoCustom" let-p>
-          <span style="color: #54617f;">{{ campo(p, ['FechaNacimiento', 'fechaNacimiento']) || '—' }}</span>
+        <ng-template appColumnaTemplate="edadCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['Edad', 'edad']) || '—' }}</span>
         </ng-template>
 
         <ng-template appColumnaTemplate="fechaOrdenCustom" let-p>
           <span style="color: #54617f;">{{ campo(p, ['FechaOrden', 'fechaOrden']) || '—' }}</span>
         </ng-template>
 
+        <ng-template appColumnaTemplate="especialidadCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['Especialidad', 'especialidad']) || '—' }}</span>
+        </ng-template>
+
         <ng-template appColumnaTemplate="observacionCustom" let-p>
           <span style="color: #54617f;">{{ campo(p, ['Observacion', 'observacion']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="diasTranscurridosCustom" let-p>
+          <span [style.color]="colorDias(p)" [style.background]="fondoDias(p)"
+                style="padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 13px;">
+            {{ campo(p, ['DiasTranscurridos', 'diasTranscurridos']) || '—' }}
+          </span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="accionesCustom" let-p>
+          <button type="button" (click)="editar(p)"
+                  style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: #263c7a; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+            <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+            Editar
+          </button>
         </ng-template>
 
       </app-tabla>
@@ -83,11 +123,13 @@
   </div>
 
   @if (modalAbierto) {
-    <ventana-modal titulo="Nueva Lista de Espera QX" subtitulo="Registrar paciente en espera quirurgica" [ancho]="820" (alCerrar)="cerrarModal()">
+    <ventana-modal [titulo]="editingId ? 'Editar Lista de Espera QX' : 'Nueva Lista de Espera QX'"
+                   [subtitulo]="editingId ? 'Actualizar datos del paciente en espera quirurgica' : 'Registrar paciente en espera quirurgica'"
+                   [ancho]="820" (alCerrar)="cerrarModal()">
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
         <div>
           <label for="tipo-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo documento *</label>
-          <select id="tipo-documento" [(ngModel)]="form.idTipoDocumento"
+          <select id="tipo-documento" [(ngModel)]="form.idTipoDocumento" [attr.disabled]="editingId ? true : null"
                   style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <option [ngValue]="null">Seleccione...</option>
             @for (doc of tiposDocumento; track doc.id) {
@@ -98,41 +140,39 @@
         <div>
           <label for="nro-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Nro Documento *</label>
           <input id="nro-documento" [(ngModel)]="form.nroDocumento" placeholder="Nro documento (Enter para buscar)"
-                 (keydown.enter)="buscarPorDocumento()" [disabled]="cargandoPaciente"
+                 (keydown.enter)="buscarPorDocumento()" [disabled]="cargandoPaciente || !!editingId"
+                 [attr.readonly]="editingId ? true : null" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
-          @if (cargandoPaciente) {
-            <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #263c7a; font-weight: 600;">Buscando...</span>
-          }
         </div>
         <div>
           <label for="apellido-paterno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido Paterno *</label>
-          <input id="apellido-paterno" [(ngModel)]="form.apellidoPaterno" placeholder="Apellido paterno"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <input id="apellido-paterno" [(ngModel)]="form.apellidoPaterno" placeholder="Apellido paterno" readonly
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;" />
         </div>
         <div>
           <label for="apellido-materno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido Materno</label>
-          <input id="apellido-materno" [(ngModel)]="form.apellidoMaterno" placeholder="Apellido materno"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <input id="apellido-materno" [(ngModel)]="form.apellidoMaterno" placeholder="Apellido materno" readonly
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;" />
         </div>
         <div>
           <label for="primer-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Primer Nombre *</label>
-          <input id="primer-nombre" [(ngModel)]="form.primerNombre" placeholder="Primer nombre"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <input id="primer-nombre" [(ngModel)]="form.primerNombre" placeholder="Primer nombre" readonly
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;" />
         </div>
         <div>
           <label for="segundo-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Segundo Nombre</label>
-          <input id="segundo-nombre" [(ngModel)]="form.segundoNombre" placeholder="Segundo nombre"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <input id="segundo-nombre" [(ngModel)]="form.segundoNombre" placeholder="Segundo nombre" readonly
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;" />
         </div>
         <div>
           <label for="fecha-nacimiento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Nacimiento *</label>
-          <input id="fecha-nacimiento" type="date" [(ngModel)]="form.fechaNacimiento"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <input id="fecha-nacimiento" type="date" [(ngModel)]="form.fechaNacimiento" readonly
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;" />
         </div>
         <div>
           <label for="sexo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Sexo *</label>
-          <select id="sexo" [(ngModel)]="form.idSexo"
-                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;">
+          <select id="sexo" [(ngModel)]="form.idSexo" disabled
+                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f0f4f8; color: #07153a;">
             <option [ngValue]="null">Seleccione...</option>
             @for (sexo of tiposSexo; track sexo.id) {
               <option [ngValue]="sexo.id">{{ sexo.descripcion }}</option>
@@ -140,47 +180,75 @@
           </select>
         </div>
         <div>
-          <label for="telefono" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Telefono</label>
-          <input id="telefono" [(ngModel)]="form.telefono" placeholder="Telefono"
+          <label for="telefono" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Telefono *</label>
+          <input id="telefono" [ngModel]="form.telefono" (ngModelChange)="onTelefonoInput($event)"
+                 placeholder="999999999 (max. 9 digitos)" maxlength="9" inputmode="numeric" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          @if (telefonoInvalido) {
+            <span style="font-size: 11px; color: #dc2626; margin-top: 4px; display: block;">El telefono debe iniciar con 9</span>
+          } @else if (telefonoIncompleto) {
+            <span style="font-size: 11px; color: #ca8a04; margin-top: 4px; display: block;">Faltan {{ 9 - form.telefono.length }} numeros por completar</span>
+          }
         </div>
         <div style="grid-column: span 2;">
-          <label for="direccion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Direccion</label>
-          <input id="direccion" [(ngModel)]="form.direccion" placeholder="Direccion"
+          <label for="direccion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Direccion *</label>
+          <input id="direccion" [(ngModel)]="form.direccion" placeholder="Direccion" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
         <div>
           <label for="fecha-orden" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Orden *</label>
-          <input id="fecha-orden" type="date" [(ngModel)]="form.fechaOrden"
+          <input id="fecha-orden" type="date" [(ngModel)]="form.fechaOrden" [attr.max]="maxFecha" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
-        <div style="grid-column: span 3;">
-          <label for="diagnostico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Diagnostico</label>
-          <input id="diagnostico" [(ngModel)]="form.diagnostico" placeholder="Diagnostico"
+        <div style="grid-column: span 3; position: relative;">
+          <label for="diagnostico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Diagnostico *</label>
+          <input id="diagnostico" [ngModel]="form.diagnosticoNombre" (ngModelChange)="buscarDiagnostico($event)"
+                 (blur)="cerrarSugerenciasDiagnostico()" placeholder="Escriba CIE10 o nombre del diagnostico..."
+                 autocomplete="off"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          @if (mostrarSugerenciasDiagnostico && diagnosticosFiltrados.length > 0) {
+            <div style="position: absolute; z-index: 100; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d5dceb; border-radius: 10px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              @for (diag of diagnosticosFiltrados; track diag.idDiagnostico) {
+                <div (mousedown)="seleccionarDiagnostico(diag)"
+                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; color: #07153a; border-bottom: 1px solid #f1f5f9;">
+                  <span style="font-weight: 600; color: #263c7a;">{{ diag.codigoCIE10 }}</span> - {{ diag.descripcion }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div>
+          <label for="especialidad" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Especialidad *</label>
+          <select id="especialidad" [(ngModel)]="form.idEspecialidad"
+                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (esp of especialidades; track esp.idEspecialidad) {
+              <option [ngValue]="esp.idEspecialidad">{{ esp.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="fecha-lab" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Laboratorio *</label>
+          <input id="fecha-lab" type="date" [(ngModel)]="form.fechaLaboratorio" [attr.max]="maxFecha" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
         <div>
-          <label for="fecha-lab" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Laboratorio</label>
-          <input id="fecha-lab" type="date" [(ngModel)]="form.fechaLaboratorio"
+          <label for="fecha-ic-cardio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Cardio *</label>
+          <input id="fecha-ic-cardio" type="date" [(ngModel)]="form.fechaICCardio" [attr.max]="maxFecha" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
         <div>
-          <label for="fecha-ic-cardio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Cardio</label>
-          <input id="fecha-ic-cardio" type="date" [(ngModel)]="form.fechaICCardio"
+          <label for="fecha-ic-neumo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Neumo *</label>
+          <input id="fecha-ic-neumo" type="date" [(ngModel)]="form.fechaICNeumo" [attr.max]="maxFecha" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
         <div>
-          <label for="fecha-ic-neumo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Neumo</label>
-          <input id="fecha-ic-neumo" type="date" [(ngModel)]="form.fechaICNeumo"
-                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
-        </div>
-        <div>
-          <label for="fecha-ic-anestesio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Anestesio</label>
-          <input id="fecha-ic-anestesio" type="date" [(ngModel)]="form.fechaICAnestesio"
+          <label for="fecha-ic-anestesio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Anestesio *</label>
+          <input id="fecha-ic-anestesio" type="date" [(ngModel)]="form.fechaICAnestesio" [attr.max]="maxFecha" autocomplete="off"
                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
         </div>
         <div style="grid-column: span 2; position: relative;">
-          <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Medico</label>
+          <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Medico *</label>
           <input id="medico" [ngModel]="form.medico" (ngModelChange)="onMedicoInput($event)"
                  (blur)="cerrarSugerenciasMedico()" placeholder="Escriba el nombre del medico..."
                  autocomplete="off"
@@ -200,7 +268,7 @@
 
       <div style="margin-top: 14px;">
         <label for="observacion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Observacion</label>
-        <textarea id="observacion" [(ngModel)]="form.observacion" rows="2" maxlength="255" placeholder="Observaciones"
+        <textarea id="observacion" [(ngModel)]="form.observacion" rows="2" maxlength="255" placeholder="Observaciones" autocomplete="off"
                   style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a; resize: vertical; font-family: inherit;"></textarea>
       </div>
 
