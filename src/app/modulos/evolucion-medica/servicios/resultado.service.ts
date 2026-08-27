@@ -4,6 +4,8 @@ import { ApiClientService } from '../../../compartido/api-client/api-client.serv
 export interface ResultadoInfo {
   idResultado: number;
   idPaciente: number;
+  idOrden: number;
+  idProducto: number;
   tipoResultado: string;
   nombreExamen: string;
   fechaResultado: string;
@@ -12,9 +14,28 @@ export interface ResultadoInfo {
   estado: string;
 }
 
+export interface DetalleResultadoLab {
+  grupo: string;
+  item: string;
+  valorTexto: string;
+  unidad: string;
+  valorReferencial: string;
+  metodo: string;
+}
+
+export interface DetalleResultadoImagen {
+  idOrden: number;
+  idProducto: number;
+  nombreExamen: string;
+  fechaInforme: string;
+  informeTexto: string;
+}
+
 interface ResultadoBackend {
   idResultado: number;
   idPaciente: number;
+  idOrden?: number;
+  idProducto?: number;
   tipoResultado: string;
   nombreExamen: string;
   fechaExamen?: string;
@@ -37,7 +58,7 @@ export class ResultadoService {
         `/api/v1/resultados/laboratorio/paciente/${idPaciente}`,
         { method: 'GET' },
       );
-      return (datos ?? []).map(this.normalizarResultado);
+      return (datos ?? []).map((d) => this.normalizarResultado(d));
     } catch (error) {
       console.error('Error al listar resultados de laboratorio:', error);
       return [];
@@ -50,10 +71,42 @@ export class ResultadoService {
         `/api/v1/resultados/imagenes/paciente/${idPaciente}`,
         { method: 'GET' },
       );
-      return (datos ?? []).map(this.normalizarResultado);
+      return (datos ?? []).map((d) => this.normalizarResultado(d));
     } catch (error) {
       console.error('Error al listar resultados de imágenes:', error);
       return [];
+    }
+  }
+
+  async obtenerDetalleLaboratorio(
+    idOrden: number,
+    idProducto: number,
+  ): Promise<DetalleResultadoLab[]> {
+    try {
+      const datos = await this.api.request<DetalleResultadoLab[]>(
+        `/api/v1/resultados/laboratorio/detalle?idOrden=${idOrden}&idProducto=${idProducto}`,
+        { method: 'GET' },
+      );
+      return datos ?? [];
+    } catch (error) {
+      console.error('Error al obtener detalle de laboratorio:', error);
+      return [];
+    }
+  }
+
+  async obtenerDetalleImagen(
+    idOrden: number,
+    idProducto: number,
+  ): Promise<DetalleResultadoImagen | null> {
+    try {
+      const datos = await this.api.request<DetalleResultadoImagen>(
+        `/api/v1/resultados/imagenes/detalle?idOrden=${idOrden}&idProducto=${idProducto}`,
+        { method: 'GET' },
+      );
+      return datos ?? null;
+    } catch (error) {
+      console.error('Error al obtener detalle de imagen:', error);
+      return null;
     }
   }
 
@@ -61,6 +114,8 @@ export class ResultadoService {
     return {
       idResultado: item.idResultado,
       idPaciente: item.idPaciente,
+      idOrden: item.idOrden ?? 0,
+      idProducto: item.idProducto ?? 0,
       tipoResultado: item.tipoResultado ?? '',
       nombreExamen: item.nombreExamen ?? '',
       fechaResultado: item.fechaExamen ?? item.fechaResultado ?? '',

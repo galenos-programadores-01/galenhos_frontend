@@ -1,6 +1,10 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import {
+  FormBuilder,
+  type FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 
 @Component({
   selector: 'app-antecedentes',
@@ -29,6 +33,6 @@ export class AntecedentesComponent {
       enfTiroidea: [false],
       cancer: [false],
     }),
-    otrasComorbilidades: ['']
+    otrasComorbilidades: [''],
   });
 }

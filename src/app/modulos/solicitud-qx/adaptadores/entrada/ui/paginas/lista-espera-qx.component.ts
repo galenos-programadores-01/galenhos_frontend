@@ -1,26 +1,39 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, type OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  type OnInit,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 import { MaestrosApiService } from '../../../../../../compartido/api/maestros.api.service';
+import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
 import { ColumnaTemplateDirective } from '../../../../../../compartido/componentes/tabla/columna-template.directive';
-import { type ColumnaTabla, TablaComponent } from '../../../../../../compartido/componentes/tabla/tabla.component';
-import type { ICatalogoDescripcion, IFilaBackend, IPaciente } from '../../../../../../compartido/tipos/api-tipos';
+import {
+  type ColumnaTabla,
+  TablaComponent,
+} from '../../../../../../compartido/componentes/tabla/tabla.component';
+import type {
+  ICatalogoDescripcion,
+  IFilaBackend,
+  IPaciente,
+} from '../../../../../../compartido/tipos/api-tipos';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { PacientesApiService } from '../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
+  type DiagnosticoItem,
+  type EspecialidadItem,
   ListaEsperaQxApiService,
   type ListaEsperaQxParams,
-  type ListaEsperaQxPaciente,
-  type DiagnosticoItem,
   type MedicoListaEspera,
-  type EspecialidadItem,
-  type ListaEsperaQxReporteItem,
 } from '../../../salida/http/lista-espera-qx.api.service';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 
-function campo(item: IFilaBackend | null | undefined, claves: string[]): string {
+function campo(
+  item: IFilaBackend | null | undefined,
+  claves: string[],
+): string {
   if (!item) return '';
   for (const k of claves) {
     const v = item[k];
@@ -87,7 +100,13 @@ function formVacio(): FormListaEsperaQx {
 @Component({
   selector: 'app-lista-espera-qx',
   standalone: true,
-  imports: [FormsModule, CommonModule, TablaComponent, ColumnaTemplateDirective, VentanaModal],
+  imports: [
+    FormsModule,
+    CommonModule,
+    TablaComponent,
+    ColumnaTemplateDirective,
+    VentanaModal,
+  ],
   templateUrl: './lista-espera-qx.component.html',
 })
 export class ListaEsperaQxComponent implements OnInit {
@@ -174,11 +193,11 @@ export class ListaEsperaQxComponent implements OnInit {
       this.tiposSexo = Array.isArray(sexos) ? sexos : [];
       this.medicos = Array.isArray(meds) ? meds : [];
       if (datosInst) {
-        this.hospitalNombre = (datosInst['nombre'] as string) ?? '';
-        this.hospitalRuc = (datosInst['rucEess'] as string) ?? '';
-        this.hospitalTelefono = (datosInst['telefono'] as string) ?? '';
-        this.hospitalDireccion = (datosInst['direccion'] as string) ?? '';
-        this.hospitalLogo = (datosInst['logoHospi'] as string) ?? '';
+        this.hospitalNombre = (datosInst.nombre as string) ?? '';
+        this.hospitalRuc = (datosInst.rucEess as string) ?? '';
+        this.hospitalTelefono = (datosInst.telefono as string) ?? '';
+        this.hospitalDireccion = (datosInst.direccion as string) ?? '';
+        this.hospitalLogo = (datosInst.logoHospi as string) ?? '';
       }
       await this.cargarEspecialidades();
     } catch {}
@@ -201,16 +220,25 @@ export class ListaEsperaQxComponent implements OnInit {
       if (this.fechaInicio && this.fechaFin) {
         const inicio = new Date(this.fechaInicio);
         const fin = new Date(this.fechaFin);
-        const diffMeses = (fin.getFullYear() - inicio.getFullYear()) * 12 + (fin.getMonth() - inicio.getMonth());
-        if (diffMeses > 3 || (diffMeses === 3 && fin.getDate() > inicio.getDate())) {
+        const diffMeses =
+          (fin.getFullYear() - inicio.getFullYear()) * 12 +
+          (fin.getMonth() - inicio.getMonth());
+        if (
+          diffMeses > 3 ||
+          (diffMeses === 3 && fin.getDate() > inicio.getDate())
+        ) {
           this.error = 'El rango de fechas no puede ser mayor a 3 meses.';
           this.cargando = false;
           return;
         }
       }
-      const params: ListaEsperaQxParams = { fecha: this.fechaInicio, fechaFin: this.fechaFin };
+      const params: ListaEsperaQxParams = {
+        fecha: this.fechaInicio,
+        fechaFin: this.fechaFin,
+      };
       if (this.paciente.trim()) params.paciente = this.paciente.trim();
-      if (this.filtroEspecialidad) params.idEspecialidad = this.filtroEspecialidad;
+      if (this.filtroEspecialidad)
+        params.idEspecialidad = this.filtroEspecialidad;
       const items = await this.apiService.listar(params);
       this.lista = Array.isArray(items) ? items : [];
     } catch (error: unknown) {
@@ -229,14 +257,14 @@ export class ListaEsperaQxComponent implements OnInit {
   }
 
   colorDias(item: IFilaBackend): string {
-    const dias = Number(item['DiasTranscurridos'] ?? item['diasTranscurridos']) || 0;
+    const dias = Number(item.DiasTranscurridos ?? item.diasTranscurridos) || 0;
     if (dias <= 15) return '#16a34a';
     if (dias <= 30) return '#ca8a04';
     return '#dc2626';
   }
 
   fondoDias(item: IFilaBackend): string {
-    const dias = Number(item['DiasTranscurridos'] ?? item['diasTranscurridos']) || 0;
+    const dias = Number(item.DiasTranscurridos ?? item.diasTranscurridos) || 0;
     if (dias <= 15) return '#f0fdf4';
     if (dias <= 30) return '#fefce8';
     return '#fef2f2';
@@ -244,10 +272,10 @@ export class ListaEsperaQxComponent implements OnInit {
 
   obtenerId(item: IFilaBackend): number {
     return (
-      Number(item['IdListaEspera']) ||
-      Number(item['idListaEspera']) ||
-      Number(item['Id']) ||
-      Number(item['id']) ||
+      Number(item.IdListaEspera) ||
+      Number(item.idListaEspera) ||
+      Number(item.Id) ||
+      Number(item.id) ||
       0
     );
   }
@@ -290,8 +318,14 @@ export class ListaEsperaQxComponent implements OnInit {
         this.form.fechaNacimiento = data.fechaNacimiento ?? '';
         this.form.fechaOrden = data.fechaOrden ?? '';
         this.form.diagnosticoNombre = data.diagnostico ?? '';
-        this.form.idDiagnostico = (data.idDiagnostico && data.idDiagnostico > 0) ? data.idDiagnostico : null;
-        this.form.idEspecialidad = (data.idEspecialidad && data.idEspecialidad > 0) ? data.idEspecialidad : null;
+        this.form.idDiagnostico =
+          data.idDiagnostico && data.idDiagnostico > 0
+            ? data.idDiagnostico
+            : null;
+        this.form.idEspecialidad =
+          data.idEspecialidad && data.idEspecialidad > 0
+            ? data.idEspecialidad
+            : null;
         this.form.fechaLaboratorio = data.fechaLab ?? '';
         this.form.fechaICCardio = data.fechaICCardio ?? '';
         this.form.fechaICNeumo = data.fechaICNeumo ?? '';
@@ -336,12 +370,12 @@ export class ListaEsperaQxComponent implements OnInit {
           const fecha = new Date(paciente.dateOfBirth);
           this.form.fechaNacimiento = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getDate().toString().padStart(2, '0')}`;
         }
-        const sexId = paciente['sexTypeId'];
+        const sexId = paciente.sexTypeId;
         if (sexId !== undefined && sexId !== null) {
           this.form.idSexo = Number(sexId);
         }
-        this.form.telefono = (paciente['phone'] as string) ?? '';
-        this.form.direccion = (paciente['homeAddress'] as string) ?? '';
+        this.form.telefono = (paciente.phone as string) ?? '';
+        this.form.direccion = (paciente.homeAddress as string) ?? '';
       }
     } catch {
     } finally {
@@ -357,15 +391,19 @@ export class ListaEsperaQxComponent implements OnInit {
       this.mostrarSugerenciasMedico = false;
       return;
     }
-    this.medicosFiltrados = this.medicos.filter(m =>
-      (m.dmedico ?? `${m.apellidoPaterno} ${m.apellidoMaterno} ${m.nombres}`).toLowerCase().includes(texto),
+    this.medicosFiltrados = this.medicos.filter((m) =>
+      (m.dmedico ?? `${m.apellidoPaterno} ${m.apellidoMaterno} ${m.nombres}`)
+        .toLowerCase()
+        .includes(texto),
     );
     this.mostrarSugerenciasMedico = this.medicosFiltrados.length > 0;
   }
 
   seleccionarMedico(medico: MedicoListaEspera) {
     this.idMedico = medico.idMedico;
-    this.form.medico = medico.dmedico ?? `${medico.apellidoPaterno} ${medico.apellidoMaterno} ${medico.nombres}`;
+    this.form.medico =
+      medico.dmedico ??
+      `${medico.apellidoPaterno} ${medico.apellidoMaterno} ${medico.nombres}`;
     this.mostrarSugerenciasMedico = false;
     this.medicosFiltrados = [];
   }
@@ -392,7 +430,8 @@ export class ListaEsperaQxComponent implements OnInit {
     try {
       const resultados = await this.apiService.listarDiagnosticos(valor.trim());
       this.diagnosticosFiltrados = Array.isArray(resultados) ? resultados : [];
-      this.mostrarSugerenciasDiagnostico = this.diagnosticosFiltrados.length > 0;
+      this.mostrarSugerenciasDiagnostico =
+        this.diagnosticosFiltrados.length > 0;
     } catch {
       this.diagnosticosFiltrados = [];
     }
@@ -412,7 +451,7 @@ export class ListaEsperaQxComponent implements OnInit {
   }
 
   onTelefonoInput(valor: string) {
-    const soloNumeros = valor.replace(/[^0-9]/g, '').slice(0, 9);
+    const soloNumeros = valor.replace(/\D/g, '').slice(0, 9);
     this.form.telefono = soloNumeros;
   }
 
@@ -425,17 +464,53 @@ export class ListaEsperaQxComponent implements OnInit {
   }
 
   async guardar() {
-    if (!this.form.fechaOrden) { this.errorGuardado = 'La fecha de orden es obligatoria.'; return; }
-    if (!this.editingId && (!this.idPaciente || !this.idMedico)) { this.errorGuardado = 'Paciente y medico son obligatorios.'; return; }
-    if (!this.form.idDiagnostico) { this.errorGuardado = 'El diagnostico es obligatorio.'; return; }
-    if (!this.form.idEspecialidad) { this.errorGuardado = 'La especialidad es obligatoria.'; return; }
-    if (!this.form.fechaLaboratorio) { this.errorGuardado = 'La fecha de laboratorio es obligatoria.'; return; }
-    if (!this.form.fechaICCardio) { this.errorGuardado = 'La fecha IC Cardio es obligatoria.'; return; }
-    if (!this.form.fechaICNeumo) { this.errorGuardado = 'La fecha IC Neumo es obligatoria.'; return; }
-    if (!this.form.fechaICAnestesio) { this.errorGuardado = 'La fecha IC Anestesio es obligatoria.'; return; }
-    if (!this.form.telefono.trim()) { this.errorGuardado = 'El telefono es obligatorio.'; return; }
-    if (this.form.telefono.length !== 9 || this.form.telefono[0] !== '9') { this.errorGuardado = 'El telefono debe tener 9 digitos y comenzar con 9.'; return; }
-    if (!this.form.direccion.trim()) { this.errorGuardado = 'La direccion es obligatoria.'; return; }
+    if (!this.form.fechaOrden) {
+      this.errorGuardado = 'La fecha de orden es obligatoria.';
+      return;
+    }
+    if (!this.editingId && (!this.idPaciente || !this.idMedico)) {
+      this.errorGuardado = 'Paciente y medico son obligatorios.';
+      return;
+    }
+    if (!this.form.idDiagnostico) {
+      this.errorGuardado = 'El diagnostico es obligatorio.';
+      return;
+    }
+    if (!this.form.idEspecialidad) {
+      this.errorGuardado = 'La especialidad es obligatoria.';
+      return;
+    }
+    if (!this.form.fechaLaboratorio) {
+      this.errorGuardado = 'La fecha de laboratorio es obligatoria.';
+      return;
+    }
+    if (!this.form.fechaICCardio) {
+      this.errorGuardado = 'La fecha IC Cardio es obligatoria.';
+      return;
+    }
+    if (!this.form.fechaICNeumo) {
+      this.errorGuardado = 'La fecha IC Neumo es obligatoria.';
+      return;
+    }
+    if (!this.form.fechaICAnestesio) {
+      this.errorGuardado = 'La fecha IC Anestesio es obligatoria.';
+      return;
+    }
+    if (!this.form.telefono.trim()) {
+      this.errorGuardado = 'El telefono es obligatorio.';
+      return;
+    }
+    if (
+      this.form.telefono.length !== 9 ||
+      !this.form.telefono.startsWith('9')
+    ) {
+      this.errorGuardado = 'El telefono debe tener 9 digitos y comenzar con 9.';
+      return;
+    }
+    if (!this.form.direccion.trim()) {
+      this.errorGuardado = 'La direccion es obligatoria.';
+      return;
+    }
 
     this.guardando = true;
     this.errorGuardado = '';
@@ -478,7 +553,11 @@ export class ListaEsperaQxComponent implements OnInit {
     this.exportando = true;
     this.error = '';
     try {
-      const datos = await this.apiService.reporte(this.fechaInicio, this.fechaFin, this.filtroEspecialidad ?? undefined);
+      const datos = await this.apiService.reporte(
+        this.fechaInicio,
+        this.fechaFin,
+        this.filtroEspecialidad ?? undefined,
+      );
       if (!datos || datos.length === 0) {
         this.error = 'No hay datos para exportar.';
         return;
@@ -490,19 +569,41 @@ export class ListaEsperaQxComponent implements OnInit {
       if (this.hospitalLogo) {
         wsData.push([]);
       }
-      wsData.push([this.hospitalNombre]);
-      wsData.push([`RUC: ${this.hospitalRuc}`]);
-      wsData.push([`Telefono: ${this.hospitalTelefono}  |  Direccion: ${this.hospitalDireccion}`]);
-      wsData.push([]);
-      wsData.push([`REPORTE DE LISTA DE ESPERA QUIRURGICA`]);
-      wsData.push([`Fecha Inicio: ${this.fechaInicio}  |  Fecha Fin: ${this.fechaFin}`]);
+      wsData.push(
+        [this.hospitalNombre],
+        [`RUC: ${this.hospitalRuc}`],
+        [
+          `Telefono: ${this.hospitalTelefono}  |  Direccion: ${this.hospitalDireccion}`,
+        ],
+        [],
+        ['REPORTE DE LISTA DE ESPERA QUIRURGICA'],
+        [`Fecha Inicio: ${this.fechaInicio}  |  Fecha Fin: ${this.fechaFin}`],
+      );
       if (this.filtroEspecialidad) {
-        const esp = this.especialidades.find(e => e.idEspecialidad === this.filtroEspecialidad);
+        const esp = this.especialidades.find(
+          (e) => e.idEspecialidad === this.filtroEspecialidad,
+        );
         wsData.push([`Especialidad: ${esp?.nombre ?? ''}`]);
       }
       wsData.push([]);
 
-      const headers = ['Nro Historia', 'Nro Documento', 'Paciente', 'Edad', 'Telefono', 'Fecha Orden', 'Especialidad', 'Diagnostico', 'Fecha Lab', 'IC Cardio', 'IC Neumo', 'IC Anestesio', 'Medico', 'Observacion', 'Dias en espera'];
+      const headers = [
+        'Nro Historia',
+        'Nro Documento',
+        'Paciente',
+        'Edad',
+        'Telefono',
+        'Fecha Orden',
+        'Especialidad',
+        'Diagnostico',
+        'Fecha Lab',
+        'IC Cardio',
+        'IC Neumo',
+        'IC Anestesio',
+        'Medico',
+        'Observacion',
+        'Dias en espera',
+      ];
       wsData.push(headers);
 
       for (const r of datos) {
@@ -528,14 +629,29 @@ export class ListaEsperaQxComponent implements OnInit {
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
       ws['!cols'] = [
-        { wch: 15 }, { wch: 15 }, { wch: 40 }, { wch: 6 }, { wch: 15 },
-        { wch: 14 }, { wch: 25 }, { wch: 40 }, { wch: 14 }, { wch: 14 },
-        { wch: 14 }, { wch: 14 }, { wch: 35 }, { wch: 30 }, { wch: 12 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 6 },
+        { wch: 15 },
+        { wch: 14 },
+        { wch: 25 },
+        { wch: 40 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 35 },
+        { wch: 30 },
+        { wch: 12 },
       ];
 
       const numHeaderRows = this.hospitalLogo ? 6 : 0;
       ws['!merges'] = [
-        { s: { r: numHeaderRows, c: 0 }, e: { r: numHeaderRows, c: headers.length - 1 } },
+        {
+          s: { r: numHeaderRows, c: 0 },
+          e: { r: numHeaderRows, c: headers.length - 1 },
+        },
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, 'Lista Espera QX');
@@ -544,7 +660,9 @@ export class ListaEsperaQxComponent implements OnInit {
       const nombreArchivo = `ListaEsperaQX_${fechaArchivo}.xlsx`;
 
       const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbOut], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blob = new Blob([wbOut], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
       saveAs(blob, nombreArchivo);
     } catch (error: unknown) {
       this.error =

@@ -11,6 +11,7 @@ import {
   type ColumnaTabla,
   TablaComponent,
 } from '../../../../../compartido/componentes/tabla/tabla.component';
+import { SelectGlobalComponent } from '../../../../../compartido/ui/select-global/select-global';
 import { AuthService } from '../../../../auth/aplicacion/auth.service';
 import { EvolucionService } from '../../../servicios/evolucion.service';
 import {
@@ -26,6 +27,7 @@ import {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    SelectGlobalComponent,
     TablaComponent,
     ColumnaTemplateDirective,
   ],
@@ -132,14 +134,18 @@ export class InterconsultasComponent implements OnInit {
     this.isSubmitting.set(true);
 
     const formData = this.interconsultaForm.value;
-    
+
     // Build the "motivo" string from checkboxes
     const motivosSeleccionados: string[] = [];
-    if (formData.chkOpinion) motivosSeleccionados.push('Opinion diagnosticos y sugerencias');
-    if (formData.chkManejo) motivosSeleccionados.push('Manejo conjunto del paciente');
-    if (formData.chkTransferencia) motivosSeleccionados.push('Transferencia del paciente');
-    if (formData.chkOtro && formData.motivoOtro) motivosSeleccionados.push(formData.motivoOtro);
-    
+    if (formData.chkOpinion)
+      motivosSeleccionados.push('Opinion diagnosticos y sugerencias');
+    if (formData.chkManejo)
+      motivosSeleccionados.push('Manejo conjunto del paciente');
+    if (formData.chkTransferencia)
+      motivosSeleccionados.push('Transferencia del paciente');
+    if (formData.chkOtro && formData.motivoOtro)
+      motivosSeleccionados.push(formData.motivoOtro);
+
     const motivoFinal = motivosSeleccionados.join(', ');
 
     const request: Interconsulta = {
@@ -150,7 +156,7 @@ export class InterconsultasComponent implements OnInit {
         : 0,
       motivo: motivoFinal,
       // TODO: Mandar Prioridad al backend cuando se actualice el struct
-      // prioridad: formData.prioridad 
+      // prioridad: formData.prioridad
     };
 
     const exito = await this.interconsultaService.crear(request);

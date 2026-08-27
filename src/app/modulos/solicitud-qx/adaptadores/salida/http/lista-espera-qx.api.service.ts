@@ -90,9 +90,13 @@ export class ListaEsperaQxApiService {
   private apiClient = inject(ApiClientService);
 
   listar(params: ListaEsperaQxParams): Promise<IFilaBackend[]> {
-    const query = new URLSearchParams({ fecha: params.fecha, fechaFin: params.fechaFin });
+    const query = new URLSearchParams({
+      fecha: params.fecha,
+      fechaFin: params.fechaFin,
+    });
     if (params.paciente) query.append('paciente', params.paciente);
-    if (params.idEspecialidad) query.append('idEspecialidad', String(params.idEspecialidad));
+    if (params.idEspecialidad)
+      query.append('idEspecialidad', String(params.idEspecialidad));
     return this.apiClient.request<IFilaBackend[]>(
       `/api/v1/lista-espera-qx?${query.toString()}`,
     );
@@ -120,7 +124,10 @@ export class ListaEsperaQxApiService {
     );
   }
 
-  modificar(id: number, payload: ListaEsperaQxCrearPayload): Promise<{ message: string }> {
+  modificar(
+    id: number,
+    payload: ListaEsperaQxCrearPayload,
+  ): Promise<{ message: string }> {
     return this.apiClient.request<{ message: string }>(
       `/api/v1/lista-espera-qx/${id}`,
       {
@@ -137,7 +144,9 @@ export class ListaEsperaQxApiService {
     );
   }
 
-  listarEspecialidadesPorDepartamento(idDepartamento: number): Promise<EspecialidadItem[]> {
+  listarEspecialidadesPorDepartamento(
+    idDepartamento: number,
+  ): Promise<EspecialidadItem[]> {
     return this.apiClient.request<EspecialidadItem[]>(
       `/api/v1/especialidades-departamento/${idDepartamento}`,
     );
@@ -149,7 +158,11 @@ export class ListaEsperaQxApiService {
     );
   }
 
-  reporte(fecha: string, fechaFin: string, idEspecialidad?: number): Promise<ListaEsperaQxReporteItem[]> {
+  reporte(
+    fecha: string,
+    fechaFin: string,
+    idEspecialidad?: number,
+  ): Promise<ListaEsperaQxReporteItem[]> {
     const query = new URLSearchParams({ fecha, fechaFin });
     if (idEspecialidad) query.append('idEspecialidad', String(idEspecialidad));
     return this.apiClient.request<ListaEsperaQxReporteItem[]>(

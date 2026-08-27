@@ -1,78 +1,73 @@
 <div class="space-y-8">
 
-  
-  <div class="border border-green-500 rounded-md p-4">
-    <h3 class="text-[13px] font-bold text-green-600 mb-5 uppercase tracking-wide">
-      SOLICITUD DE INTERCONSULTAS :
+  <div class="border border-slate-200 rounded-lg p-5 bg-white shadow-xs">
+    <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
+      <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Solicitud de interconsultas
     </h3>
 
     <form [formGroup]="interconsultaForm" (ngSubmit)="solicitar()" class="flex flex-col gap-5 mb-2">
-      <!-- Info Header -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="text-[12px] text-green-600 font-semibold">
-          Médico Solicitante : <span class="font-normal">{{ authService.username() || 'RAMIREZ CALDERON CARLOS' }}</span>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border-b border-slate-100">
+        <div class="text-[12.5px] text-slate-500 font-semibold">
+          Médico Solicitante: <span class="font-medium text-slate-800">{{ authService.username() || 'RAMIREZ CALDERON CARLOS' }}</span>
         </div>
-        <div class="text-[12px] text-green-600 font-semibold md:text-center">
-          Fecha: <span class="font-normal">{{ fechaActual | date:'dd/MM/yyyy' }}</span>
+        <div class="text-[12.5px] text-slate-500 font-semibold md:text-right">
+          Fecha: <span class="font-medium text-slate-800">{{ fechaActual | date:'dd/MM/yyyy' }}</span>
         </div>
       </div>
 
-      <!-- Selects -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-        <!-- Prioridad -->
         <div class="flex flex-col">
-          <label for="ic-prioridad" class="text-[12px] font-bold text-green-600 mb-1">Prioridad:</label>
-          <select id="ic-prioridad" formControlName="prioridad"
-            class="w-full border border-slate-300 rounded-sm p-1.5 text-[12px] text-slate-800 focus:ring-1 focus:ring-green-500 focus:outline-none"
-            [class.border-red-300]="interconsultaForm.get('prioridad')?.invalid && interconsultaForm.get('prioridad')?.touched">
+          <label for="ic-prioridad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Prioridad:</label>
+          <app-select-global id="ic-prioridad" formControlName="prioridad">
             <option value="">--SELECCIONAR--</option>
             <option value="NORMAL">NORMAL</option>
             <option value="URGENTE">URGENTE</option>
-          </select>
+          </app-select-global>
         </div>
 
-        <!-- Especialidad -->
         <div class="flex flex-col">
-          <label for="ic-especialidad" class="text-[12px] font-bold text-green-600 mb-1">Especialidad:</label>
-          <select id="ic-especialidad" formControlName="IdEspecialidad"
-            (change)="onEspecialidadChange($event)"
-            class="w-full border border-slate-300 rounded-sm p-1.5 text-[12px] text-slate-800 focus:ring-1 focus:ring-green-500 focus:outline-none"
-            [class.border-red-300]="interconsultaForm.get('IdEspecialidad')?.invalid && interconsultaForm.get('IdEspecialidad')?.touched">
+          <label for="ic-especialidad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Especialidad:</label>
+          <app-select-global id="ic-especialidad" formControlName="IdEspecialidad" (change)="onEspecialidadChange($event)">
             <option value="">--SELECCIONAR--</option>
             @for (esp of especialidades(); track esp.IdEspecialidad) {
               <option [value]="esp.IdEspecialidad">{{ esp.nombre }}</option>
             }
-          </select>
+          </app-select-global>
         </div>
       </div>
 
-      <!-- Motivo Checkboxes -->
       <div class="flex flex-col mt-2">
-        <label class="text-[12px] font-bold text-green-600 mb-2">Motivo:</label>
+        <span class="text-[11.5px] font-semibold text-slate-500 mb-2">Motivo:</span>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <label for="chk-opinion" class="flex items-center gap-2 cursor-pointer">
-            <input id="chk-opinion" type="checkbox" formControlName="chkOpinion" class="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500">
-            <span class="text-[12px] text-green-600">Opinion diagnosticos y sugerencias</span>
+          <label for="chk-opinion" class="flex items-center gap-2 cursor-pointer hover:text-teal-700 transition-colors">
+            <input id="chk-opinion" type="checkbox" formControlName="chkOpinion" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
+            <span class="text-[13px] text-slate-700">Opinión, diagnósticos y sugerencias</span>
           </label>
-          <label for="chk-manejo" class="flex items-center gap-2 cursor-pointer">
-            <input id="chk-manejo" type="checkbox" formControlName="chkManejo" class="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500">
-            <span class="text-[12px] text-green-600">Manejo conjutno del paciente</span>
+          <label for="chk-manejo" class="flex items-center gap-2 cursor-pointer hover:text-teal-700 transition-colors">
+            <input id="chk-manejo" type="checkbox" formControlName="chkManejo" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
+            <span class="text-[13px] text-slate-700">Manejo conjunto del paciente</span>
           </label>
-          <label for="chk-transferencia" class="flex items-center gap-2 cursor-pointer">
-            <input id="chk-transferencia" type="checkbox" formControlName="chkTransferencia" class="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500">
-            <span class="text-[12px] text-green-600">Transferencia del paciente</span>
+          <label for="chk-transferencia" class="flex items-center gap-2 cursor-pointer hover:text-teal-700 transition-colors">
+            <input id="chk-transferencia" type="checkbox" formControlName="chkTransferencia" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
+            <span class="text-[13px] text-slate-700">Transferencia del paciente</span>
           </label>
         </div>
         
         <div class="flex items-center gap-2 mt-3">
-          <label for="chk-otro" class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-            <input id="chk-otro" type="checkbox" formControlName="chkOtro" class="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500">
-            <span class="text-[12px] text-green-600 uppercase">Otro</span>
+          <label for="chk-otro" class="flex items-center gap-2 cursor-pointer whitespace-nowrap hover:text-teal-700 transition-colors">
+            <input id="chk-otro" type="checkbox" formControlName="chkOtro" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
+            <span class="text-[13px] text-slate-700 uppercase">Otro</span>
           </label>
           @if (interconsultaForm.get('chkOtro')?.value) {
             <label for="txt-otro" class="sr-only">Especifique otro motivo</label>
             <input id="txt-otro" type="text" formControlName="motivoOtro" placeholder="Especifique..." 
-              class="border border-slate-300 rounded-sm px-2 py-1 text-[12px] focus:ring-1 focus:ring-green-500 focus:outline-none w-full max-w-sm">
+              class="border border-slate-300 rounded-md px-2.5 py-1 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none w-full max-w-sm">
           }
         </div>
       </div>
@@ -83,13 +78,16 @@
         </div>
       }
 
-      <!-- Submit button -->
       <div class="flex justify-end mt-4">
         @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
           <button type="submit" [disabled]="interconsultaForm.invalid || isSubmitting()"
-            class="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-6 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2">
+            class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-6 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2">
             @if (isSubmitting()) {
-              <span class="animate-spin text-lg leading-none">⟳</span> Solicitando...
+              <svg aria-hidden="true" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Solicitando...
             } @else {
               Solicitar Interconsulta
             }
@@ -99,7 +97,6 @@
     </form>
   </div>
 
-  
   <div>
     <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-5 pb-2 border-b border-slate-200">
       <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -148,7 +145,7 @@
                 'bg-slate-100 text-slate-600 border-slate-200': ic.estado === 'Pendiente' || !ic.estado,
                 'bg-teal-100 text-teal-700 border-teal-200': ic.estado === 'Firmado',
                 'bg-amber-100 text-amber-700 border-amber-200': ic.estado === 'En Progreso',
-                'bg-green-100 text-green-700 border-green-200': ic.estado === 'Completado'
+                'bg-teal-100 text-teal-800 border-teal-200': ic.estado === 'Completado'
               }">
               {{ ic.estado || 'Pendiente' }}
             </span>

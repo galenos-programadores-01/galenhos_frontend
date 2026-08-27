@@ -292,10 +292,6 @@ export class AdmisionesComponent implements OnInit {
       this.errorAdmision = 'El nombre del acompañante es obligatorio.';
       return;
     }
-    // if (!this.formAdmision.telefonoAcompanante.trim()) {
-    //   this.errorAdmision = 'El teléfono del acompañante es obligatorio.';
-    //   return;
-    // }
     if (!this.formAdmision.direccionPaciente.trim()) {
       this.errorAdmision = 'La dirección del paciente es obligatoria.';
       return;

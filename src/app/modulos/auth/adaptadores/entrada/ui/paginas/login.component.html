@@ -2,40 +2,73 @@
   
   
   <aside class="hidden lg:flex lg:w-[54%] flex-col bg-[#040a14] overflow-hidden relative border-r border-slate-200/50">
-    
+
+    <!-- Fondo: slideshow de imágenes médicas -->
     <div class="absolute inset-0 overflow-hidden">
       <div class="slideshow-bg" style="background-image: url('https://images.unsplash.com/photo-1516549655169-df83a0774514?ixlib=rb-1.2.1&auto=format&fit=crop&w=3840&q=100');"></div>
       <div class="slideshow-bg" style="background-image: url('https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-1.2.1&auto=format&fit=crop&w=3840&q=100');"></div>
       <div class="slideshow-bg" style="background-image: url('https://images.unsplash.com/photo-1584982751601-97d8838d9673?ixlib=rb-1.2.1&auto=format&fit=crop&w=3840&q=100');"></div>
       <div class="slideshow-bg" style="background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-1.2.1&auto=format&fit=crop&w=3840&q=100');"></div>
     </div>
-    
-    
+
+    <!-- Overlay de color y blur -->
     <div class="absolute inset-0 bg-gradient-to-br from-[#02050a]/70 via-[#040a14]/60 to-[#02050a]/70 backdrop-blur-[1px]"></div>
     <div class="absolute -top-48 -right-48 w-[560px] h-[560px] rounded-full bg-teal-500/20 blur-[130px]"></div>
 
-    
-    <div class="relative z-10 flex-1 flex flex-col justify-center px-12 xl:px-20 py-10">
-      <div class="gp-anim-fade-up min-h-[220px]">
-        <app-typewriter-text
-          [texts]="heroTexts"
-          fontFamily="'Space Grotesk', 'Roboto Mono', 'JetBrains Mono', ui-monospace, monospace"
-          fontSize="clamp(40px, 4.5vw, 75px)"
-          [fontWeight]="700"
-          lineHeight="1.15em"
-          letterSpacing="-0.03em"
-          color="#FFFFFF"
-          cursorColor="#2dd4bf"
-          cursorBorderColor="#2dd4bf"
-          [cursorWidth]="8"
-          [cursorHeight]="50"
-        ></app-typewriter-text>
+    <!-- Contenido principal -->
+    <div class="relative z-10 flex-1 flex flex-col justify-center px-10 xl:px-16 py-8">
+
+      <!-- Marca + texto animado -->
+      <div class="mb-2 gp-anim-fade-up">
+        <p class="text-teal-400/90 text-[11px] font-bold tracking-[0.35em] uppercase mb-4">Galenos Pro</p>
+        <div class="min-h-[140px] xl:min-h-[180px]">
+          <app-typewriter-text
+            [texts]="heroTexts"
+            fontFamily="'Space Grotesk', 'Roboto Mono', 'JetBrains Mono', ui-monospace, monospace"
+            fontSize="clamp(32px, 3.4vw, 60px)"
+            [fontWeight]="700"
+            lineHeight="1.15em"
+            letterSpacing="-0.03em"
+            color="#FFFFFF"
+            cursorColor="#2dd4bf"
+            cursorBorderColor="#2dd4bf"
+            [cursorWidth]="8"
+            [cursorHeight]="42"
+          ></app-typewriter-text>
+        </div>
+        <p class="text-slate-400/70 text-[12px] font-medium mt-5 tracking-wide leading-relaxed max-w-[420px]">
+          Plataforma integral de gestión clínica para hospitales,
+          clínicas y equipos de salud.
+        </p>
+      </div>
+
+      <!-- Separador decorativo -->
+      <div class="flex items-center gap-3 my-6 gp-anim-fade-up" style="animation-delay: 0.2s">
+        <div class="h-px flex-1 bg-gradient-to-r from-teal-500/40 via-teal-500/10 to-transparent"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-teal-400/60 shadow-[0_0_8px_rgba(45,212,191,0.5)]"></div>
+        <div class="w-1 h-1 rounded-full bg-teal-500/30"></div>
+        <div class="w-1 h-1 rounded-full bg-teal-500/20"></div>
+      </div>
+
+      <!-- Monitor de Signos Vitales -->
+      <div class="w-full gp-anim-fade-up" style="animation-delay: 0.35s">
+        <app-monitor-signos-vitales
+          nombrePaciente="PACIENTE: UCI - CAMA 04"
+          estadoRitmo="RITMO SINUSAL NORMAL"
+          [frecuenciaCardiaca]="75"
+          [saturacionOxigeno]="98"
+          [presionSistolica]="120"
+          [presionDiastolica]="80"
+          [frecuenciaRespiratoria]="16"
+          [temperatura]="36.6"
+        ></app-monitor-signos-vitales>
       </div>
     </div>
 
-    
-    <div class="relative z-10 shrink-0 px-12 xl:px-20 pb-10 xl:pb-12 text-[12px] text-slate-500 font-medium">
+    <!-- Footer -->
+    <div class="relative z-10 shrink-0 px-12 xl:px-20 pb-10 xl:pb-12 flex items-center justify-between text-[11px] text-slate-500 font-medium">
       <span>© 2026 GALENOS PRO</span>
+      <span class="text-slate-600/50">v1.0</span>
     </div>
   </aside>
 

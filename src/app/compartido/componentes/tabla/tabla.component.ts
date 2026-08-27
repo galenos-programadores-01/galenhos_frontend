@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  ContentChildren,
+  contentChildren,
   Input,
-  type QueryList,
   type TemplateRef,
 } from '@angular/core';
 import { ColumnaTemplateDirective } from './columna-template.directive';
@@ -31,14 +30,12 @@ export class TablaComponent {
     'Realice una búsqueda para ver resultados.';
   @Input() mensajeVacio: string = 'No se encontraron resultados.';
 
-  @ContentChildren(ColumnaTemplateDirective)
-  templates!: QueryList<ColumnaTemplateDirective>;
+  readonly templates = contentChildren(ColumnaTemplateDirective);
 
   getTemplate(nombreColumna: string): TemplateRef<unknown> | null {
-    if (!this.templates) return null;
-    const directiva = this.templates.find(
-      (t) => t.nombreColumna === nombreColumna,
-    );
+    const list = this.templates();
+    if (!list || list.length === 0) return null;
+    const directiva = list.find((t) => t.nombreColumna === nombreColumna);
     return directiva ? directiva.template : null;
   }
 }

@@ -4,7 +4,8 @@ import { ApiClientService } from '../../../compartido/api-client/api-client.serv
 export interface Interconsulta {
   idInterconsulta?: number;
   idAtencionOrigen: number;
-  IdEspecialidad: number;
+  IdEspecialidad?: number;
+  idEspecialidad?: number;
   idMedicoDestino: number;
   motivo: string;
   fechaSolicitud?: string;
@@ -125,7 +126,8 @@ export class InterconsultaService {
 }
 
 export interface EspecialidadInterconsulta {
-  IdEspecialidad: number;
+  IdEspecialidad?: number;
+  idEspecialidad?: number;
   nombre?: string | null;
   descripcionLarga?: string | null;
 }

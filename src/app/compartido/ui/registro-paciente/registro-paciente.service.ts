@@ -241,7 +241,7 @@ export class RegistroPacienteService {
       const param = await this.maestrosApi.getParametro(296);
       const paramArr = Array.isArray(param) ? param : [param];
       const parametro = paramArr[0];
-      if (!parametro || parametro.valorTexto !== 'S') {
+      if (parametro?.valorTexto !== 'S') {
         return;
       }
     } catch {
@@ -302,7 +302,8 @@ export class RegistroPacienteService {
       }
       this.reniecConsumido = true;
       this.camposBloqueados = true;
-      this.aviso = 'Datos cargados desde RENIEC. Los campos se encuentran bloqueados.';
+      this.aviso =
+        'Datos cargados desde RENIEC. Los campos se encuentran bloqueados.';
     } catch (err: unknown) {
       this.error =
         err instanceof ApiRequestError
