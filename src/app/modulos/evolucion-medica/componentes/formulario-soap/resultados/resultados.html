@@ -32,20 +32,42 @@
                  mensajeVacio="No hay resultados de laboratorio registrados.">
 
         <ng-template appColumnaTemplate="examenCustom" let-item>
-          <span class="text-slate-800 font-medium">{{ item.nombreExamen }}</span>
+          @if (item.estado === 'SI') {
+            <button type="button" (click)="verDetalleLaboratorio(item)" class="text-left font-medium text-[#07153a] hover:text-[#0f766e] hover:underline cursor-pointer block whitespace-normal break-words leading-relaxed py-0.5 group">
+              <span class="group-hover:text-[#0f766e]">{{ item.nombreExamen }}</span>
+            </button>
+          } @else {
+            <span class="text-slate-800 font-medium whitespace-normal break-words block leading-relaxed py-0.5">{{ item.nombreExamen }}</span>
+          }
         </ng-template>
 
         <ng-template appColumnaTemplate="fechaCustom" let-item>
-          <span class="font-mono text-[11.5px] text-slate-600">{{ item.fechaResultado | date:'dd/MM/yyyy' }}</span>
+          <span class="font-mono text-[11.5px] text-slate-600 whitespace-nowrap">{{ item.fechaResultado || '—' }}</span>
         </ng-template>
 
         <ng-template appColumnaTemplate="resultadoCustom" let-item>
-          <span class="text-slate-700">{{ item.valores || item.observaciones || '—' }}</span>
+          <div class="flex items-center gap-2">
+            @if (item.valores) {
+              <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[11px]">
+                <span class="text-slate-400 font-sans text-[10px] font-medium mr-1">CPT</span>{{ item.valores }}
+              </span>
+            }
+            @if (item.estado === 'SI') {
+              <button type="button" (click)="verDetalleLaboratorio(item)"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#07153a] hover:bg-[#0f766e] text-white font-medium text-[11px] transition-colors shadow-2xs cursor-pointer">
+                <svg aria-hidden="true" class="w-3.5 h-3.5 text-teal-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver
+              </button>
+            }
+          </div>
         </ng-template>
 
         <ng-template appColumnaTemplate="estadoCustom" let-item>
-          <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold" [class]="obtenerClaseEstado(item.estado)">
-            {{ item.estado || 'Pendiente' }}
+          <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold whitespace-nowrap inline-block" [class]="obtenerClaseEstado(item.estado)">
+            {{ item.estado === 'SI' ? 'Disponible' : (item.estado === 'NO' ? 'En proceso' : item.estado) }}
           </span>
         </ng-template>
 
@@ -69,25 +91,43 @@
     </h3>
     <div class="overflow-x-auto">
       <app-tabla [columnas]="columnasImagenes" [datos]="imagenes()" [cargando]="false"
-                 mensajeVacio="No hay estudios de imagenología registrados.">
-
-        <ng-template appColumnaTemplate="estudioCustom" let-item>
-          <span class="text-slate-800 font-medium">{{ item.nombreExamen }}</span>
+                 mensajeVacio="No hay estudios de imagenología registrados.">        <ng-template appColumnaTemplate="estudioCustom" let-item>
+          @if (item.estado === 'SI') {
+            <button type="button" (click)="verDetalleImagen(item)" class="text-left font-medium text-[#07153a] hover:text-[#0f766e] hover:underline cursor-pointer block whitespace-normal break-words leading-relaxed py-0.5 group">
+              <span class="group-hover:text-[#0f766e]">{{ item.nombreExamen }}</span>
+            </button>
+          } @else {
+            <span class="text-slate-800 font-medium whitespace-normal break-words block leading-relaxed py-0.5">{{ item.nombreExamen }}</span>
+          }
         </ng-template>
 
         <ng-template appColumnaTemplate="fechaCustom" let-item>
-          <span class="font-mono text-[11.5px] text-slate-600">{{ item.fechaResultado | date:'dd/MM/yyyy' }}</span>
+          <span class="font-mono text-[11.5px] text-slate-600 whitespace-nowrap">{{ item.fechaResultado || '—' }}</span>
         </ng-template>
 
         <ng-template appColumnaTemplate="informeCustom" let-item>
-          <div class="text-slate-700 line-clamp-3" [title]="item.observaciones || 'Sin informe registrado'">
-            {{ item.observaciones || 'Sin informe registrado' }}
+          <div class="flex items-center gap-2">
+            @if (item.valores) {
+              <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[11px]">
+                <span class="text-slate-400 font-sans text-[10px] font-medium mr-1">CPT</span>{{ item.valores }}
+              </span>
+            }
+            @if (item.estado === 'SI') {
+              <button type="button" (click)="verDetalleImagen(item)"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#07153a] hover:bg-[#0f766e] text-white font-medium text-[11px] transition-colors shadow-2xs cursor-pointer">
+                <svg aria-hidden="true" class="w-3.5 h-3.5 text-teal-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver
+              </button>
+            }
           </div>
         </ng-template>
 
         <ng-template appColumnaTemplate="estadoCustom" let-item>
-          <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold" [class]="obtenerClaseEstado(item.estado)">
-            {{ item.estado || 'Pendiente' }}
+          <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold whitespace-nowrap inline-block" [class]="obtenerClaseEstado(item.estado)">
+            {{ item.estado === 'SI' ? 'Disponible' : (item.estado === 'NO' ? 'En proceso' : item.estado) }}
           </span>
         </ng-template>
 
@@ -99,6 +139,82 @@
     </div>
   </div>
 
-  
+  @if (modalDetalleOpen()) {
+    <ventana-modal [titulo]="modalDetalleTitulo()" subtitulo="Informe analítico expedido por Patología Clínica y Laboratorio" [ancho]="760" (alCerrar)="cerrarModalDetalle()">
+      @if (modalDetalleCargando()) {
+        <div class="flex flex-col items-center justify-center py-14 gap-3 text-slate-500">
+          <svg aria-hidden="true" class="animate-spin h-7 w-7 text-[#0f766e]" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span class="text-xs font-medium text-slate-600">Cargando valores del laboratorio desde la base de datos...</span>
+        </div>
+      } @else if (modalDetalleItems().length === 0) {
+        <div class="text-center py-12 text-slate-500 text-xs">
+          No se encontraron resultados detallados procesados para este análisis.
+        </div>
+      } @else {
+        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs max-h-[60vh]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-[#07153a] text-white border-b border-slate-200 uppercase tracking-wider font-bold text-[10.5px]">
+                <th class="py-3 px-4">Análisis / Ítem</th>
+                <th class="py-3 px-4">Resultado Medido</th>
+                <th class="py-3 px-4">Unidad</th>
+                <th class="py-3 px-4">Rango de Referencia</th>
+                <th class="py-3 px-4">Método</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @for (det of modalDetalleItems(); track det.item) {
+                <tr class="hover:bg-slate-50 transition-colors">
+                  <td class="py-2.5 px-4">
+                    <span class="font-bold text-slate-800 block">{{ det.item }}</span>
+                    @if (det.grupo) {
+                      <span class="text-[10px] text-[#0f766e] font-semibold block uppercase tracking-wider mt-0.5">{{ det.grupo }}</span>
+                    }
+                  </td>
+                  <td class="py-2.5 px-4 font-mono font-extrabold text-[#07153a] text-[13px]">{{ det.valorTexto || '—' }}</td>
+                  <td class="py-2.5 px-4 text-slate-600 font-mono text-[11px]">{{ det.unidad || '—' }}</td>
+                  <td class="py-2.5 px-4 text-slate-600 font-mono text-[11px] bg-slate-50/50">{{ det.valorReferencial || '—' }}</td>
+                  <td class="py-2.5 px-4 text-slate-500 text-[10.5px] uppercase font-mono">{{ det.metodo || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </ventana-modal>
+  }
+
+  @if (modalImagenOpen()) {
+    <ventana-modal [titulo]="modalImagenTitulo()" subtitulo="Informe de Radiología y Diagnóstico por Imágenes" [ancho]="720" (alCerrar)="cerrarModalImagen()">
+      @if (modalImagenCargando()) {
+        <div class="flex flex-col items-center justify-center py-14 gap-3 text-slate-500">
+          <svg aria-hidden="true" class="animate-spin h-7 w-7 text-[#0f766e]" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span class="text-xs font-medium text-slate-600">Cargando informe radiológico desde la base de datos...</span>
+        </div>
+      } @else if (!modalImagenDetalle() || !modalImagenDetalle()?.informeTexto) {
+        <div class="text-center py-12 text-slate-500 text-xs">
+          No se encontró el informe firmado para este estudio.
+        </div>
+      } @else {
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+          @if (modalImagenDetalle()?.fechaInforme) {
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 text-xs text-slate-500">
+              <span class="font-semibold text-slate-700">Informe Radiológico Oficial</span>
+              <span class="font-mono text-[#0f766e] font-medium">Emitido: {{ modalImagenDetalle()?.fechaInforme }}</span>
+            </div>
+          }
+          <div class="text-[12.5px] text-slate-800 leading-relaxed font-sans whitespace-pre-wrap bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-2xs tracking-normal font-normal">
+            {{ modalImagenDetalle()?.informeTexto }}
+          </div>
+        </div>
+      }
+    </ventana-modal>
+  }
 
 }

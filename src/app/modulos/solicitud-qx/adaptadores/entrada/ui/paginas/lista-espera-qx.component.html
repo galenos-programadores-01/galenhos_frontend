@@ -1,0 +1,226 @@
+<div class="gp-in" style="display: flex; flex-direction: column; gap: 18px;">
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 10px; align-items: end;">
+      <div>
+        <label for="fecha-inicio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha inicio</label>
+        <input id="fecha-inicio" type="date" [(ngModel)]="fechaInicio"
+               style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div>
+        <label for="fecha-fin" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha fin</label>
+        <input id="fecha-fin" type="date" [(ngModel)]="fechaFin"
+               style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div>
+        <label for="paciente" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Paciente</label>
+        <input id="paciente" [(ngModel)]="paciente" (keydown.enter)="cargarLista()" placeholder="Nombre del paciente"
+               style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <button type="button" (click)="cargarLista()" [disabled]="cargando"
+              style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #263c7a; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;"
+              [style.opacity]="cargando ? 0.7 : 1">
+        @if (cargando) {
+          <svg aria-hidden="true" style="animation: spin 1s linear infinite;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+          <span>Buscando...</span>
+        } @else {
+          <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          <span>Buscar</span>
+        }
+      </button>
+      <button type="button" (click)="abrirModal()"
+              style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #059669; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" /></svg>
+        <span>Nuevo</span>
+      </button>
+    </div>
+
+    @if (error) {
+      <div style="margin-top: 14px; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+        {{ error }}
+      </div>
+    }
+
+    @if (mensajeExito) {
+      <div style="margin-top: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+        {{ mensajeExito }}
+      </div>
+    }
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div style="overflow-x: auto;">
+      <app-tabla [columnas]="columnasTabla" [datos]="lista" [cargando]="cargando" mensajeCargando="Buscando..."
+                 [mostrarFiltroRequerido]="!buscado" mensajeFiltroRequerido="Realice una busqueda para ver la lista de espera quirurgica."
+                 mensajeVacio="No se encontraron registros para los filtros seleccionados.">
+
+        <ng-template appColumnaTemplate="nroHistoriaCustom" let-p>
+          <span style="font-weight: 600; color: #263c7a;">{{ campo(p, ['NroHistoriaClinica', 'nroHistoriaClinica']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="nroDocumentoCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['NroDocumento', 'nroDocumento']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="pacienteCustom" let-p>
+          <span style="font-weight: 600; color: #07153a;">{{ campo(p, ['Paciente', 'paciente']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="fechaNacimientoCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['FechaNacimiento', 'fechaNacimiento']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="fechaOrdenCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['FechaOrden', 'fechaOrden']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="observacionCustom" let-p>
+          <span style="color: #54617f;">{{ campo(p, ['Observacion', 'observacion']) || '—' }}</span>
+        </ng-template>
+
+      </app-tabla>
+    </div>
+  </div>
+
+  @if (modalAbierto) {
+    <ventana-modal titulo="Nueva Lista de Espera QX" subtitulo="Registrar paciente en espera quirurgica" [ancho]="820" (alCerrar)="cerrarModal()">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+        <div>
+          <label for="tipo-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo documento *</label>
+          <select id="tipo-documento" [(ngModel)]="form.idTipoDocumento"
+                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (doc of tiposDocumento; track doc.id) {
+              <option [ngValue]="doc.id">{{ doc.descripcion }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="nro-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Nro Documento *</label>
+          <input id="nro-documento" [(ngModel)]="form.nroDocumento" placeholder="Nro documento (Enter para buscar)"
+                 (keydown.enter)="buscarPorDocumento()" [disabled]="cargandoPaciente"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          @if (cargandoPaciente) {
+            <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #263c7a; font-weight: 600;">Buscando...</span>
+          }
+        </div>
+        <div>
+          <label for="apellido-paterno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido Paterno *</label>
+          <input id="apellido-paterno" [(ngModel)]="form.apellidoPaterno" placeholder="Apellido paterno"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="apellido-materno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido Materno</label>
+          <input id="apellido-materno" [(ngModel)]="form.apellidoMaterno" placeholder="Apellido materno"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="primer-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Primer Nombre *</label>
+          <input id="primer-nombre" [(ngModel)]="form.primerNombre" placeholder="Primer nombre"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="segundo-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Segundo Nombre</label>
+          <input id="segundo-nombre" [(ngModel)]="form.segundoNombre" placeholder="Segundo nombre"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-nacimiento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Nacimiento *</label>
+          <input id="fecha-nacimiento" type="date" [(ngModel)]="form.fechaNacimiento"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="sexo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Sexo *</label>
+          <select id="sexo" [(ngModel)]="form.idSexo"
+                  style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (sexo of tiposSexo; track sexo.id) {
+              <option [ngValue]="sexo.id">{{ sexo.descripcion }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="telefono" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Telefono</label>
+          <input id="telefono" [(ngModel)]="form.telefono" placeholder="Telefono"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="direccion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Direccion</label>
+          <input id="direccion" [(ngModel)]="form.direccion" placeholder="Direccion"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-orden" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Orden *</label>
+          <input id="fecha-orden" type="date" [(ngModel)]="form.fechaOrden"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div style="grid-column: span 3;">
+          <label for="diagnostico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Diagnostico</label>
+          <input id="diagnostico" [(ngModel)]="form.diagnostico" placeholder="Diagnostico"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-lab" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha Laboratorio</label>
+          <input id="fecha-lab" type="date" [(ngModel)]="form.fechaLaboratorio"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-ic-cardio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Cardio</label>
+          <input id="fecha-ic-cardio" type="date" [(ngModel)]="form.fechaICCardio"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-ic-neumo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Neumo</label>
+          <input id="fecha-ic-neumo" type="date" [(ngModel)]="form.fechaICNeumo"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="fecha-ic-anestesio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha IC Anestesio</label>
+          <input id="fecha-ic-anestesio" type="date" [(ngModel)]="form.fechaICAnestesio"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div style="grid-column: span 2; position: relative;">
+          <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Medico</label>
+          <input id="medico" [ngModel]="form.medico" (ngModelChange)="onMedicoInput($event)"
+                 (blur)="cerrarSugerenciasMedico()" placeholder="Escriba el nombre del medico..."
+                 autocomplete="off"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          @if (mostrarSugerenciasMedico && medicosFiltrados.length > 0) {
+            <div style="position: absolute; z-index: 100; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d5dceb; border-radius: 10px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              @for (med of medicosFiltrados; track med.idMedico) {
+                <div (mousedown)="seleccionarMedico(med)"
+                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; color: #07153a; border-bottom: 1px solid #f1f5f9;">
+                  {{ med.dmedico }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <label for="observacion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Observacion</label>
+        <textarea id="observacion" [(ngModel)]="form.observacion" rows="2" maxlength="255" placeholder="Observaciones"
+                  style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 10px; font-size: 14px; background: #f8fafc; color: #07153a; resize: vertical; font-family: inherit;"></textarea>
+      </div>
+
+      @if (errorGuardado) {
+        <div style="margin-top: 14px; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+          {{ errorGuardado }}
+        </div>
+      }
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px;">
+        <button type="button" (click)="cerrarModal()"
+                style="padding: 10px 20px; border: 1px solid #e0e6f1; border-radius: 11px; background: #fff; font-size: 14px; font-weight: 600; color: #54617f; cursor: pointer;">
+          Cancelar
+        </button>
+        <button type="button" (click)="guardar()" [disabled]="guardando"
+                style="padding: 10px 22px; background: #263c7a; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer;"
+                [style.opacity]="guardando ? 0.7 : 1">
+          {{ guardando ? 'Guardando...' : 'Grabar' }}
+        </button>
+      </div>
+    </ventana-modal>
+  }
+</div>

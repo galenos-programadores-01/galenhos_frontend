@@ -1,0 +1,94 @@
+<div class="w-full bg-transparent p-0 border-0 text-slate-100 flex flex-col lg:flex-row items-center gap-4 font-mono relative select-none">
+  
+  
+  <div class="relative flex-1 w-full bg-transparent overflow-hidden flex flex-col justify-center min-h-[160px] lg:min-h-[220px]">
+    
+    @if (mostrarEtiquetas) {
+      <div class="absolute top-0 left-0 z-10 text-[10px] font-extrabold neon-text-green tracking-wider bg-slate-950/40 px-1.5 py-0.5 rounded-br-md">
+        ECG II
+      </div>
+      <div class="absolute top-[37%] left-0 z-10 text-[10px] font-extrabold neon-text-cyan tracking-wider bg-slate-950/40 px-1.5 py-0.5 rounded-r-md">
+        SpO2
+      </div>
+      <div class="absolute top-[71%] left-0 z-10 text-[10px] font-extrabold neon-text-yellow tracking-wider bg-slate-950/40 px-1.5 py-0.5 rounded-r-md">
+        RESP
+      </div>
+    }
+
+    
+    <canvas #canvasEcg class="w-full h-full block bg-transparent min-h-[160px] lg:min-h-[220px]"></canvas>
+  </div>
+
+  
+  <div class="flex flex-wrap lg:flex-col items-start gap-3 shrink-0 p-0 font-mono">
+    
+    
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1.5 text-[11px] font-extrabold neon-text-green tracking-wider">
+        <svg aria-hidden="true" [class.scale-125]="esLatidoActivo" class="w-3.5 h-3.5 text-[#00ff66] drop-shadow-[0_0_8px_#00ff66] transition-transform duration-100 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        <span>ECG / FC</span>
+      </div>
+      <div class="flex items-baseline gap-1.5">
+        <span class="text-3xl sm:text-4xl font-black neon-text-green tracking-tight leading-none">
+          {{ frecuenciaActual }}
+        </span>
+        <span class="text-[10px] text-[#00ff66] font-sans font-bold">BPM</span>
+      </div>
+    </div>
+
+    
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1.5 text-[11px] font-extrabold neon-text-cyan tracking-wider">
+        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#00f0ff] drop-shadow-[0_0_8px_#00f0ff] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span>SpO2 %</span>
+      </div>
+      <div class="flex items-baseline gap-1.5">
+        <span class="text-3xl sm:text-4xl font-black neon-text-cyan tracking-tight leading-none">
+          {{ saturacionActual }}
+        </span>
+        <span class="text-[10px] text-[#00f0ff] font-sans font-bold">%</span>
+      </div>
+    </div>
+
+    
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1.5 text-[11px] font-extrabold neon-text-yellow tracking-wider">
+        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#ffea00] drop-shadow-[0_0_8px_#ffea00] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 12l3-3"/>
+        </svg>
+        <span>P.A. (NIBP)</span>
+      </div>
+      <div class="flex items-baseline">
+        <span class="text-2xl sm:text-3xl font-black neon-text-yellow tracking-tight leading-none">
+          {{ presionSistolicaActual }}/{{ presionDiastolicaActual }}
+        </span>
+      </div>
+    </div>
+
+    
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1.5 text-[11px] font-extrabold neon-text-pink tracking-wider">
+        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#ff0077] drop-shadow-[0_0_8px_#ff0077] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+        </svg>
+        <span>RESP / TEMP</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <div class="flex items-baseline gap-0.5">
+          <span class="text-2xl font-black neon-text-yellow leading-none">{{ frecuenciaRespiratoriaActual }}</span>
+          <span class="text-[9px] text-[#ffea00]">rpm</span>
+        </div>
+        <div class="flex items-baseline gap-0.5">
+          <span class="text-xl font-black neon-text-pink leading-none">{{ temperaturaActual }}</span>
+          <span class="text-[9px] text-[#ff0077]">°C</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

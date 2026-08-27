@@ -1,4 +1,3 @@
-
 @if (errorMessage()) {
   <div class="mb-5 flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-lg px-4 py-3">
     <svg aria-hidden="true" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,7 +15,6 @@
     {{ successMessage() }}
   </div>
 }
-
 
 <div class="mb-8" [formGroup]="ordenesGroup">
   <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
@@ -59,146 +57,10 @@
             </svg>
             Guardando...
           } @else {
-            Guardar Orden y Receta
+            Guardar Orden
           }
         </button>
       }
     </div>
   </div>
-</div>
-
-
-<div class="mb-8">
-  <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-    <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950">
-      <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
-        <path d="m8.5 8.5 7 7"></path>
-      </svg>
-      Prescripción médica (Receta)
-    </h3>
-    @if (authService.hasPermission('imprimir') || authService.hasPermission('agregar')) {
-      <button type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded text-[12.6px] font-semibold shadow-sm transition-colors flex items-center gap-1.5">
-        <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 6 2 18 2 18 9"></polyline>
-          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-          <rect x="6" y="14" width="12" height="8"></rect>
-        </svg>
-        Imprimir Receta
-      </button>
-    }
-  </div>
-  <div class="overflow-x-auto">
-    <app-tabla [columnas]="columnasPrescripcion" [datos]="prescripcionArray.controls" [cargando]="false"
-               mensajeVacio="No hay medicamentos en la prescripción.">
-
-      <ng-template appColumnaTemplate="medicamentoCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1.5 relative">
-          <input type="text" [id]="'medicamento_' + i" aria-label="Medicamento" formControlName="medicamento"
-            (input)="buscarMedicamento(i)" (focus)="buscarMedicamento(i)" (blur)="cerrarSugerencias()"
-            class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800"
-            placeholder="Escriba para buscar en el catálogo...">
-          @if (sugerencias().length > 0 && i === prescripcionArray.length - 1) {
-            <ul class="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border border-slate-200 rounded-md shadow-lg">
-              @for (p of sugerencias(); track p.idProducto) {
-                <li>
-                  <button type="button" class="w-full text-left px-3 py-2 hover:bg-teal-50 text-[12px] text-slate-700"
-                    (mousedown)="seleccionarProducto(i, p)">
-                    <span class="font-medium">{{ p.nombre }}</span>
-                    <span class="text-slate-400">{{ p.presentacion ? ' - ' + p.presentacion : '' }}</span>
-                    <span class="ml-1 text-teal-700">S/ {{ p.precioVenta.toFixed(2) }}</span>
-                  </button>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      </ng-template>
-
-      <ng-template appColumnaTemplate="cantidadCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1.5">
-          <input type="number" [id]="'cantidad_' + i" aria-label="Cantidad" formControlName="cantidad" class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800" placeholder="0">
-        </div>
-      </ng-template>
-
-      <ng-template appColumnaTemplate="indicacionesCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1.5">
-          <input type="text" [id]="'indicaciones_' + i" aria-label="Indicaciones" formControlName="indicaciones" class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800" placeholder="Tomar 1 tableta cada 8h por 3 días">
-        </div>
-      </ng-template>
-
-      <ng-template appColumnaTemplate="accionesCustom" let-ctrl let-i="index">
-        @if (authService.hasPermission('modificar') || authService.hasPermission('eliminar')) {
-          <button type="button" class="text-slate-400 hover:text-rose-600 transition-colors mt-2" (click)="removerPrescripcion(i)" title="Eliminar fila">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-          </button>
-        }
-      </ng-template>
-
-    </app-tabla>
-    @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
-      <button type="button" class="mt-3 bg-teal-50 text-teal-700 border border-dashed border-teal-500 px-3 py-2 rounded-lg text-[12.6px] font-semibold hover:bg-teal-100 transition-colors"
-        (click)="agregarPrescripcion()">+ Agregar prescripción</button>
-    }
-  </div>
-</div>
-
-
-<div class="mb-8">
-  <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
-    <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-      <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-      <path d="M9 12h6"></path>
-      <path d="M9 16h6"></path>
-    </svg>
-    Historial de Órdenes y Recetas
-  </h3>
-
-  @if (isLoading()) {
-    <div class="flex justify-center items-center py-8 gap-3 text-slate-500">
-      <svg aria-hidden="true" class="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span class="text-[13px]">Cargando órdenes...</span>
-    </div>
-  } @else if (ordenesPrevias().length === 0) {
-    <div class="flex flex-col items-center gap-3 py-8">
-      <svg aria-hidden="true" class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-        <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-        <path d="M9 12h6"></path>
-        <path d="M9 16h6"></path>
-      </svg>
-      <p class="text-slate-500 text-[13px] italic">No hay órdenes o recetas previas para esta atención.</p>
-    </div>
-  } @else {
-    <div class="overflow-x-auto">
-      <app-tabla [columnas]="columnasHistorial" [datos]="ordenesPrevias()" [cargando]="false"
-                 mensajeVacio="No hay órdenes o recetas previas para esta atención.">
-
-        <ng-template appColumnaTemplate="fechaCustom" let-orden>
-          <span class="font-mono text-[11.5px] text-slate-500">{{ orden.fechaOrden | date:'dd/MM/yyyy HH:mm' }}</span>
-        </ng-template>
-
-        <ng-template appColumnaTemplate="medicoCustom" let-orden>
-          <span class="font-medium">Dr. {{ orden.medico || '—' }}</span>
-        </ng-template>
-
-        <ng-template appColumnaTemplate="observacionCustom" let-orden>
-          <span class="text-slate-600">{{ orden.observacion || '-' }}</span>
-        </ng-template>
-
-        <ng-template appColumnaTemplate="itemsCustom" let-orden>
-          <ul class="list-disc pl-4 text-[11px] text-slate-600">
-            @for (det of orden.detalles; track det.idProducto) {
-              <li>{{ det.nombreProducto || det.indicaciones }} (Cant: {{ det.cantidad }})</li>
-            }
-          </ul>
-        </ng-template>
-
-      </app-tabla>
-    </div>
-  }
 </div>

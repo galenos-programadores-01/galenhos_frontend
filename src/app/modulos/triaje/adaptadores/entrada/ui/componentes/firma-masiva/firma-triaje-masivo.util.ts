@@ -1,5 +1,8 @@
 import type { jsPDF } from 'jspdf';
-import { type FirmaPeruBatido, iniciarFirmaLote } from './firma-peru.util';
+import {
+  type FirmaPeruBatido,
+  iniciarFirmaLote,
+} from '../../../../../../../compartido/utilidades/firma-peru.util';
 import {
   construirPdfTriaje,
   type DatosInstitucion,

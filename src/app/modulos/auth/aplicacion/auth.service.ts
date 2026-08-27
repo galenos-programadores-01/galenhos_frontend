@@ -1,9 +1,11 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { computed, Injectable, Injector, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiClientService } from '../../../compartido/api-client/api-client.service';
 import type {
   IAuthMenus,
   IMenu,
   IMenuPermiso,
+  IUserProfile,
 } from '../../../compartido/tipos/tipos';
 
 @Injectable({
@@ -11,15 +13,33 @@ import type {
 })
 export class AuthService {
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
   private readonly TOKEN_KEY = 'galenos.accessToken';
   private readonly USERNAME_KEY = 'galenos.username';
   private readonly MENUS_KEY = 'galenos.menus';
   private readonly PERMISOS_KEY = 'galenos.permisos';
+  private readonly PROFILE_KEY = 'galenos.profile';
 
   readonly isAuthenticated = signal<boolean>(!!this.getToken());
   readonly username = signal<string | null>(this.getStoredUsername());
   readonly menus = signal<IMenu[]>(this.getStoredMenus());
   readonly permisos = signal<IMenuPermiso[]>(this.getStoredPermisos());
+  readonly userProfile = signal<IUserProfile | null>(this.getStoredProfile());
+
+  readonly fotoUrl = computed<string | null>(() => {
+    const profile = this.userProfile();
+    if (!profile?.foto) return null;
+    const foto = profile.foto.trim();
+    if (!foto) return null;
+    if (
+      foto.startsWith('data:image/') ||
+      foto.startsWith('http://') ||
+      foto.startsWith('https://')
+    ) {
+      return foto;
+    }
+    return `data:image/jpeg;base64,${foto}`;
+  });
 
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
@@ -51,11 +71,39 @@ export class AuthService {
     return data ? JSON.parse(data) : [];
   }
 
+  getStoredProfile(): IUserProfile | null {
+    const data = localStorage.getItem(this.PROFILE_KEY);
+    return data ? JSON.parse(data) : null;
+  }
+
   setSession(token: string, username: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USERNAME_KEY, username);
     this.isAuthenticated.set(true);
     this.username.set(username);
+    this.cargarPerfil();
+  }
+
+  setProfile(profile: IUserProfile): void {
+    localStorage.setItem(this.PROFILE_KEY, JSON.stringify(profile));
+    this.userProfile.set(profile);
+  }
+
+  async cargarPerfil(): Promise<IUserProfile | null> {
+    if (!this.getToken()) return null;
+    try {
+      const api = this.injector.get(ApiClientService);
+      const profile = await api.request<IUserProfile>('/api/v1/auth/perfil', {
+        method: 'GET',
+      });
+      if (profile) {
+        this.setProfile(profile);
+        return profile;
+      }
+    } catch (err) {
+      console.warn('No se pudo cargar el perfil del operador:', err);
+    }
+    return null;
   }
 
   setMenus(authMenus: IAuthMenus): void {
@@ -70,8 +118,10 @@ export class AuthService {
     localStorage.removeItem(this.USERNAME_KEY);
     localStorage.removeItem(this.MENUS_KEY);
     localStorage.removeItem(this.PERMISOS_KEY);
+    localStorage.removeItem(this.PROFILE_KEY);
     this.isAuthenticated.set(false);
     this.username.set(null);
+    this.userProfile.set(null);
     this.menus.set([]);
     this.permisos.set([]);
   }

@@ -64,7 +64,7 @@ export class EvolucionService {
   public readonly page = signal<number>(1);
   public readonly totalPages = signal<number>(1);
   public readonly totalItems = signal<number>(0);
-  public readonly pageSize = signal<number>(7);
+  public readonly pageSize = signal<number>(6);
 
   public readonly activePatient = signal<PacienteItem | null>(null);
 
@@ -240,5 +240,35 @@ export class EvolucionService {
     this.activePatient.set(null);
     this.setViewMode('tray');
     this.cargarPacientes();
+  }
+
+  async obtenerBandeja(
+    fechaInicio?: string,
+    fechaFin?: string,
+    filtro?: string,
+  ) {
+    const params = new URLSearchParams();
+    if (fechaInicio) params.set('fechaInicio', fechaInicio);
+    if (fechaFin) params.set('fechaFin', fechaFin);
+    if (filtro) params.set('filtro', filtro);
+
+    return this.api.request<Record<string, unknown>[]>(
+      `/api/v1/evoluciones/bandeja?${params.toString()}`,
+      { method: 'GET' },
+      true,
+    );
+  }
+
+  async guardarEvolucionMedica(
+    datos: Record<string, unknown>,
+  ): Promise<{ idEvolucion: number; mensaje: string }> {
+    return this.api.request<{ idEvolucion: number; mensaje: string }>(
+      '/api/v1/evoluciones/registro',
+      {
+        method: 'POST',
+        body: JSON.stringify(datos),
+      },
+      true,
+    );
   }
 }

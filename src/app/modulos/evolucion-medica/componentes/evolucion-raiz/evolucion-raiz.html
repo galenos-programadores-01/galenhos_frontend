@@ -2,16 +2,6 @@
   <ng-template #headerActions>
     <div class="flex gap-2 items-center">
       @if (evolucionService.viewMode() !== 'tray') {
-        <button
-          type="button"
-          (click)="evolucionService.setViewMode('tray')"
-          class="group flex items-center gap-2 font-semibold text-[13px] px-4 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:text-[#0f766e] hover:border-[#0f766e]/30 hover:bg-[#0f766e]/5 hover:shadow-[0_2px_8px_rgba(15,118,110,0.08)] transition-all duration-200"
-        >
-          <svg aria-hidden="true" class="w-4 h-4 text-slate-400 group-hover:text-[#0f766e] group-hover:-translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Volver a bandeja
-        </button>
         @if (authService.hasPermission('imprimir')) {
           <button
             type="button"
