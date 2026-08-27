@@ -33,10 +33,10 @@
 
         <div class="flex flex-col">
           <label for="ic-especialidad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Especialidad:</label>
-          <app-select-global id="ic-especialidad" formControlName="idEspecialidad">
+          <app-select-global id="ic-especialidad" formControlName="IdEspecialidad" (change)="onEspecialidadChange($event)">
             <option value="">--SELECCIONAR--</option>
-            @for (esp of especialidades(); track esp.idEspecialidad) {
-              <option [value]="esp.idEspecialidad">{{ esp.nombre }}</option>
+            @for (esp of especialidades(); track esp.IdEspecialidad) {
+              <option [value]="esp.IdEspecialidad">{{ esp.nombre }}</option>
             }
           </app-select-global>
         </div>
@@ -132,7 +132,7 @@
           </ng-template>
 
           <ng-template appColumnaTemplate="especialidadCustom" let-ic>
-            <span class="font-medium text-slate-800">{{ obtenerNombreEspecialidad(ic.idEspecialidad) }}</span>
+            <span class="font-medium text-slate-800">{{ obtenerNombreEspecialidad(ic.IdEspecialidad) }}</span>
           </ng-template>
 
           <ng-template appColumnaTemplate="motivoCustom" let-ic>

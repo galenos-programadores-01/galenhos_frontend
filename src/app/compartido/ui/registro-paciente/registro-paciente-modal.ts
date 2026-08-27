@@ -37,11 +37,12 @@ export class RegistroPacienteModal implements OnChanges {
   async ngOnChanges(cambios: SimpleChanges): Promise<void> {
     if (cambios.abierto?.currentValue === true) {
       this.srv.limpiarEstado();
-      this.srv.cargarCatalogos();
+      await this.srv.cargarCatalogos();
+      await this.srv.verificarParametro296();
       if (this.pacienteId) {
         await this.srv.cargarPaciente(this.pacienteId);
-        this.cdr.detectChanges();
       }
+      this.cdr.detectChanges();
     }
   }
 

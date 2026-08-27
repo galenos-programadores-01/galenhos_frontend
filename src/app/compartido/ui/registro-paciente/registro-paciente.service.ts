@@ -40,6 +40,8 @@ export class RegistroPacienteService {
   error = '';
   aviso = '';
   catalogoCargado = false;
+  reniecConsumido = false;
+  camposBloqueados = false;
 
   private detalleOriginal: Record<string, unknown> | null = null;
 
@@ -80,6 +82,8 @@ export class RegistroPacienteService {
     Object.assign(this.form, formVacio());
     this.error = '';
     this.aviso = '';
+    this.reniecConsumido = false;
+    this.camposBloqueados = false;
     this.depNacimientoSel = '';
     this.provNacimientoSel = '';
     this.depProcedenciaSel = '';
@@ -228,6 +232,22 @@ export class RegistroPacienteService {
       this.error = 'Ingrese el número de documento para consultar a RENIEC.';
       return;
     }
+
+    if (this.form.idDocIdentidad !== '1') {
+      return;
+    }
+
+    try {
+      const param = await this.maestrosApi.getParametro(296);
+      const paramArr = Array.isArray(param) ? param : [param];
+      const parametro = paramArr[0];
+      if (parametro?.valorTexto !== 'S') {
+        return;
+      }
+    } catch {
+      return;
+    }
+
     if (!/^\d{8}$/.test(dni)) {
       this.error =
         'RENIEC solo consulta DNI de 8 dígitos. Verifique el número.';
@@ -280,6 +300,10 @@ export class RegistroPacienteService {
           this.provNacimientoSel,
         );
       }
+      this.reniecConsumido = true;
+      this.camposBloqueados = true;
+      this.aviso =
+        'Datos cargados desde RENIEC. Los campos se encuentran bloqueados.';
     } catch (err: unknown) {
       this.error =
         err instanceof ApiRequestError
@@ -287,6 +311,27 @@ export class RegistroPacienteService {
           : 'No se pudo consultar a RENIEC.';
     } finally {
       this.consultandoReniec = false;
+    }
+  }
+
+  async onCambioTipoDocumento(): Promise<void> {
+    this.reniecConsumido = false;
+    this.aviso = '';
+    if (this.form.idDocIdentidad !== '1') {
+      this.camposBloqueados = false;
+      return;
+    }
+    await this.verificarParametro296();
+  }
+
+  async verificarParametro296(): Promise<void> {
+    try {
+      const param = await this.maestrosApi.getParametro(296);
+      const paramArr = Array.isArray(param) ? param : [param];
+      const parametro = paramArr[0];
+      this.camposBloqueados = parametro?.valorTexto === 'S';
+    } catch {
+      this.camposBloqueados = false;
     }
   }
 
