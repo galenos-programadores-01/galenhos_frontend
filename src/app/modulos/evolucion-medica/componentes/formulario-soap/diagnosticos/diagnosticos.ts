@@ -13,10 +13,13 @@ import {
   type FormGroup,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { AuthService } from '../../../../auth/aplicacion/auth.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { EvolucionService, type DiagnosticoBusqueda } from '../../../servicios/evolucion.service';
+import { AuthService } from '../../../../auth/aplicacion/auth.service';
+import {
+  type DiagnosticoBusqueda,
+  EvolucionService,
+} from '../../../servicios/evolucion.service';
 
 export interface DxForm {
   cie10: FormControl<string | null>;
@@ -31,6 +34,7 @@ import {
   type ColumnaTabla,
   TablaComponent,
 } from '../../../../../compartido/componentes/tabla/tabla.component';
+import { SelectGlobalComponent } from '../../../../../compartido/ui/select-global/select-global';
 import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/error-mensaje.component';
 
 @Component({
@@ -39,6 +43,7 @@ import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/e
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    SelectGlobalComponent,
     ErrorMensajeComponent,
     TablaComponent,
     ColumnaTemplateDirective,
@@ -56,15 +61,18 @@ export class DiagnosticosComponent {
   public readonly searchResults = signal<DiagnosticoBusqueda[]>([]);
   public readonly isSearching = signal(false);
 
-  private readonly searchSubject = new Subject<{ texto: string; index: number }>();
+  private readonly searchSubject = new Subject<{
+    texto: string;
+    index: number;
+  }>();
 
   constructor() {
     this.searchSubject
       .pipe(
         debounceTime(300),
-        distinctUntilChanged((prev, curr) => prev.texto === curr.texto)
+        distinctUntilChanged((prev, curr) => prev.texto === curr.texto),
       )
-      .subscribe(async ({ texto, index }) => {
+      .subscribe(async ({ texto }) => {
         if (!texto || texto.length < 2) {
           this.searchResults.set([]);
           this.isSearching.set(false);
@@ -75,14 +83,22 @@ export class DiagnosticosComponent {
         const paciente = this.evolucionService.activePatient();
         const idAtencion = paciente?.idRegAtencion || 0;
         const idPaciente = paciente?.idPaciente || 0;
-        const resultados = await this.evolucionService.buscarDiagnosticos(texto, idAtencion, idPaciente);
+        const resultados = await this.evolucionService.buscarDiagnosticos(
+          texto,
+          idAtencion,
+          idPaciente,
+        );
         this.searchResults.set(resultados);
         this.isSearching.set(false);
       });
   }
 
   columnasDiagnosticos: ColumnaTabla[] = [
-    { campo: 'detallesCustom', cabecera: 'Detalles del Diagnóstico', ancho: 'auto' },
+    {
+      campo: 'detallesCustom',
+      cabecera: 'Detalles del Diagnóstico',
+      ancho: 'auto',
+    },
     {
       campo: 'accionesCustom',
       cabecera: '',

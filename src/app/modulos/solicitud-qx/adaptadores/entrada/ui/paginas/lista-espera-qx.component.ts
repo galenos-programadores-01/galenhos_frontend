@@ -1,11 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, type OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  type OnInit,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
 import { MaestrosApiService } from '../../../../../../compartido/api/maestros.api.service';
+import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
 import { ColumnaTemplateDirective } from '../../../../../../compartido/componentes/tabla/columna-template.directive';
-import { type ColumnaTabla, TablaComponent } from '../../../../../../compartido/componentes/tabla/tabla.component';
-import type { ICatalogoDescripcion, IFilaBackend, IPaciente } from '../../../../../../compartido/tipos/api-tipos';
+import {
+  type ColumnaTabla,
+  TablaComponent,
+} from '../../../../../../compartido/componentes/tabla/tabla.component';
+import type {
+  ICatalogoDescripcion,
+  IFilaBackend,
+  IPaciente,
+} from '../../../../../../compartido/tipos/api-tipos';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { PacientesApiService } from '../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
@@ -14,7 +26,10 @@ import {
   type MedicoListaEspera,
 } from '../../../salida/http/lista-espera-qx.api.service';
 
-function campo(item: IFilaBackend | null | undefined, claves: string[]): string {
+function campo(
+  item: IFilaBackend | null | undefined,
+  claves: string[],
+): string {
   if (!item) return '';
   for (const k of claves) {
     const v = item[k];
@@ -77,7 +92,13 @@ function formVacio(): FormListaEsperaQx {
 @Component({
   selector: 'app-lista-espera-qx',
   standalone: true,
-  imports: [FormsModule, CommonModule, TablaComponent, ColumnaTemplateDirective, VentanaModal],
+  imports: [
+    FormsModule,
+    CommonModule,
+    TablaComponent,
+    ColumnaTemplateDirective,
+    VentanaModal,
+  ],
   templateUrl: './lista-espera-qx.component.html',
 })
 export class ListaEsperaQxComponent implements OnInit {
@@ -202,12 +223,12 @@ export class ListaEsperaQxComponent implements OnInit {
           const fecha = new Date(paciente.dateOfBirth);
           this.form.fechaNacimiento = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getDate().toString().padStart(2, '0')}`;
         }
-        const sexId = paciente['sexTypeId'];
+        const sexId = paciente.sexTypeId;
         if (sexId !== undefined && sexId !== null) {
           this.form.idSexo = Number(sexId);
         }
-        this.form.telefono = (paciente['phone'] as string) ?? '';
-        this.form.direccion = (paciente['homeAddress'] as string) ?? '';
+        this.form.telefono = (paciente.phone as string) ?? '';
+        this.form.direccion = (paciente.homeAddress as string) ?? '';
       }
     } catch {
       // Paciente no encontrado
@@ -224,15 +245,19 @@ export class ListaEsperaQxComponent implements OnInit {
       this.mostrarSugerenciasMedico = false;
       return;
     }
-    this.medicosFiltrados = this.medicos.filter(m =>
-      (m.dmedico ?? `${m.apellidoPaterno} ${m.apellidoMaterno} ${m.nombres}`).toLowerCase().includes(texto),
+    this.medicosFiltrados = this.medicos.filter((m) =>
+      (m.dmedico ?? `${m.apellidoPaterno} ${m.apellidoMaterno} ${m.nombres}`)
+        .toLowerCase()
+        .includes(texto),
     );
     this.mostrarSugerenciasMedico = this.medicosFiltrados.length > 0;
   }
 
   seleccionarMedico(medico: MedicoListaEspera) {
     this.idMedico = medico.idMedico;
-    this.form.medico = medico.dmedico ?? `${medico.apellidoPaterno} ${medico.apellidoMaterno} ${medico.nombres}`;
+    this.form.medico =
+      medico.dmedico ??
+      `${medico.apellidoPaterno} ${medico.apellidoMaterno} ${medico.nombres}`;
     this.mostrarSugerenciasMedico = false;
     this.medicosFiltrados = [];
   }
@@ -249,7 +274,15 @@ export class ListaEsperaQxComponent implements OnInit {
   }
 
   async guardar() {
-    if (!this.form.idTipoDocumento || !this.form.nroDocumento.trim() || !this.form.apellidoPaterno.trim() || !this.form.primerNombre.trim() || !this.form.fechaNacimiento || !this.form.idSexo || !this.form.fechaOrden) {
+    if (
+      !this.form.idTipoDocumento ||
+      !this.form.nroDocumento.trim() ||
+      !this.form.apellidoPaterno.trim() ||
+      !this.form.primerNombre.trim() ||
+      !this.form.fechaNacimiento ||
+      !this.form.idSexo ||
+      !this.form.fechaOrden
+    ) {
       this.errorGuardado = 'Los campos con * son obligatorios.';
       return;
     }
@@ -280,7 +313,8 @@ export class ListaEsperaQxComponent implements OnInit {
         observacion: this.form.observacion.trim(),
       });
       this.modalAbierto = false;
-      this.mensajeExito = 'Paciente registrado en lista de espera quirurgica correctamente.';
+      this.mensajeExito =
+        'Paciente registrado en lista de espera quirurgica correctamente.';
       setTimeout(() => (this.mensajeExito = ''), 5000);
       this.cargarLista();
     } catch (error: unknown) {

@@ -75,3 +75,14 @@ export interface IAuthMenus {
   menus: IMenu[];
   permisos: IMenuPermiso[];
 }
+
+export interface IUserProfile {
+  idEmpleado: number;
+  username: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  nombreCompleto: string;
+  foto: string;
+  rol?: string;
+}

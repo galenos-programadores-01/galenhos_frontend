@@ -72,7 +72,7 @@ export async function construirPdfTriaje(
   const v = (x: string | number | null | undefined) =>
     x === null || x === undefined || x === '' ? '—' : String(x);
   const direccion = c.Direccion
-    ? c.Direccion + (c.Distrito ? ', ' + c.Distrito : '')
+    ? c.Direccion + (c.Distrito ? `, ${c.Distrito}` : '')
     : '—';
   const motivo = c.sintoma_principal ?? '—';
 

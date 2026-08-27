@@ -1,73 +1,90 @@
 @if (evolucionService.activePatient(); as paciente) {
 
-<!-- Barra de metadatos de la evolución -->
-<div class="bg-white border-b border-slate-200 -mt-4 md:-mt-6 lg:-mt-8 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 py-3 shadow-sm relative z-10 flex flex-wrap items-center gap-x-8 gap-y-3">
-  
-  <!-- Fecha y hora -->
-  <div class="flex items-center gap-2 shrink-0">
-    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-      <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+<div class="flex flex-col gap-6">
+
+  <!-- Barra de metadatos de la evolución (FIJA ARRIBA AL HACER SCROLL) -->
+  <div class="bg-white rounded-2xl border border-slate-200 px-6 py-4 shadow-sm flex flex-wrap items-center justify-between gap-y-3 gap-x-4 sticky top-0 z-20">
+    
+    <!-- Botón Volver a bandeja (esquina izquierda) -->
+    <button
+      type="button"
+      (click)="evolucionService.setViewMode('tray')"
+      class="group flex items-center gap-2 font-semibold text-[13px] px-3.5 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:text-[#0f766e] hover:border-[#0f766e]/30 hover:bg-[#0f766e]/5 hover:shadow-[0_2px_8px_rgba(15,118,110,0.08)] transition-all duration-200 shrink-0 cursor-pointer"
+    >
+      <svg aria-hidden="true" class="w-4 h-4 text-slate-400 group-hover:text-[#0f766e] group-hover:-translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      <span>Volver a bandeja</span>
+    </button>
+
+    <!-- Items de metadatos centrados -->
+    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 flex-1">
+      <!-- Fecha y hora -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+          <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        </div>
+        <div class="flex flex-col justify-center">
+          <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Fecha y hora</span>
+          <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ fechaEvolucion }} {{ horaEvolucion }}</span>
+        </div>
+      </div>
+
+      <!-- Médico tratante -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+          <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+        </div>
+        <div class="flex flex-col justify-center">
+          <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Médico tratante</span>
+          <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ authService.username() ?? '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Especialidad -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+          <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        </div>
+        <div class="flex flex-col justify-center">
+          <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Especialidad</span>
+          <span class="font-bold text-[13px] text-[#07153a] leading-none">Medicina General</span>
+        </div>
+      </div>
+
+      <!-- Servicio -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+          <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+        </div>
+        <div class="flex flex-col justify-center">
+          <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Servicio</span>
+          <span class="font-bold text-[13px] text-[#07153a] leading-none truncate max-w-[200px]">{{ paciente.ubicacion || '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Cama -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+          <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        </div>
+        <div class="flex flex-col justify-center">
+          <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Cama</span>
+          <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ paciente.cama || '—' }}</span>
+        </div>
+      </div>
     </div>
-    <div class="flex flex-col justify-center">
-      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Fecha y hora</span>
-      <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ fechaEvolucion }} {{ horaEvolucion }}</span>
-    </div>
+
   </div>
 
-  <!-- Médico tratante -->
-  <div class="flex items-center gap-2 shrink-0">
-    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-      <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-    </div>
-    <div class="flex flex-col justify-center">
-      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Médico tratante</span>
-      <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ authService.username() ?? '—' }}</span>
-    </div>
-  </div>
+  <!-- Layout principal: sidebar + contenido -->
+  <div class="grid grid-cols-1 md:grid-cols-[256px_1fr] gap-6 items-start">
 
-  <!-- Especialidad -->
-  <div class="flex items-center gap-2 shrink-0">
-    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-      <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-    </div>
-    <div class="flex flex-col justify-center">
-      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Especialidad</span>
-      <span class="font-bold text-[13px] text-[#07153a] leading-none">Medicina General</span>
-    </div>
-  </div>
-
-  <!-- Servicio -->
-  <div class="flex items-center gap-2 shrink-0">
-    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-      <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-    </div>
-    <div class="flex flex-col justify-center">
-      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Servicio</span>
-      <span class="font-bold text-[13px] text-[#07153a] leading-none truncate max-w-[200px]">{{ paciente.ubicacion || '—' }}</span>
-    </div>
-  </div>
-
-  <!-- Cama -->
-  <div class="flex items-center gap-2 shrink-0">
-    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-      <svg aria-hidden="true" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-    </div>
-    <div class="flex flex-col justify-center">
-      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Cama</span>
-      <span class="font-bold text-[13px] text-[#07153a] leading-none">{{ paciente.cama || '—' }}</span>
-    </div>
-  </div>
-
-</div>
-
-<!-- Layout: sidebar de navegación + área de contenido -->
-<div class="grid grid-cols-1 md:grid-cols-[256px_1fr] min-h-[calc(100vh-170px)] -mx-4 md:-mx-6 lg:-mx-8">
-
-  <!-- ─── Sidebar de navegación SOAP ─── -->
-  <nav class="bg-white border-r border-slate-200 py-4 flex flex-col overflow-y-auto shadow-sm">
+    <!-- ─── Sidebar de navegación SOAP ─── -->
+    <nav class="bg-white rounded-2xl border border-slate-200 py-4 flex flex-col shadow-sm shrink-0 md:sticky md:top-[97px] self-start w-full md:w-[256px]">
 
     <!-- Paciente resumido en el sidebar -->
-    <div class="px-4 pb-4 mb-2 border-b border-slate-100">
+    <div class="px-4 pb-4 mb-2 border-b border-slate-100 text-center">
       <p class="text-[10px] font-bold uppercase tracking-widest text-[#54617f] mb-1">Evolucionando a</p>
       <p class="text-[13px] font-bold text-[#07153a] leading-tight truncate">{{ paciente.nombre }}</p>
       <p class="text-[11px] text-[#54617f] font-mono">Cama {{ paciente.cama }} · HC {{ paciente.historia }}</p>
@@ -107,18 +124,18 @@
       </button>
     </div>
 
-    <!-- Grupo: Método SOAP -->
+    <!-- Grupo: Evolución clínica -->
     <div class="mb-1">
       <div class="px-4 py-2 flex items-center gap-2">
         <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Método SOAP</span>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Evolución clínica</span>
       </div>
       @for (item of [
-        {id: 'p3', num: 'S', label: 'Subjetivo', desc: 'Síntomas referidos'},
-        {id: 'p4', num: 'O', label: 'Objetivo', desc: 'Signos vitales y examen físico'},
-        {id: 'p5', num: 'R', label: 'Resultados', desc: 'Exámenes del expediente'},
-        {id: 'p6', num: 'A', label: 'Evaluación', desc: 'Diagnósticos'},
-        {id: 'p7', num: 'P', label: 'Plan', desc: 'Tratamiento e indicaciones'}
+        {id: 'p3', num: '3', label: 'Subjetivo', desc: 'Síntomas referidos'},
+        {id: 'p4', num: '4', label: 'Objetivo', desc: 'Signos vitales y examen físico'},
+        {id: 'p5', num: '5', label: 'Resultados', desc: 'Exámenes del expediente'},
+        {id: 'p6', num: '6', label: 'Evaluación', desc: 'Diagnósticos'},
+        {id: 'p7', num: '7', label: 'Plan', desc: 'Tratamiento e indicaciones'}
       ]; track item.id) {
         <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
           [class.bg-blue-50]="activePanel() === item.id" [class.border-[#263c7a]]="activePanel() === item.id"
@@ -128,7 +145,7 @@
           (click)="activarPanel(item.id)">
           <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
             [class.bg-[#263c7a]]="activePanel() === item.id" [class.text-white]="activePanel() === item.id"
-            [class.bg-amber-100]="activePanel() !== item.id" [class.text-amber-700]="activePanel() !== item.id">
+            [class.bg-slate-200]="activePanel() !== item.id" [class.text-[#54617f]]="activePanel() !== item.id">
             {{ item.num }}
           </span>
           {{ item.label }}
@@ -139,12 +156,12 @@
     <!-- Grupo: Documentación -->
     <div class="mb-1">
       <div class="px-4 py-2 flex items-center gap-2">
-        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/></svg>
+        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2h11l5 5v14a2 2 0 01-2 2z"/></svg>
         <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Documentación</span>
       </div>
       @for (item of [
-        {id: 'p9', num: '9', label: 'Alta médica'},
-        {id: 'p14', num: '14', label: 'Adjuntos'}
+        {id: 'p9', num: '8', label: 'Alta médica'},
+        {id: 'p14', num: '9', label: 'Adjuntos'}
       ]; track item.id) {
         <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
           [class.bg-blue-50]="activePanel() === item.id" [class.border-[#263c7a]]="activePanel() === item.id"
@@ -163,35 +180,33 @@
     </div>
 
     <!-- Grupo: Cierre -->
-    <div class="mt-auto">
-      <div class="border-t border-slate-100 pt-2">
-        <div class="px-4 py-2 flex items-center gap-2">
-          <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Cierre</span>
-        </div>
-        <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
-          [class.bg-blue-50]="activePanel() === 'p15'" [class.border-[#263c7a]]="activePanel() === 'p15'"
-          [class.text-[#263c7a]]="activePanel() === 'p15'" [class.font-semibold]="activePanel() === 'p15'"
-          [class.border-transparent]="activePanel() !== 'p15'" [class.text-[#54617f]]="activePanel() !== 'p15'"
-          [class.hover:bg-slate-50]="activePanel() !== 'p15'"
-          (click)="activarPanel('p15')">
-          <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
-            [class.bg-[#0f766e]]="activePanel() === 'p15'" [class.text-white]="activePanel() === 'p15'"
-            [class.bg-emerald-100]="activePanel() !== 'p15'" [class.text-emerald-700]="activePanel() !== 'p15'">
-            ✓
-          </span>
-          Firma y auditoría
-        </button>
+    <div class="mt-4">
+      <div class="px-4 py-2 flex items-center gap-2">
+        <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Cierre</span>
       </div>
+      <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+        [class.bg-blue-50]="activePanel() === 'p15'" [class.border-[#263c7a]]="activePanel() === 'p15'"
+        [class.text-[#263c7a]]="activePanel() === 'p15'" [class.font-semibold]="activePanel() === 'p15'"
+        [class.border-transparent]="activePanel() !== 'p15'" [class.text-[#54617f]]="activePanel() !== 'p15'"
+        [class.hover:bg-slate-50]="activePanel() !== 'p15'"
+        (click)="activarPanel('p15')">
+        <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+          [class.bg-[#0f766e]]="activePanel() === 'p15'" [class.text-white]="activePanel() === 'p15'"
+          [class.bg-emerald-100]="activePanel() !== 'p15'" [class.text-emerald-700]="activePanel() !== 'p15'">
+          ✓
+        </span>
+        Firma y auditoría
+      </button>
     </div>
   </nav>
 
   <!-- ─── Área de contenido de cada sección ─── -->
-  <div class="p-6 md:p-8 pb-16 bg-[#f1f5f9]" [formGroup]="soapForm">
+  <div class="flex-1 min-w-0" [formGroup]="soapForm">
 
     <!-- SECCIÓN 01: Información general -->
     @if (activePanel() === 'p1') {
-      <section class="animate-in fade-in duration-300 w-full">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           
@@ -244,7 +259,7 @@
 
     <!-- SECCIÓN 02: Apreciación clínica -->
     @if (activePanel() === 'p2') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">02</div>
@@ -262,12 +277,11 @@
 
     <!-- SECCIÓN S: Subjetivo -->
     @if (activePanel() === 'p3') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-amber-100 flex items-center gap-3 bg-amber-50">
-            <div class="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0">S</div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">03</div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-0.5">Método SOAP — Sección 03</div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Subjetivo</h2>
               <p class="text-[12px] text-[#54617f]">Lo que refiere el paciente</p>
             </div>
@@ -296,7 +310,6 @@
                   <div class="border-b border-slate-100 last:border-b-0">
                     <button type="button" (click)="toggleGrupoSintomas(grupo.clave)"
                       class="w-full flex items-center gap-3 px-5 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors cursor-pointer">
-                      <span class="w-1 h-4 bg-amber-500 rounded-sm shrink-0"></span>
                       <span class="font-semibold text-[13px] text-[#07153a] flex-1">{{ grupo.etiqueta }}</span>
                       <span class="text-[11px] text-[#54617f] font-medium">
                         {{ contarSintomasSistema(grupo.clave) }} sel.
@@ -346,12 +359,11 @@
                   placeholder="Escribir síntoma nuevo..."
                   class="flex-1 min-w-[160px] border border-slate-200 rounded-lg px-3 py-2 text-[13px] text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a]">
                 <label for="nuevo-sintoma-sistema" class="sr-only">Sistema del síntoma</label>
-                <select id="nuevo-sintoma-sistema" [(ngModel)]="nuevoSintomaSistema" [ngModelOptions]="{standalone: true}"
-                  class="border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/30 cursor-pointer">
+                <app-select-global id="nuevo-sintoma-sistema" [(ngModel)]="nuevoSintomaSistema" [ngModelOptions]="{standalone: true}">
                   @for (grupo of sintomasPorSistema(); track grupo.clave) {
                     <option [value]="grupo.clave">{{ grupo.etiqueta }}</option>
                   }
-                </select>
+                </app-select-global>
                 <button type="button" (click)="agregarSintomaNuevo()"
                   class="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-lg text-[13px] transition-colors cursor-pointer whitespace-nowrap">
                   + Agregar
@@ -380,12 +392,11 @@
 
     <!-- SECCIÓN O: Objetivo -->
     @if (activePanel() === 'p4') {
-      <section class="animate-in fade-in duration-300 max-w-4xl space-y-5">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full space-y-5">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-blue-50 flex items-center gap-3 bg-blue-50">
-            <div class="w-8 h-8 rounded-xl bg-[#263c7a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">O</div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">04</div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-[#263c7a] mb-0.5">Método SOAP — Sección 04</div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Objetivo</h2>
               <p class="text-[12px] text-[#54617f]">Signos vitales y hallazgos del examen físico</p>
             </div>
@@ -402,7 +413,7 @@
 
     <!-- SECCIÓN: Resultados -->
     @if (activePanel() === 'p5') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
             <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">05</div>
@@ -420,12 +431,11 @@
 
     <!-- SECCIÓN A: Evaluación -->
     @if (activePanel() === 'p6') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-teal-50 flex items-center gap-3 bg-teal-50">
-            <div class="w-8 h-8 rounded-xl bg-[#0f766e] flex items-center justify-center text-white text-[11px] font-bold shrink-0">A</div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">06</div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-[#0f766e] mb-0.5">Método SOAP — Sección 06</div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Evaluación</h2>
               <p class="text-[12px] text-[#54617f]">Interpretación clínica y diagnósticos</p>
             </div>
@@ -434,17 +444,20 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" formGroupName="evaluacion">
               <div class="flex flex-col gap-1.5">
                 <label for="evaluacion-estado-clinico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Estado clínico</label>
-                <select id="evaluacion-estado-clinico" formControlName="estadoClinico"
-                  class="w-full border border-slate-200 rounded-xl p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none cursor-pointer">
-                  <option>Mejoría</option><option>Estacionario</option><option>Empeoramiento</option><option>Resuelto</option>
-                </select>
+                <app-select-global id="evaluacion-estado-clinico" formControlName="estadoClinico">
+                  <option value="Mejoría">Mejoría</option>
+                  <option value="Estacionario">Estacionario</option>
+                  <option value="Empeoramiento">Empeoramiento</option>
+                  <option value="Resuelto">Resuelto</option>
+                </app-select-global>
               </div>
               <div class="flex flex-col gap-1.5">
                 <label for="evaluacion-pronostico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Pronóstico</label>
-                <select id="evaluacion-pronostico" formControlName="pronostico"
-                  class="w-full border border-slate-200 rounded-xl p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none cursor-pointer">
-                  <option>Bueno</option><option>Reservado</option><option>Malo</option>
-                </select>
+                <app-select-global id="evaluacion-pronostico" formControlName="pronostico">
+                  <option value="Bueno">Bueno</option>
+                  <option value="Reservado">Reservado</option>
+                  <option value="Malo">Malo</option>
+                </app-select-global>
               </div>
             </div>
             <div class="pt-6 border-t border-slate-100">
@@ -466,12 +479,11 @@
 
     <!-- SECCIÓN P: Plan -->
     @if (activePanel() === 'p7') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-purple-50 flex items-center gap-3 bg-purple-50">
-            <div class="w-8 h-8 rounded-xl bg-purple-700 flex items-center justify-center text-white text-[11px] font-bold shrink-0">P</div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">07</div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-purple-700 mb-0.5">Método SOAP — Sección 07</div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Plan</h2>
               <p class="text-[12px] text-[#54617f]">Tratamiento, procedimientos y exámenes</p>
             </div>
@@ -483,12 +495,12 @@
       </section>
     }
 
-    <!-- SECCIÓN 09: Órdenes médicas -->
+    <!-- SECCIÓN 08: Órdenes médicas / Alta médica -->
     @if (activePanel() === 'p9') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">09</div>
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">08</div>
             <div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Alta Medica</h2>
               <p class="text-[12px] text-[#54617f]">Integrada con farmacia para dispensación directa</p>
@@ -501,15 +513,12 @@
       </section>
     }
 
-
-
-
-    <!-- SECCIÓN 14: Adjuntos -->
+    <!-- SECCIÓN 09: Adjuntos -->
     @if (activePanel() === 'p14') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">14</div>
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">09</div>
             <div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Adjuntos</h2>
             </div>
@@ -521,45 +530,56 @@
       </section>
     }
 
+
     <!-- SECCIÓN 15: Firma y auditoría -->
     @if (activePanel() === 'p15') {
-      <section class="animate-in fade-in duration-300 max-w-4xl">
+      <section class="animate-in fade-in duration-300 max-w-5xl w-full">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-emerald-50 flex items-center gap-3 bg-emerald-50">
-            <div class="w-8 h-8 rounded-xl bg-[#0f766e] flex items-center justify-center text-white shrink-0">
-              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-              </svg>
-            </div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">10</div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-[#0f766e] mb-0.5">Sección 15 — Cierre</div>
               <h2 class="font-bold text-[15px] text-[#07153a]">Firma y auditoría</h2>
-              <p class="text-[12px] text-[#54617f]">Al firmar, la evolución queda bloqueada con validez legal</p>
+              <p class="text-[12px] text-[#54617f]">Al firmar, se genera un PDF que será firmado digitalmente con su DNIe</p>
             </div>
           </div>
           <div class="p-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- Firma digital -->
+              <!-- Firma Perú (DNIe) -->
               <div class="flex flex-col">
-                <h3 class="text-[12px] font-bold uppercase tracking-wider text-[#07153a] mb-4 pb-2 border-b border-slate-100">Firma digital</h3>
-                <app-firma-digital (firmaCambio)="onFirmaCambio($event)" />
+                <h3 class="text-[12px] font-bold uppercase tracking-wider text-[#07153a] mb-4 pb-2 border-b border-slate-100">Firma digital con DNIe</h3>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                  <div class="flex items-start gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-[#0f766e]/10 flex items-center justify-center shrink-0">
+                      <svg aria-hidden="true" class="w-5 h-5 text-[#0f766e]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-[13px] font-semibold text-[#07153a]">Firma Perú — DNIe</p>
+                      <p class="text-[12px] text-[#54617f] mt-1">Se generará un PDF con la evolución completa y se abrirá el Firmador de Firma Perú. Ingrese su PIN del DNIe una sola vez para firmar.</p>
+                    </div>
+                  </div>
+                  <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 mt-3">
+                    <p class="text-amber-800 text-[11.5px] font-medium">Verifique que todos los campos estén completos antes de firmar. Una vez firmado con el DNIe, el documento tiene validez legal.</p>
+                  </div>
+                </div>
                 <button type="button"
                   class="mt-5 w-full bg-[#0f766e] hover:bg-[#0d6460] text-white font-bold py-3.5 rounded-xl transition-colors text-[14px] shadow-sm"
                   (click)="firmar()">
-                  @if (isSaving()) {
+                  @if (isSigning()) {
                     <span class="flex items-center justify-center gap-2">
                       <svg aria-hidden="true" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                       </svg>
-                      Procesando firma...
+                      Procesando firma con DNIe...
                     </span>
                   } @else {
                     <span class="flex items-center justify-center gap-2">
                       <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                       </svg>
-                      Firmar y bloquear evolución
+                      Firmar evolución con DNIe
                     </span>
                   }
                 </button>
@@ -606,5 +626,6 @@
     </div>
 
   </div>
+</div>
 </div>
 }
