@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="text-right flex flex-col items-end">
-       <div class="text-[32px] font-black uppercase leading-none mb-1 tracking-tighter">SIS</div>
+       <div class="text-[32px] font-black uppercase leading-none mb-1 tracking-tighter">{{ financiamiento }}</div>
        <!-- Barcode placeholder -->
        <div class="w-36 h-10 border-2 border-black border-solid flex items-center justify-center">
          <!-- Simulated barcode lines -->
@@ -51,15 +51,80 @@
         <span class="uppercase">{{ cabecera.estado || '—' }}</span>
       </div>
     </div>
-    <div class="flex">
+    <div class="flex border-b border-black">
       <div class="w-full p-1.5 flex items-center gap-1">
         <span class="font-bold">Médico tratante:</span>
         <span class="uppercase">{{ cabecera.medicoTratante || '—' }}</span>
       </div>
     </div>
+    <div class="flex">
+      <div class="w-1/2 p-1.5 border-r border-black flex items-center gap-1">
+        <span class="font-bold">Especialidad:</span>
+        <span class="uppercase">{{ especialidad }}</span>
+      </div>
+      <div class="w-1/2 p-1.5 flex items-center gap-1">
+        <span class="font-bold">Servicio:</span>
+        <span class="uppercase">{{ servicio }}</span>
+      </div>
+    </div>
   </div>
 
-  <div class="mb-4 font-bold text-[13px] uppercase">PRIORIDAD: III. URGENCIA MENOR</div>
+  @if (prioridad) {
+    <div class="mb-4 font-bold text-[13px] uppercase">PRIORIDAD: {{ prioridad }}</div>
+  }
+
+  <!-- Antecedentes y Comorbilidades -->
+  @if (antecedentes) {
+    <div class="mb-4">
+      <p class="font-bold text-[14px] uppercase mb-1">ANTECEDENTES Y COMORBILIDADES</p>
+      <div class="border border-black text-[12px] flex flex-col">
+        <div class="flex border-b border-black">
+          <div class="w-1/2 p-1.5 border-r border-black flex items-start gap-1">
+            <span class="font-bold shrink-0">Quirúrgicos:</span>
+            <span>{{ antecedentes.antecedQuirurgico || '—' }}</span>
+          </div>
+          <div class="w-1/2 p-1.5 flex items-start gap-1">
+            <span class="font-bold shrink-0">Patológicos:</span>
+            <span>{{ antecedentes.antecedPatologico || '—' }}</span>
+          </div>
+        </div>
+        <div class="flex border-b border-black">
+          <div class="w-1/2 p-1.5 border-r border-black flex items-start gap-1">
+            <span class="font-bold shrink-0">Obstétricos:</span>
+            <span>{{ antecedentes.antecedObstetrico || '—' }}</span>
+          </div>
+          <div class="w-1/2 p-1.5 flex items-start gap-1">
+            <span class="font-bold shrink-0">Alergias:</span>
+            <span>{{ antecedentes.antecedAlergico || '—' }}</span>
+          </div>
+        </div>
+        <div class="flex border-b border-black">
+          <div class="w-1/2 p-1.5 border-r border-black flex items-start gap-1">
+            <span class="font-bold shrink-0">Familiares:</span>
+            <span>{{ antecedentes.antecedFamiliar || '—' }}</span>
+          </div>
+          <div class="w-1/2 p-1.5 flex items-start gap-1">
+            <span class="font-bold shrink-0">Otros:</span>
+            <span>{{ antecedentes.antecedentes || '—' }}</span>
+          </div>
+        </div>
+        <div class="flex" [class.border-b]="antecedentes.otrosComorbilidad" [class.border-black]="antecedentes.otrosComorbilidad">
+          <div class="w-full p-1.5 flex items-start gap-1">
+            <span class="font-bold shrink-0">Comorbilidades:</span>
+            <span>{{ listaComorbilidades.length > 0 ? listaComorbilidades.join(', ') : 'Ninguna' }}</span>
+          </div>
+        </div>
+        @if (antecedentes.otrosComorbilidad) {
+          <div class="flex">
+            <div class="w-full p-1.5 flex items-start gap-1">
+              <span class="font-bold shrink-0">Otras comorbilidades:</span>
+              <span>{{ antecedentes.otrosComorbilidad }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
   <!-- S: Subjetivo -->
   <div class="mb-4">
@@ -67,7 +132,7 @@
     <div class="border-b border-black mb-2 pb-1">
       <span class="inline-block w-40 text-[12px] font-semibold">Motivo de consulta:</span>
       <span class="text-[12px] uppercase">
-        {{ motivos.length > 0 ? motivos[0].etiqueta : '—' }}
+        {{ motivos.length > 0 ? motivos[0].etiqueta : (motivoDetalle ? 'Consulta general' : '—') }}
       </span>
       @if (motivos.length > 1) {
          <span class="text-[12px] uppercase">, {{ motivos[1].etiqueta }}</span>
@@ -79,10 +144,7 @@
     <div class="border-b border-black mb-2 pb-1">
       <span class="inline-block w-40 text-[12px] font-semibold">Signos y síntomas:</span>
       <span class="text-[12px] uppercase">
-        {{ sintomas.length > 0 ? sintomas.join('; ') : '—' }}
-        @if (subjetivoMarcados.length > 0) {
-          {{ sintomas.length > 0 ? ' - ' : '' }} {{ subjetivoMarcados.join('; ') }}
-        }
+        {{ listaSignosYSintomas.length > 0 ? listaSignosYSintomas.join('; ') : '—' }}
       </span>
     </div>
     @if (subjetivo.escalaDolor != null) {
@@ -175,26 +237,35 @@
            </ul>
         </div>
       }
-      @if (procedimientosIndicados.length > 0) {
+      @if (examenesSolicitados.length > 0) {
         <div>
-           <span class="font-bold underline">Procedimientos:</span>
-           <span class="uppercase">{{ procedimientosIndicados.join('; ') }}</span>
-        </div>
-      }
-      @if (solicitudExamenes.length > 0) {
-        <div>
-           <span class="font-bold underline block mb-1">Exámenes solicitados:</span>
-           <ul class="list-disc pl-5">
-             @for (ex of solicitudExamenes; track ex.etiqueta) {
-               <li class="uppercase">{{ ex.etiqueta }}: {{ ex.valor }}</li>
-             }
-           </ul>
+          <span class="font-bold underline block mb-1">Exámenes solicitados:</span>
+          <ul class="list-disc pl-5">
+            @for (ex of examenesSolicitados; track $index) {
+              <li class="uppercase">
+                <span class="font-bold">[{{ ex.tipo }}]</span> {{ ex.examen }}
+                @if (ex.indicacion) {
+                  - <em>{{ ex.indicacion }}</em>
+                }
+                @if (ex.prioridad) {
+                  <span class="text-[11px] font-semibold text-slate-700">({{ ex.prioridad }})</span>
+                }
+              </li>
+            }
+          </ul>
         </div>
       }
       @if (interconsultasSolicitadas.length > 0) {
         <div>
-           <span class="font-bold underline">Interconsultas:</span>
-           <span class="uppercase">{{ interconsultasSolicitadas.join('; ') }}</span>
+          <span class="font-bold underline block mb-1">Interconsultas solicitadas:</span>
+          <ul class="list-disc pl-5">
+            @for (ic of interconsultasSolicitadas; track $index) {
+              <li class="uppercase">
+                <span class="font-bold">{{ ic.especialidad }}</span>: {{ ic.motivo }}
+                <span class="text-[11px] font-semibold text-slate-700">({{ ic.estado }})</span>
+              </li>
+            }
+          </ul>
         </div>
       }
       @if (indicacionesGenerales.length > 0) {
@@ -222,17 +293,35 @@
     </div>
   </div>
 
-  <!-- Firma -->
+  <!-- Firma Digital Oficial (Firma Perú / RENIEC) -->
   <div class="mt-12 flex justify-end">
-    <div class="w-64 text-center">
-      @if (firmaDigital) {
-        <img [src]="firmaDigital" alt="Firma del médico" class="h-20 mx-auto border-b border-black mb-1 object-contain">
-      } @else {
-        <div class="h-20 border-b border-black mb-1"></div>
-      }
-      <p class="text-[12px] font-bold uppercase truncate">{{ cabecera.medicoTratante || 'MÉDICO TRATANTE' }}</p>
-      <p class="text-[10px] uppercase">Firma y Sello</p>
-    </div>
+    @if (esFirmado) {
+      <div class="flex items-center gap-3 p-2 text-left max-w-md border border-transparent">
+        @if (logoInstitucion()) {
+          <img [src]="'data:image/png;base64,' + logoInstitucion()" alt="Sello Hospital" class="w-16 h-16 object-contain shrink-0">
+        }
+        <div class="text-[11px] leading-tight text-gray-900 select-text">
+          <p class="text-gray-700">Firmado digitalmente por:</p>
+          <p class="font-bold text-[12px] uppercase mt-0.5 text-gray-900">{{ cabecera.medicoTratante || 'MÉDICO TRATANTE' }} FIR</p>
+          @if (dni) {
+            <p class="text-gray-800 text-[11px]">{{ dni }}</p>
+          }
+          <p class="text-gray-700 text-[10px] mt-0.5">Motivo: Soy el Autor</p>
+          <p class="text-gray-600 text-[10px]">Fecha: {{ fechaHoraFirma || cabecera.fecha || '—' }}</p>
+          <p class="text-gray-600 text-[10px]">Cargo: {{ cargoCompleto }}</p>
+        </div>
+      </div>
+    } @else {
+      <div class="w-64 text-center">
+        @if (firmaDigital && firmaDigital.startsWith('data:image')) {
+          <img [src]="firmaDigital" alt="Firma del médico" class="h-20 mx-auto border-b border-black mb-1 object-contain">
+        } @else {
+          <div class="h-20 border-b border-black mb-1"></div>
+        }
+        <p class="text-[12px] font-bold uppercase truncate">{{ cabecera.medicoTratante || 'MÉDICO TRATANTE' }}</p>
+        <p class="text-[10px] uppercase">Firma y Sello</p>
+      </div>
+    }
   </div>
 
 </div>

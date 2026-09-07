@@ -28,6 +28,7 @@ export class BarraSuperior implements OnInit {
   @Input() title: string = '';
   @Input() username: string | null = null;
   @Output() logoutEvent = new EventEmitter<void>();
+  @Output() toggleMobileMenuEvent = new EventEmitter<void>();
 
   isMenuOpen = signal(false);
   isProfileModalOpen = signal(false);

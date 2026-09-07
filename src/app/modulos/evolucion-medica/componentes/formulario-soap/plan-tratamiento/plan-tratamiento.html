@@ -1,4 +1,3 @@
- 
 <div class="mb-8">
   <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
     <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -8,44 +7,50 @@
     Tratamiento farmacológico
   </h3>
 
-  <!-- ─── BARRA SUPERIOR: DIAGNÓSTICO + MEDICAMENTO ─── -->
   <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mb-4">
-    <!-- Diagnóstico -->
     <div class="md:col-span-4">
-      <label for="selectDxMaster" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-        DIAGNÓSTICO:
-      </label>
       @if (listaDiagnosticos.length > 1) {
-        <select id="selectDxMaster" [value]="diagnosticoSeleccionado()" (change)="diagnosticoSeleccionado.set($any($event.target).value)"
-                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[12.5px] bg-white text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none font-medium truncate">
+        <label for="selectDxMaster" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+          DIAGNÓSTICO:
+        </label>
+        <app-select-global
+          id="selectDxMaster"
+          [ngModel]="diagnosticoSeleccionado()"
+          (ngModelChange)="diagnosticoSeleccionado.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        >
           @for (dx of listaDiagnosticos; track dx.codigo) {
             <option [value]="dx.codigo">{{ dx.descripcion }}</option>
           }
-        </select>
+        </app-select-global>
       } @else if (listaDiagnosticos.length === 1) {
-        <div class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[12.5px] font-bold text-teal-950 truncate" [title]="listaDiagnosticos[0].descripcion">
+        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+          DIAGNÓSTICO:
+        </span>
+        <div class="border border-slate-200 bg-slate-50 rounded-md px-3 py-2 text-[12.5px] font-bold text-teal-950 truncate" [title]="listaDiagnosticos[0].descripcion">
           {{ listaDiagnosticos[0].descripcion }}
         </div>
       } @else {
-        <div class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[12px] text-slate-400 font-medium italic">
+        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+          DIAGNÓSTICO:
+        </span>
+        <div class="border border-slate-200 bg-slate-50 rounded-md px-3 py-2 text-[12px] text-slate-400 font-medium italic">
           Sin diagnósticos registrados
         </div>
       }
     </div>
 
-    <!-- Medicamento Buscador -->
     <div class="md:col-span-8 relative">
       <label for="buscarMedMaster" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
         MEDICAMENTO:
       </label>
       <input type="text" id="buscarMedMaster" #inputBusqueda [value]="busquedaQuery()"
              (input)="buscarMedicamento(inputBusqueda.value)"
-             class="w-full border border-slate-300 rounded-lg px-3 py-2 text-[12.5px] bg-white text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none placeholder:text-slate-400"
+             class="w-full border border-slate-300 rounded-md px-3 py-2 text-[12.5px] bg-white text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none placeholder:text-slate-400"
              placeholder="--SELECCIONAR / BUSCAR MEDICAMENTO EN CATALOGO--" autocomplete="off">
 
-      <!-- Popup Desplegable de Resultados de Búsqueda -->
       @if (busquedaQuery().trim().length >= 2) {
-        <div class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100">
+        <div class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100">
           @if (cargandoBusqueda()) {
             <div class="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
               <div class="w-3.5 h-3.5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
@@ -57,14 +62,15 @@
             </div>
           } @else {
             @for (m of busquedaResultados(); track m.idProducto) {
-              <div class="px-3.5 py-2 flex items-center justify-between hover:bg-teal-50/80 transition-colors cursor-pointer"
-                   (click)="agregarMedicamentoDesdeCatalogo(m)">
+              <button type="button"
+                      class="w-full text-left px-3.5 py-2 flex items-center justify-between hover:bg-teal-50/80 transition-colors cursor-pointer"
+                      (click)="agregarMedicamentoDesdeCatalogo(m)">
                 <div>
                   <p class="text-[12.5px] font-semibold text-slate-900 leading-snug">{{ m.nombre }}</p>
                   <p class="text-[10.5px] text-slate-500 font-mono">Código: {{ m.codigo }}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded font-mono border"
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md font-mono border"
                         [class.bg-emerald-50]="m.stock > 0" [class.text-emerald-700]="m.stock > 0" [class.border-emerald-200]="m.stock > 0"
                         [class.bg-rose-50]="m.stock <= 0" [class.text-rose-700]="m.stock <= 0" [class.border-rose-200]="m.stock <= 0">
                     Stock: {{ m.stock }}
@@ -73,7 +79,7 @@
                     + Agregar
                   </span>
                 </div>
-              </div>
+              </button>
             }
           }
         </div>
@@ -81,8 +87,7 @@
     </div>
   </div>
 
-  <!-- ─── TABLA DE MEDICAMENTOS INDICADOS (DISEÑO PROFESIONAL MODERNO) ─── -->
-  <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs">
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead>
@@ -109,69 +114,83 @@
               </td>
             </tr>
           } @else {
-            @for (ctrl of farmacologicoArray.controls; track $index; let i = $index) {
-              <tr [formGroup]="getFormGroup(i)" class="hover:bg-teal-50/20 transition-colors group">
-                <!-- Action Eliminar -->
+            @for (item of farmacosPaginados; track item.indiceOriginal) {
+              <tr [formGroup]="getFormGroup(item.indiceOriginal)" class="hover:bg-teal-50/20 transition-colors group">
                 <td class="py-2.5 px-2 text-center">
-                  <button type="button" (click)="removerMedicamento(i)"
-                          class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Eliminar medicamento">
+                  <button type="button" (click)="removerMedicamento(item.indiceOriginal)"
+                          class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer" title="Eliminar medicamento">
                     <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                   </button>
                 </td>
 
-                <!-- Medicamentos -->
                 <td class="py-2.5 px-3">
-                  <input type="text" formControlName="medicamento"
-                         class="w-full border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2.5 py-1.5 text-[12.5px] font-bold text-slate-900 transition-all outline-none uppercase"
-                         placeholder="Nombre del medicamento">
+                  <label class="block">
+                    <span class="sr-only">Medicamento</span>
+                    <input [id]="'med_nom_' + item.indiceOriginal" [name]="'med_nom_' + item.indiceOriginal" type="text" formControlName="medicamento" maxlength="200"
+                           class="w-full border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12.5px] font-bold text-slate-900 transition-all outline-none uppercase"
+                           [class.border-rose-300]="getFormGroup(item.indiceOriginal).get('medicamento')?.invalid && getFormGroup(item.indiceOriginal).get('medicamento')?.touched"
+                           placeholder="Nombre del medicamento">
+                  </label>
                 </td>
 
-                <!-- Cantidad -->
                 <td class="py-2.5 px-2">
-                  <input type="number" formControlName="cantidad" min="1"
-                         class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none">
+                  <label class="block">
+                    <span class="sr-only">Cantidad</span>
+                    <input [id]="'med_cant_' + item.indiceOriginal" [name]="'med_cant_' + item.indiceOriginal" type="number" formControlName="cantidad" min="1" max="999" maxlength="3"
+                           class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                           [class.border-rose-300]="getFormGroup(item.indiceOriginal).get('cantidad')?.invalid && getFormGroup(item.indiceOriginal).get('cantidad')?.touched">
+                  </label>
                 </td>
 
-                <!-- Dosis -->
                 <td class="py-2.5 px-2">
-                  <input type="text" formControlName="dosis"
-                         class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none">
+                  <label class="block">
+                    <span class="sr-only">Dosis</span>
+                    <input [id]="'med_dosis_' + item.indiceOriginal" [name]="'med_dosis_' + item.indiceOriginal" type="number" step="0.1" min="0.01" maxlength="6" formControlName="dosis"
+                           class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                           [class.border-rose-300]="getFormGroup(item.indiceOriginal).get('dosis')?.invalid && getFormGroup(item.indiceOriginal).get('dosis')?.touched">
+                  </label>
                 </td>
 
-                <!-- Unidad -->
                 <td class="py-2.5 px-2">
-                  <select formControlName="unidad"
-                          class="w-full border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[11.5px] font-bold text-slate-800 transition-all outline-none uppercase">
-                    @for (u of unidadesDosis(); track u.id) {
-                      <option [value]="u.descripcion">{{ u.descripcion }}</option>
-                    }
-                  </select>
+                  <div class="relative">
+                    <span class="sr-only">Unidad</span>
+                    <app-select-global [id]="'med_unid_' + item.indiceOriginal" formControlName="unidad">
+                      @for (u of unidadesDosis(); track u.id) {
+                        <option [value]="u.descripcion">{{ u.descripcion }}</option>
+                      }
+                    </app-select-global>
+                  </div>
                 </td>
 
-                <!-- Frecuencia -->
                 <td class="py-2.5 px-2">
-                  <select formControlName="frecuencia"
-                          class="w-full border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[11.5px] font-bold text-slate-800 transition-all outline-none uppercase">
-                    @for (f of frecuencias(); track f.id) {
-                      <option [value]="f.descripcion">{{ f.descripcion }}</option>
-                    }
-                  </select>
+                  <div class="relative">
+                    <span class="sr-only">Frecuencia</span>
+                    <app-select-global [id]="'med_frec_' + item.indiceOriginal" formControlName="frecuencia">
+                      @for (f of frecuencias(); track f.id) {
+                        <option [value]="f.descripcion">{{ f.descripcion }}</option>
+                      }
+                    </app-select-global>
+                  </div>
                 </td>
 
-                <!-- Vía -->
                 <td class="py-2.5 px-2">
-                  <select formControlName="via"
-                          class="w-full border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[11.5px] font-bold text-slate-800 transition-all outline-none uppercase">
-                    @for (v of viasAdministracion(); track v.id) {
-                      <option [value]="v.descripcion">{{ v.descripcion }}</option>
-                    }
-                  </select>
+                  <div class="relative">
+                    <span class="sr-only">Vía</span>
+                    <app-select-global [id]="'med_via_' + item.indiceOriginal" formControlName="via">
+                      @for (v of viasAdministracion(); track v.id) {
+                        <option [value]="v.descripcion">{{ v.descripcion }}</option>
+                      }
+                    </app-select-global>
+                  </div>
                 </td>
 
-                <!-- Duración -->
                 <td class="py-2.5 px-2">
-                  <input type="text" formControlName="duracion"
-                         class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-lg px-2 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none uppercase">
+                  <label class="block">
+                    <span class="sr-only">Duración</span>
+                    <input [id]="'med_dur_' + item.indiceOriginal" [name]="'med_dur_' + item.indiceOriginal" type="text" formControlName="duracion" maxlength="50"
+                           class="w-full text-center border border-slate-200/80 bg-slate-50/70 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12px] font-bold text-slate-800 transition-all outline-none uppercase"
+                           [class.border-rose-300]="getFormGroup(item.indiceOriginal).get('duracion')?.invalid && getFormGroup(item.indiceOriginal).get('duracion')?.touched">
+                  </label>
                 </td>
               </tr>
             }
@@ -179,6 +198,17 @@
         </tbody>
       </table>
     </div>
+
+    @if (farmacologicoArray.controls.length > elementosPorPaginaFarmaco) {
+      <div class="mt-3 pt-2 border-t border-slate-100">
+        <app-paginacion
+          [page]="paginaFarmaco()"
+          [totalPages]="totalPaginasFarmaco"
+          [totalItems]="farmacologicoArray.controls.length"
+          (pageChange)="paginaFarmaco.set($event)"
+        />
+      </div>
+    }
   </div>
 
   <div class="mt-2.5 flex justify-end">
@@ -188,69 +218,202 @@
   </div>
 </div>
 
+<div class="mb-8">
+  <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200">
+    <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950">
+      <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="9" y1="13" x2="15" y2="13"></line>
+        <line x1="9" y1="17" x2="13" y2="17"></line>
+      </svg>
+      Solicitud de exámenes
+    </h3>
 
-<div class="mb-8" [formGroup]="procedimientosIndicadosGroup">
-  <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
-    <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-    </svg>
-    Procedimientos indicados
-  </h3>
-  <div class="flex flex-wrap gap-x-5 gap-y-2.5 mb-4">
-    <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-      <input type="checkbox" formControlName="curaciones" class="accent-teal-600 w-4 h-4"> Curaciones
-    </label>
-    <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-      <input type="checkbox" formControlName="suturas" class="accent-teal-600 w-4 h-4"> Suturas
-    </label>
-    <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-      <input type="checkbox" formControlName="cateter" class="accent-teal-600 w-4 h-4"> Catéter
-    </label>
-    <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-      <input type="checkbox" formControlName="intubacion" class="accent-teal-600 w-4 h-4"> Intubación
-    </label>
+    <button
+      type="button"
+      (click)="agregarExamen()"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-teal-50 text-teal-800 text-[11.5px] font-bold hover:bg-teal-100 border border-teal-200 transition-colors cursor-pointer"
+    >
+      <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Agregar examen
+    </button>
   </div>
-  <div class="flex flex-col">
-    <label for="otroProcedimiento" class="text-[11.5px] font-semibold text-slate-500 mb-1">Otro procedimiento</label>
-    <input type="text" id="otroProcedimiento" formControlName="otro" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Especifique...">
-  </div>
+
+  @if (examenesArray.controls.length === 0) {
+    <div class="bg-slate-50 border border-dashed border-slate-200 rounded-lg p-6 text-center">
+      <p class="text-[12.5px] text-slate-500 font-medium">No se han solicitado exámenes auxiliares.</p>
+      <button
+        type="button"
+        (click)="agregarExamen()"
+        class="mt-2 text-[11.5px] text-teal-700 font-bold hover:underline cursor-pointer"
+      >
+        + Solicitar primer examen
+      </button>
+    </div>
+  } @else {
+    <div class="rounded-lg border border-slate-200 shadow-2xs overflow-visible bg-white">
+      <table class="w-full text-left text-[12.5px] border-collapse bg-white rounded-lg">
+        <thead>
+          <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold text-[10.5px] uppercase tracking-wider">
+            <th class="py-2.5 px-3 w-12 text-center">N.°</th>
+            <th class="py-2.5 px-3 w-40">Tipo</th>
+            <th class="py-2.5 px-3">Examen / Prueba solicitada</th>
+            <th class="py-2.5 px-3">Indicación / Justificación</th>
+            <th class="py-2.5 px-3 w-32">Prioridad</th>
+            <th class="py-2.5 px-3 w-14 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (item of examenesPaginados; track item.indiceOriginal) {
+            <tr
+              [formGroup]="getExamenFormGroup(item.indiceOriginal)"
+              class="hover:bg-slate-50/50 transition-colors"
+              [ngClass]="{ 'relative z-30': indiceFilaActivaExamen() === item.indiceOriginal }"
+            >
+              <td class="py-2.5 px-3 text-center font-bold text-slate-400 text-[11px]">
+                #{{ item.indiceOriginal + 1 }}
+              </td>
+              <td class="py-2 px-3">
+                <div class="relative">
+                  <span class="sr-only">Tipo</span>
+                  <app-select-global
+                    [id]="'ex_tipo_' + item.indiceOriginal"
+                    formControlName="tipo"
+                  >
+                    @for (t of tiposExamen; track t) {
+                      <option [value]="t">{{ t }}</option>
+                    }
+                  </app-select-global>
+                </div>
+              </td>
+              <td class="py-2 px-3">
+                <div class="relative">
+                  <label class="block">
+                    <span class="sr-only">Examen</span>
+                    <input
+                      [id]="'ex_nom_' + item.indiceOriginal"
+                      [name]="'ex_nom_' + item.indiceOriginal"
+                      type="text"
+                      maxlength="200"
+                      formControlName="examen"
+                      (input)="buscarExamenes($any($event.target).value, item.indiceOriginal)"
+                      (focus)="buscarExamenes(getExamenFormGroup(item.indiceOriginal).get('examen')?.value || '', item.indiceOriginal)"
+                      (blur)="cerrarBusquedaExamenes()"
+                      placeholder="Escriba o busque en el catálogo..."
+                      class="w-full border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12.5px] font-bold text-slate-900 transition-all outline-none placeholder:font-normal placeholder:text-slate-400 placeholder:italic"
+                      [class.border-rose-300]="getExamenFormGroup(item.indiceOriginal).get('examen')?.invalid && getExamenFormGroup(item.indiceOriginal).get('examen')?.touched"
+                    />
+                  </label>
+                  @if (indiceFilaActivaExamen() === item.indiceOriginal && (cargandoBusquedaExamen() || busquedaExamenResultados().length > 0)) {
+                    <div
+                      class="absolute left-0 w-full min-w-[340px] max-w-[480px] bg-white border border-slate-200 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 ring-1 ring-black/5"
+                      [ngClass]="item.indiceOriginal >= 3 && item.indiceOriginal >= examenesArray.controls.length - 2 ? 'bottom-full mb-1.5' : 'top-full mt-1.5'"
+                    >
+                      @if (cargandoBusquedaExamen()) {
+                        <div class="p-3 text-center text-slate-500 text-[12px] flex items-center justify-center gap-2">
+                          <svg aria-hidden="true" class="animate-spin h-3.5 w-3.5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Buscando en catálogo...</span>
+                        </div>
+                      } @else {
+                        @for (it of busquedaExamenResultados(); track it.idProducto) {
+                          <button
+                            type="button"
+                            (mousedown)="seleccionarExamen(it, item.indiceOriginal)"
+                            class="w-full text-left p-2.5 hover:bg-teal-50/80 transition-colors flex items-start gap-2.5 cursor-pointer group"
+                          >
+                            <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider mt-0.5 shrink-0"
+                              [ngClass]="{
+                                'bg-teal-100 text-teal-800': it.tipo === 'Laboratorio',
+                                'bg-indigo-100 text-indigo-800': it.tipo === 'Imágenes',
+                                'bg-amber-100 text-amber-800': it.tipo === 'Procedimientos',
+                                'bg-slate-100 text-slate-700': it.tipo === 'Otros'
+                              }">
+                              {{ it.tipo }}
+                            </span>
+                            <div class="flex-1 min-w-0">
+                              <p class="text-[12px] font-semibold text-slate-800 group-hover:text-teal-900 leading-tight">
+                                {{ it.nombre }}
+                              </p>
+                              @if (it.codigo) {
+                                <p class="text-[10.5px] text-slate-400 font-mono mt-0.5">
+                                  Cód: {{ it.codigo }}
+                                </p>
+                              }
+                            </div>
+                          </button>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
+              <td class="py-2 px-3">
+                <label class="block">
+                  <span class="sr-only">Indicación clínica</span>
+                  <input
+                    [id]="'ex_ind_' + item.indiceOriginal"
+                    [name]="'ex_ind_' + item.indiceOriginal"
+                    type="text"
+                    maxlength="300"
+                    formControlName="indicacion"
+                    class="w-full border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 rounded-md px-2.5 py-1.5 text-[12px] text-slate-700 transition-all outline-none"
+                    placeholder="Motivo o indicación clínica"
+                  />
+                </label>
+              </td>
+              <td class="py-2 px-3">
+                <div class="relative">
+                  <span class="sr-only">Prioridad</span>
+                  <app-select-global
+                    [id]="'ex_prio_' + item.indiceOriginal"
+                    formControlName="prioridad"
+                  >
+                    @for (p of prioridadesExamen; track p) {
+                      <option [value]="p">{{ p }}</option>
+                    }
+                  </app-select-global>
+                </div>
+              </td>
+              <td class="py-2 px-3 text-center">
+                <button
+                  type="button"
+                  (click)="removerExamen(item.indiceOriginal)"
+                  title="Eliminar examen"
+                  class="p-1.5 rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+                >
+                  <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (examenesArray.controls.length > elementosPorPaginaExamen) {
+      <div class="mt-3 pt-2 border-t border-slate-100">
+        <app-paginacion
+          [page]="paginaExamen()"
+          [totalPages]="totalPaginasExamen"
+          [totalItems]="examenesArray.controls.length"
+          (pageChange)="paginaExamen.set($event)"
+        />
+      </div>
+    }
+  }
 </div>
-
-
-<div class="mb-8" [formGroup]="examenesGroup">
-  <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
-    <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-      <polyline points="14 2 14 8 20 8"></polyline>
-      <line x1="9" y1="13" x2="15" y2="13"></line>
-      <line x1="9" y1="17" x2="13" y2="17"></line>
-    </svg>
-    Solicitud de exámenes
-  </h3>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="flex flex-col">
-      <label for="laboratorioSolicitado" class="text-[11.5px] font-semibold text-slate-500 mb-1">Laboratorio</label>
-      <textarea id="laboratorioSolicitado" rows="2" formControlName="laboratorio" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Ej. Hemograma de control"></textarea>
-      <app-error-mensaje [control]="examenesGroup.get('laboratorio')"></app-error-mensaje>
-    </div>
-    <div class="flex flex-col">
-      <label for="imagenesSolicitadas" class="text-[11.5px] font-semibold text-slate-500 mb-1">Imágenes</label>
-      <textarea id="imagenesSolicitadas" rows="2" formControlName="imagenes" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Ej. TAC abdominal"></textarea>
-      <app-error-mensaje [control]="examenesGroup.get('imagenes')"></app-error-mensaje>
-    </div>
-    <div class="flex flex-col">
-      <label for="otrosProcedimientos" class="text-[11.5px] font-semibold text-slate-500 mb-1">Otros procedimientos</label>
-      <textarea id="otrosProcedimientos" rows="2" formControlName="otros" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Ej. ECG de control"></textarea>
-      <app-error-mensaje [control]="examenesGroup.get('otros')"></app-error-mensaje>
-    </div>
-  </div>
-</div>
-
 
 <div class="mb-8">
   <app-interconsultas></app-interconsultas>
 </div>
-
 
 <div class="mb-8" [formGroup]="indicacionesGroup">
   <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-4 pb-2 border-b border-slate-200">
@@ -265,23 +428,23 @@
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
     <div class="flex flex-col">
       <label for="dietaInd" class="text-[11.5px] font-semibold text-slate-500 mb-1">Dieta</label>
-      <input type="text" id="dietaInd" formControlName="dieta" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Blanda">
+      <input type="text" id="dietaInd" maxlength="200" formControlName="dieta" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Blanda">
     </div>
     <div class="flex flex-col">
       <label for="reposoInd" class="text-[11.5px] font-semibold text-slate-500 mb-1">Reposo</label>
-      <input type="text" id="reposoInd" formControlName="reposo" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Relativo">
+      <input type="text" id="reposoInd" maxlength="200" formControlName="reposo" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Relativo">
     </div>
     <div class="flex flex-col">
       <label for="hidratacionInd" class="text-[11.5px] font-semibold text-slate-500 mb-1">Hidratación</label>
-      <input type="text" id="hidratacionInd" formControlName="hidratacion" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. VO libre demanda">
+      <input type="text" id="hidratacionInd" maxlength="200" formControlName="hidratacion" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. VO libre demanda">
     </div>
     <div class="flex flex-col">
       <label for="oxigenoInd" class="text-[11.5px] font-semibold text-slate-500 mb-1">Oxígeno</label>
-      <input type="text" id="oxigenoInd" formControlName="oxigeno" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Cánula 2L/min">
+      <input type="text" id="oxigenoInd" maxlength="200" formControlName="oxigeno" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Cánula 2L/min">
     </div>
   </div>
   <div class="flex flex-col">
     <label for="restriccionesInd" class="text-[11.5px] font-semibold text-slate-500 mb-1">Restricciones</label>
-    <textarea id="restriccionesInd" rows="2" formControlName="restricciones" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Ej. Restricción de sodio, no deambular sin apoyo..."></textarea>
+    <textarea id="restriccionesInd" rows="2" maxlength="500" formControlName="restricciones" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Ej. Restricción de sodio, no deambular sin apoyo..."></textarea>
   </div>
 </div>

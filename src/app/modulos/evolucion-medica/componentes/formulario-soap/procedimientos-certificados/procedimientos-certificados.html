@@ -71,7 +71,7 @@
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="flex flex-col">
       <label for="incapacidadDias" class="text-[11.5px] font-semibold text-slate-500 mb-1">Días de incapacidad</label>
-      <input type="number" id="incapacidadDias" formControlName="dias" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="0">
+      <input type="number" id="incapacidadDias" min="1" max="365" maxlength="3" formControlName="dias" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="0">
       <app-error-mensaje [control]="incapacidadGroup.get('dias')"></app-error-mensaje>
     </div>
     <div class="flex flex-col">
@@ -108,16 +108,16 @@
   </div>
   <div class="flex flex-wrap gap-x-5 gap-y-2.5 mb-4">
     <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors font-medium">
-      <input type="checkbox" formControlName="certificadoMedico" class="accent-teal-600 w-4 h-4"> Certificado Médico
+      <input id="chk_cert_medico" name="certificadoMedico" type="checkbox" formControlName="certificadoMedico" class="accent-teal-600 w-4 h-4"> Certificado Médico
     </label>
     <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors font-medium">
-      <input type="checkbox" formControlName="informeMedico" class="accent-teal-600 w-4 h-4"> Informe Médico
+      <input id="chk_inf_medico" name="informeMedico" type="checkbox" formControlName="informeMedico" class="accent-teal-600 w-4 h-4"> Informe Médico
     </label>
     <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors font-medium">
-      <input type="checkbox" formControlName="epicrisis" class="accent-teal-600 w-4 h-4"> Epicrisis
+      <input id="chk_epicrisis" name="epicrisis" type="checkbox" formControlName="epicrisis" class="accent-teal-600 w-4 h-4"> Epicrisis
     </label>
     <label class="flex items-center gap-1.5 text-[13px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors font-medium">
-      <input type="checkbox" formControlName="constancias" class="accent-teal-600 w-4 h-4"> Constancia de atención
+      <input id="chk_constancias" name="constancias" type="checkbox" formControlName="constancias" class="accent-teal-600 w-4 h-4"> Constancia de atención
     </label>
   </div>
   <div class="flex flex-col">

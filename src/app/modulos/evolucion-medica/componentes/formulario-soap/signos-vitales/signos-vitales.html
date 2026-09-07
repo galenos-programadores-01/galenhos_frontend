@@ -1,88 +1,130 @@
 <div [formGroup]="form">
-      <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-5 pb-2 border-b border-slate-200">
-        <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-        </svg>
-        Signos vitales
-      </h3>
+  <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-5 pb-2 border-b border-slate-200">
+    <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+    </svg>
+    Signos vitales
+  </h3>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-5">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-5">
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="presionArterial" class="text-[10.5px] font-semibold text-slate-500">Presión arterial</label>
-          <div class="flex items-baseline">
-            <input id="presionArterial" type="text" formControlName="presionArterial" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="120/80">
-            <span class="text-[10.5px] text-slate-400 ml-1">mmHg</span>
-          </div>
-          <app-error-mensaje [control]="form.get('presionArterial')"></app-error-mensaje>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('presionArterial')?.invalid || (!form.get('presionArterial')?.touched && !form.get('presionArterial')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('presionArterial')?.invalid || (!form.get('presionArterial')?.touched && !form.get('presionArterial')?.dirty)"
+      [class.border-rose-400]="form.get('presionArterial')?.invalid && (form.get('presionArterial')?.touched || form.get('presionArterial')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('presionArterial')?.invalid && (form.get('presionArterial')?.touched || form.get('presionArterial')?.dirty)">
+      <label for="presionArterial" class="text-[10.5px] font-semibold text-slate-500">Presión arterial</label>
+      <div class="flex items-baseline">
+        <input id="presionArterial" type="text" maxlength="7" formControlName="presionArterial" (input)="filtrarPresion($event)" (blur)="formatearPresionEnBlur()" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="120/80">
+        <span class="text-[10.5px] text-slate-400 ml-1">mmHg</span>
+      </div>
+      <app-error-mensaje [control]="form.get('presionArterial')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="frecuenciaCardiaca" class="text-[10.5px] font-semibold text-slate-500">Frec. cardíaca</label>
-          <div class="flex items-baseline">
-            <input id="frecuenciaCardiaca" type="number" formControlName="frecuenciaCardiaca" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="72">
-            <span class="text-[10.5px] text-slate-400 ml-1">lpm</span>
-          </div>
-          <app-error-mensaje [control]="form.get('frecuenciaCardiaca')"></app-error-mensaje>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('frecuenciaCardiaca')?.invalid || (!form.get('frecuenciaCardiaca')?.touched && !form.get('frecuenciaCardiaca')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('frecuenciaCardiaca')?.invalid || (!form.get('frecuenciaCardiaca')?.touched && !form.get('frecuenciaCardiaca')?.dirty)"
+      [class.border-rose-400]="form.get('frecuenciaCardiaca')?.invalid && (form.get('frecuenciaCardiaca')?.touched || form.get('frecuenciaCardiaca')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('frecuenciaCardiaca')?.invalid && (form.get('frecuenciaCardiaca')?.touched || form.get('frecuenciaCardiaca')?.dirty)">
+      <label for="frecuenciaCardiaca" class="text-[10.5px] font-semibold text-slate-500">Frec. cardíaca</label>
+      <div class="flex items-baseline">
+        <input id="frecuenciaCardiaca" type="number" min="30" max="250" maxlength="3" formControlName="frecuenciaCardiaca" (keydown)="bloquearTeclasNoNumericas($event)" (input)="limitarEntero($event, 'frecuenciaCardiaca', 3)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="72">
+        <span class="text-[10.5px] text-slate-400 ml-1">lpm</span>
+      </div>
+      <app-error-mensaje [control]="form.get('frecuenciaCardiaca')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="frecuenciaRespiratoria" class="text-[10.5px] font-semibold text-slate-500">Frec. respiratoria</label>
-          <div class="flex items-baseline">
-            <input id="frecuenciaRespiratoria" type="number" formControlName="frecuenciaRespiratoria" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="16">
-            <span class="text-[10.5px] text-slate-400 ml-1">rpm</span>
-          </div>
-          <app-error-mensaje [control]="form.get('frecuenciaRespiratoria')"></app-error-mensaje>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('frecuenciaRespiratoria')?.invalid || (!form.get('frecuenciaRespiratoria')?.touched && !form.get('frecuenciaRespiratoria')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('frecuenciaRespiratoria')?.invalid || (!form.get('frecuenciaRespiratoria')?.touched && !form.get('frecuenciaRespiratoria')?.dirty)"
+      [class.border-rose-400]="form.get('frecuenciaRespiratoria')?.invalid && (form.get('frecuenciaRespiratoria')?.touched || form.get('frecuenciaRespiratoria')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('frecuenciaRespiratoria')?.invalid && (form.get('frecuenciaRespiratoria')?.touched || form.get('frecuenciaRespiratoria')?.dirty)">
+      <label for="frecuenciaRespiratoria" class="text-[10.5px] font-semibold text-slate-500">Frec. respiratoria</label>
+      <div class="flex items-baseline">
+        <input id="frecuenciaRespiratoria" type="number" min="8" max="60" maxlength="2" formControlName="frecuenciaRespiratoria" (keydown)="bloquearTeclasNoNumericas($event)" (input)="limitarEntero($event, 'frecuenciaRespiratoria', 2)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="16">
+        <span class="text-[10.5px] text-slate-400 ml-1">rpm</span>
+      </div>
+      <app-error-mensaje [control]="form.get('frecuenciaRespiratoria')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="temperatura" class="text-[10.5px] font-semibold text-slate-500">Temperatura</label>
-          <div class="flex items-baseline">
-            <input id="temperatura" type="number" step="0.1" formControlName="temperatura" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="36.5">
-            <span class="text-[10.5px] text-slate-400 ml-1">°C</span>
-          </div>
-          <app-error-mensaje [control]="form.get('temperatura')"></app-error-mensaje>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('temperatura')?.invalid || (!form.get('temperatura')?.touched && !form.get('temperatura')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('temperatura')?.invalid || (!form.get('temperatura')?.touched && !form.get('temperatura')?.dirty)"
+      [class.border-rose-400]="form.get('temperatura')?.invalid && (form.get('temperatura')?.touched || form.get('temperatura')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('temperatura')?.invalid && (form.get('temperatura')?.touched || form.get('temperatura')?.dirty)">
+      <label for="temperatura" class="text-[10.5px] font-semibold text-slate-500">Temperatura</label>
+      <div class="flex items-baseline">
+        <input id="temperatura" type="number" step="0.1" min="30" max="45" maxlength="4" formControlName="temperatura" (keydown)="bloquearTeclasNoDecimales($event)" (input)="limitarDecimal($event, 'temperatura', 4)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="36.5">
+        <span class="text-[10.5px] text-slate-400 ml-1">°C</span>
+      </div>
+      <app-error-mensaje [control]="form.get('temperatura')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="saturacionOxigeno" class="text-[10.5px] font-semibold text-slate-500">Saturación O₂</label>
-          <div class="flex items-baseline">
-            <input id="saturacionOxigeno" type="number" formControlName="saturacionOxigeno" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="98">
-            <span class="text-[10.5px] text-slate-400 ml-1">%</span>
-          </div>
-          <app-error-mensaje [control]="form.get('saturacionOxigeno')"></app-error-mensaje>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('saturacionOxigeno')?.invalid || (!form.get('saturacionOxigeno')?.touched && !form.get('saturacionOxigeno')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('saturacionOxigeno')?.invalid || (!form.get('saturacionOxigeno')?.touched && !form.get('saturacionOxigeno')?.dirty)"
+      [class.border-rose-400]="form.get('saturacionOxigeno')?.invalid && (form.get('saturacionOxigeno')?.touched || form.get('saturacionOxigeno')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('saturacionOxigeno')?.invalid && (form.get('saturacionOxigeno')?.touched || form.get('saturacionOxigeno')?.dirty)">
+      <label for="saturacionOxigeno" class="text-[10.5px] font-semibold text-slate-500">Saturación O₂</label>
+      <div class="flex items-baseline">
+        <input id="saturacionOxigeno" type="number" min="50" max="100" maxlength="3" formControlName="saturacionOxigeno" (keydown)="bloquearTeclasNoNumericas($event)" (input)="limitarEntero($event, 'saturacionOxigeno', 3)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="98">
+        <span class="text-[10.5px] text-slate-400 ml-1">%</span>
+      </div>
+      <app-error-mensaje [control]="form.get('saturacionOxigeno')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="peso" class="text-[10.5px] font-semibold text-slate-500">Peso</label>
-          <div class="flex items-baseline">
-            <input id="peso" type="number" step="0.1" formControlName="peso" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="70">
-            <span class="text-[10.5px] text-slate-400 ml-1">kg</span>
-          </div>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('peso')?.invalid || (!form.get('peso')?.touched && !form.get('peso')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('peso')?.invalid || (!form.get('peso')?.touched && !form.get('peso')?.dirty)"
+      [class.border-rose-400]="form.get('peso')?.invalid && (form.get('peso')?.touched || form.get('peso')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('peso')?.invalid && (form.get('peso')?.touched || form.get('peso')?.dirty)">
+      <label for="peso" class="text-[10.5px] font-semibold text-slate-500">Peso</label>
+      <div class="flex items-baseline">
+        <input id="peso" type="number" step="0.1" min="0.5" max="350" maxlength="5" formControlName="peso" (keydown)="bloquearTeclasNoDecimales($event)" (input)="limitarDecimal($event, 'peso', 5)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="70.0">
+        <span class="text-[10.5px] text-slate-400 ml-1">kg</span>
+      </div>
+      <app-error-mensaje [control]="form.get('peso')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="talla" class="text-[10.5px] font-semibold text-slate-500">Talla</label>
-          <div class="flex items-baseline">
-            <input id="talla" type="number" step="0.01" formControlName="talla" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="1.70">
-            <span class="text-[10.5px] text-slate-400 ml-1">m</span>
-          </div>
-        </div>
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('talla')?.invalid || (!form.get('talla')?.touched && !form.get('talla')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('talla')?.invalid || (!form.get('talla')?.touched && !form.get('talla')?.dirty)"
+      [class.border-rose-400]="form.get('talla')?.invalid && (form.get('talla')?.touched || form.get('talla')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('talla')?.invalid && (form.get('talla')?.touched || form.get('talla')?.dirty)">
+      <label for="talla" class="text-[10.5px] font-semibold text-slate-500">Talla (m)</label>
+      <div class="flex items-baseline">
+        <input id="talla" type="number" step="0.01" min="0.30" max="2.50" maxlength="5" formControlName="talla" (keydown)="bloquearTeclasNoDecimales($event)" (input)="limitarDecimal($event, 'talla', 5)" (blur)="formatearTallaEnBlur()" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="1.70">
+        <span class="text-[10.5px] text-slate-400 ml-1">m</span>
+      </div>
+      <app-error-mensaje [control]="form.get('talla')"></app-error-mensaje>
+    </div>
 
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 cursor-not-allowed">
-          <label for="imc" class="text-[10.5px] font-semibold text-slate-400">IMC</label>
-          <div class="flex items-baseline">
-            <input id="imc" type="text" readonly formControlName="imc" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-slate-500 w-full focus:ring-0 cursor-not-allowed" placeholder="—">
-            <span class="text-[10.5px] text-slate-400 ml-1">kg/m²</span>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 transition-colors focus-within:border-teal-600">
-          <label for="glucemia" class="text-[10.5px] font-semibold text-slate-500">Glucemia</label>
-          <div class="flex items-baseline">
-            <input id="glucemia" type="number" formControlName="glucemia" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0" placeholder="90">
-            <span class="text-[10.5px] text-slate-400 ml-1">mg/dL</span>
-          </div>
-        </div>
+    <div class="flex flex-col gap-1 border-b border-slate-200 pb-2 cursor-not-allowed">
+      <div class="flex items-center justify-between">
+        <label for="imc" class="text-[10.5px] font-semibold text-slate-400">IMC</label>
+        @if (obtenerClasificacionImc(); as categoria) {
+          <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md border" [class]="categoria.clase">
+            {{ categoria.etiqueta }}
+          </span>
+        }
+      </div>
+      <div class="flex items-baseline">
+        <input id="imc" type="text" readonly formControlName="imc" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-slate-600 w-full focus:ring-0 cursor-not-allowed" placeholder="—">
+        <span class="text-[10.5px] text-slate-400 ml-1">kg/m²</span>
       </div>
     </div>
+
+    <div class="flex flex-col gap-1 border-b pb-2 transition-colors"
+      [class.border-slate-200]="!form.get('glucemia')?.invalid || (!form.get('glucemia')?.touched && !form.get('glucemia')?.dirty)"
+      [class.focus-within:border-teal-600]="!form.get('glucemia')?.invalid || (!form.get('glucemia')?.touched && !form.get('glucemia')?.dirty)"
+      [class.border-rose-400]="form.get('glucemia')?.invalid && (form.get('glucemia')?.touched || form.get('glucemia')?.dirty)"
+      [class.focus-within:border-rose-500]="form.get('glucemia')?.invalid && (form.get('glucemia')?.touched || form.get('glucemia')?.dirty)">
+      <label for="glucemia" class="text-[10.5px] font-semibold text-slate-500">Glucemia</label>
+      <div class="flex items-baseline">
+        <input id="glucemia" type="number" min="20" max="1000" maxlength="4" formControlName="glucemia" (keydown)="bloquearTeclasNoNumericas($event)" (input)="limitarEntero($event, 'glucemia', 4)" class="bg-transparent border-none p-0 m-0 font-mono text-[16px] font-medium text-teal-900 w-full focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="90">
+        <span class="text-[10.5px] text-slate-400 ml-1">mg/dL</span>
+      </div>
+      <app-error-mensaje [control]="form.get('glucemia')"></app-error-mensaje>
+    </div>
+  </div>
+</div>

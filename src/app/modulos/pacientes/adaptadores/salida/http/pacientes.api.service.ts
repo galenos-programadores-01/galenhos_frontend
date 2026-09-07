@@ -9,6 +9,7 @@ import type {
   IReniecResultado,
   RegistroPacientePayload,
 } from '../../../../../compartido/tipos/api-tipos';
+import type { IPacienteDatosAdicionales } from '../../../../../compartido/tipos/tipos';
 
 export interface ActualizarPacientePayload {
   birthCountryId?: number;
@@ -125,5 +126,26 @@ export class PacientesApiService {
 
   obtener(idPaciente: number | string): Promise<IPaciente> {
     return this.apiClient.request<IPaciente>(`/api/v1/pacientes/${idPaciente}`);
+  }
+
+  obtenerDatosAdicionales(
+    idPaciente: number | string,
+  ): Promise<IPacienteDatosAdicionales> {
+    return this.apiClient.request<IPacienteDatosAdicionales>(
+      `/api/v1/pacientes/${idPaciente}/datos-adicionales`,
+    );
+  }
+
+  actualizarDatosAdicionales(
+    idPaciente: number | string,
+    payload: Partial<IPacienteDatosAdicionales>,
+  ): Promise<IPacienteDatosAdicionales> {
+    return this.apiClient.request<IPacienteDatosAdicionales>(
+      `/api/v1/pacientes/${idPaciente}/datos-adicionales`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+    );
   }
 }

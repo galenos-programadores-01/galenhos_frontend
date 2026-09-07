@@ -8,6 +8,7 @@ import type {
   RegistroPacientePayload,
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.mapper';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { PacientesApiService } from '../../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
   type SisAfiliado,
@@ -31,6 +32,7 @@ export class RegistroTriajeService {
   private readonly sisApi = inject(SisApiService);
   private readonly triajeApi = inject(TriajeApiService);
   private readonly reniecMapper = inject(ReniecMapper);
+  private readonly authService = inject(AuthService);
 
   formulario: FormRegistroTriaje = this.crearFormularioVacio();
 
@@ -38,6 +40,7 @@ export class RegistroTriajeService {
   guardando = false;
   pacienteEncontrado = false;
   mensajeError = '';
+  mensajeInfo = '';
 
   sisConsultado = false;
   sisActivo = false;
@@ -82,6 +85,9 @@ export class RegistroTriajeService {
     return {
       idDocIdentidad: '1',
       nroDocumento: '',
+      afiliacionDisa: '035',
+      afiliacionTipoFormato: 'E',
+      afiliacionNroContrato: '',
       pacienteNn: false,
       apellidoPaterno: '',
       apellidoMaterno: '',
@@ -114,6 +120,8 @@ export class RegistroTriajeService {
       tiempoEvolucionCantidadUnidad: '',
       idServicio: '',
       idTipoPrioridad: '',
+      fechaUltimaRegla: '',
+      esGestante: false,
     };
   }
 
@@ -160,6 +168,7 @@ export class RegistroTriajeService {
     this.buscando = false;
     this.guardando = false;
     this.mensajeError = '';
+    this.mensajeInfo = '';
     this.sisConsultado = false;
     this.sisActivo = false;
     this.sisDescripcion = '';
@@ -175,6 +184,11 @@ export class RegistroTriajeService {
       return;
     }
 
+    if (this.esFiliacion) {
+      await this.buscarPorAfiliacion();
+      return;
+    }
+
     if (!this.formulario.nroDocumento) {
       this.mensajeError = 'Ingrese un número de documento';
       return;
@@ -183,6 +197,7 @@ export class RegistroTriajeService {
     this.formulario.nroDocumento = this.formulario.nroDocumento.trim();
     this.buscando = true;
     this.mensajeError = '';
+    this.mensajeInfo = '';
     this.pacienteEncontrado = false;
     this.sisConsultado = false;
     this.sisActivo = false;
@@ -208,15 +223,63 @@ export class RegistroTriajeService {
         await this.consultarSis();
       }
 
-      if (!this.pacienteEncontrado && !this.mensajeError) {
-        this.mensajeError =
-          'No se encontró el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
+      // Si el paciente no se encontró en BD, RENIEC ni SIS, se habilitan
+      // los textbox para que el usuario ingrese los datos manualmente.
+      if (!this.pacienteEncontrado) {
+        this.pacienteEncontrado = true;
+        this.pasoActual = 2;
+        this.mensajeInfo =
+          'El paciente no fue encontrado. Ingrese los datos manualmente.';
       }
     } catch (error: unknown) {
       this.mensajeError =
         error instanceof ApiRequestError
           ? error.message
           : 'Error inesperado al buscar paciente.';
+    } finally {
+      this.buscando = false;
+    }
+  }
+
+  // Busca por afiliación SIS (intOpcion=2): requiere DISA, tipo de formato y
+  // número de contrato, sin número de documento.
+  private async buscarPorAfiliacion(): Promise<void> {
+    const disa = this.formulario.afiliacionDisa.trim();
+    const tipoFormato = this.formulario.afiliacionTipoFormato.trim();
+    const nroContrato = this.formulario.afiliacionNroContrato.trim();
+
+    if (!disa || !tipoFormato || !nroContrato) {
+      this.mensajeError =
+        'Ingrese DISA, tipo de formato y número de contrato de la afiliación.';
+      return;
+    }
+
+    this.formulario.nroDocumento = '';
+    this.buscando = true;
+    this.mensajeError = '';
+    this.pacienteEncontrado = false;
+    this.sisConsultado = false;
+    this.sisActivo = false;
+
+    try {
+      await this.cargarParametrosIntegracion();
+
+      if (this.sisIntegrado) {
+        this.formulario.afiliacionDisa = disa;
+        this.formulario.afiliacionTipoFormato = tipoFormato;
+        this.formulario.afiliacionNroContrato = nroContrato;
+        await this.consultarSis();
+      }
+
+      if (!this.pacienteEncontrado && !this.mensajeError) {
+        this.mensajeError =
+          'No se encontró la afiliación en SIS. Complete los datos manualmente o active el modo Paciente NN.';
+      }
+    } catch (error: unknown) {
+      this.mensajeError =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'Error inesperado al buscar la afiliación.';
     } finally {
       this.buscando = false;
     }
@@ -336,11 +399,20 @@ export class RegistroTriajeService {
 
   private async consultarSis(): Promise<void> {
     try {
-      const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
-      const sisResponse = await this.sisApi.consultarAfiliado(
-        this.formulario.nroDocumento,
-        tipoDoc,
-      );
+      let sisResponse: SisAfiliado;
+      if (this.esFiliacion) {
+        sisResponse = await this.sisApi.consultarAfiliado('', 0, {
+          disa: this.formulario.afiliacionDisa,
+          tipoFormato: this.formulario.afiliacionTipoFormato,
+          nroContrato: this.formulario.afiliacionNroContrato,
+        });
+      } else {
+        const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
+        sisResponse = await this.sisApi.consultarAfiliado(
+          this.formulario.nroDocumento,
+          tipoDoc,
+        );
+      }
 
       this.sisConsultado = true;
 
@@ -391,10 +463,13 @@ export class RegistroTriajeService {
       }
 
       this.actualizarIafaAutomatico();
-    } catch {
+    } catch (error: unknown) {
       this.sisConsultado = true;
       this.sisActivo = false;
       this.actualizarIafaAutomatico();
+      if (error instanceof ApiRequestError) {
+        this.mensajeError = error.message;
+      }
     }
   }
 
@@ -437,6 +512,19 @@ export class RegistroTriajeService {
     }
   }
 
+  fijarFuenteParticular(): void {
+    const particular = this.fuentesFinanciamiento.find((f) =>
+      String((f.descripcion as string | number | boolean) || '')
+        .toUpperCase()
+        .includes('PARTICULAR'),
+    );
+    if (particular) {
+      this.formulario.idFuenteFinanciamiento = String(
+        particular.idFuenteFinanciamiento,
+      );
+    }
+  }
+
   private mapearNombresYApellidosSis(sis: SisAfiliado): void {
     if (!this.formulario.apellidoPaterno && sis.apePaterno)
       this.formulario.apellidoPaterno = sis.apePaterno;
@@ -466,6 +554,21 @@ export class RegistroTriajeService {
 
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
+
+    // Si se buscó por afiliación (sin documento), el SIS puede devolver el
+    // tipo y número de documento real del paciente, o un recién nacido sin
+    // documento. Con número se usa tal cual; sin número se trata como
+    // "Sin Documento" (SD), igual que el modo NN, para poder grabar el triaje.
+    if (this.esFiliacion) {
+      if (sis.nroDocumento) {
+        this.formulario.nroDocumento = sis.nroDocumento;
+        if (sis.tipoDocumento && sis.tipoDocumento !== '99') {
+          this.formulario.idDocIdentidad = sis.tipoDocumento;
+        }
+      } else {
+        this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
+      }
+    }
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
       this.formulario.fechaNacimiento = `${sis.fecNacimiento.slice(0, 4)}-${sis.fecNacimiento.slice(4, 6)}-${sis.fecNacimiento.slice(6, 8)}`;
@@ -610,6 +713,21 @@ export class RegistroTriajeService {
     );
   }
 
+  get esFiliacion(): boolean {
+    return this.formulario.idDocIdentidad === '99';
+  }
+
+  private idTipoDocumentoSinDocumento(): string {
+    const sd = this.tiposDocumentos.find(
+      (t) => (t.descripcion || '').toUpperCase() === 'SD',
+    );
+    return sd ? String(sd.id) : '';
+  }
+
+  get esCadaver(): boolean {
+    return this.formulario.idTipoPrioridad === '6';
+  }
+
   async guardarYContinuar(): Promise<void> {
     this.mensajeError = '';
 
@@ -633,9 +751,61 @@ export class RegistroTriajeService {
       return;
     }
 
+    if (!this.formulario.idEstadoLlego) {
+      this.mensajeError = 'Seleccione cómo llegó el paciente.';
+      return;
+    }
+
     if (!this.formulario.idServicio) {
       this.mensajeError = 'Seleccione el servicio derivado.';
       return;
+    }
+
+    if (!this.esCadaver) {
+      if (!this.formulario.motivo) {
+        this.mensajeError = 'Ingrese los síntomas principales.';
+        return;
+      }
+      if (!this.formulario.peso) {
+        this.mensajeError = 'Ingrese el peso del paciente.';
+        return;
+      }
+      if (!this.formulario.talla) {
+        this.mensajeError = 'Ingrese la talla del paciente.';
+        return;
+      }
+      if (!this.formulario.presionArterial) {
+        this.mensajeError = 'Ingrese la presión arterial.';
+        return;
+      }
+      if (!this.formulario.saturacion) {
+        this.mensajeError = 'Ingrese la saturación de O₂.';
+        return;
+      }
+      if (!this.formulario.temperatura) {
+        this.mensajeError = 'Ingrese la temperatura.';
+        return;
+      }
+      if (!this.formulario.tiempoEvolucionCantidad) {
+        this.mensajeError = 'Ingrese el tiempo de síntomas.';
+        return;
+      }
+      if (!this.formulario.tiempoEvolucionCantidadUnidad) {
+        this.mensajeError = 'Seleccione la frecuencia del tiempo de síntomas.';
+        return;
+      }
+      if (!this.formulario.frecCardiaca) {
+        this.mensajeError = 'Ingrese la frecuencia cardíaca.';
+        return;
+      }
+      if (!this.formulario.escalaDolor && this.formulario.escalaDolor !== '0') {
+        this.mensajeError = 'Seleccione la escala de dolor.';
+        return;
+      }
+      if (!this.formulario.escalaGlasgow) {
+        this.mensajeError = 'Seleccione la escala de Glasgow.';
+        return;
+      }
     }
 
     this.guardando = true;
@@ -669,7 +839,11 @@ export class RegistroTriajeService {
           Number(this.formulario.idCentroPobladoDomicilio) || undefined,
       };
 
-      if (!idPacienteFinal && !this.formulario.pacienteNn) {
+      if (
+        !idPacienteFinal &&
+        !this.formulario.pacienteNn &&
+        this.formulario.nroDocumento
+      ) {
         await this.pacientesApi.registrar(
           payloadPaciente as unknown as RegistroPacientePayload,
         );
@@ -721,6 +895,17 @@ export class RegistroTriajeService {
           this.formulario.tiempoEvolucionCantidadUnidad,
         idServicio: Number(this.formulario.idServicio) || undefined,
         idTipoPrioridad: Number(this.formulario.idTipoPrioridad) || undefined,
+        gestante: this.formulario.esGestante ? 1 : 0,
+        fechaUltimaRegla: this.formulario.fechaUltimaRegla || undefined,
+        fur: this.formulario.fechaUltimaRegla || null,
+        edadGestacional: null,
+        fpp: null,
+        nroControlesPrenatales: null,
+        movimientosFetales: null,
+        idEmpleado:
+          this.authService.getIdEmpleado() > 0
+            ? this.authService.getIdEmpleado()
+            : 1,
       };
 
       await this.triajeApi.registrar(payloadTriaje);

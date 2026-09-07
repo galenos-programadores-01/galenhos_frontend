@@ -1,78 +1,85 @@
 <aside
-  class="shrink-0 bg-gradient-to-b from-[#101c3d] via-[#0c1631] to-[#0a1128] flex flex-col border-r border-white/5 h-full transition-all duration-300 relative z-20"
-  [class.w-[260px]]="!isCollapsed" [class.w-[80px]]="isCollapsed">
+  class="shrink-0 bg-gradient-to-b from-[#101c3d] via-[#0c1631] to-[#0a1128] flex flex-col border-r border-white/5 h-full transition-all duration-300 relative z-20 w-[270px] lg:w-auto"
+  [class.lg:w-[260px]]="!isCollapsed" [class.lg:w-[80px]]="isCollapsed">
 
-  
-  <div class="h-[66px] border-b border-white/5 flex items-center transition-all duration-300"
-    [class.px-4]="!isCollapsed" [class.px-0]="isCollapsed" [class.justify-between]="!isCollapsed" [class.justify-center]="isCollapsed">
-    @if (!isCollapsed) {
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="font-extrabold text-[22px] tracking-tight text-white flex gap-1 whitespace-nowrap">
-          GALENOS<span class="text-teal-400">PRO</span>
-        </div>
+  <div class="h-[66px] border-b border-white/5 flex items-center justify-between px-4 transition-all duration-300"
+    [class.lg:px-4]="!isCollapsed" [class.lg:px-0]="isCollapsed" [class.lg:justify-between]="!isCollapsed" [class.lg:justify-center]="isCollapsed">
+    
+    <div class="flex items-center gap-2.5 min-w-0" [class.lg:hidden]="isCollapsed">
+      <div class="font-extrabold text-[22px] tracking-tight text-white flex gap-1 whitespace-nowrap">
+        GALENOS<span class="text-teal-400">PRO</span>
       </div>
-      <button type="button" (click)="toggleSidebarEvent.emit()" title="Colapsar menú"
-        class="p-2 -mr-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0">
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-    } @else {
-      <button type="button" (click)="toggleSidebarEvent.emit()" title="Expandir menú"
-        class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-    }
+    </div>
+
+    <!-- Botón de colapso en escritorio -->
+    <div class="hidden lg:flex items-center">
+      @if (!isCollapsed) {
+        <button type="button" (click)="toggleSidebarEvent.emit()" title="Colapsar menú"
+          class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      } @else {
+        <button type="button" (click)="toggleSidebarEvent.emit()" title="Expandir menú"
+          class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <!-- Botón de cierre para móviles -->
+    <button type="button" (click)="closeMobileSidebarEvent.emit()" title="Cerrar menú"
+      class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0 lg:hidden">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
   </div>
 
-  
   <nav class="flex-1 overflow-y-auto px-3 py-5 flex flex-col gap-1.5 overflow-x-hidden sidebar-scrollbar">
     @for (menu of menus; track menu.idListGrupo) {
       <div class="flex flex-col">
         
         <button type="button" (click)="toggleGroup(menu.idListGrupo)"
-          class="group flex items-center justify-between w-full py-2.5 rounded-lg cursor-pointer text-[13px] font-medium transition-all duration-200 text-slate-400 hover:bg-white/[0.07] hover:text-white"
-          [class.justify-center]="isCollapsed" [class.px-3]="!isCollapsed"
+          class="group flex items-center justify-between w-full py-2.5 rounded-lg cursor-pointer text-[13px] font-medium transition-all duration-200 text-slate-400 hover:bg-white/[0.07] hover:text-white px-3"
+          [class.lg:justify-center]="isCollapsed" [class.lg:px-3]="!isCollapsed"
           [class.mt-6]="menu.keyIconWeb === 'configuracion'"
           [title]="isCollapsed ? menu.texto : ''">
 
-          <div class="flex items-center gap-2.5 min-w-0" [class.gap-0]="isCollapsed">
+          <div class="flex items-center gap-2.5 min-w-0" [class.lg:gap-0]="isCollapsed">
             <icono-ruta [idGrupo]="menu.idListGrupo"></icono-ruta>
-            <span class="whitespace-nowrap transition-opacity duration-200 truncate" [class.opacity-0]="isCollapsed"
-              [class.w-0]="isCollapsed" [class.hidden]="isCollapsed">{{ menu.texto }}</span>
+            <span class="whitespace-nowrap transition-opacity duration-200 truncate"
+              [class.lg:opacity-0]="isCollapsed"
+              [class.lg:w-0]="isCollapsed"
+              [class.lg:hidden]="isCollapsed">{{ menu.texto }}</span>
           </div>
 
-          @if (!isCollapsed && getPermisosPorGrupo(menu.idListGrupo).length > 0) {
-            <svg aria-hidden="true" [class.rotate-180]="isGroupExpanded(menu.idListGrupo)" class="transition-transform duration-200 opacity-40 group-hover:opacity-90 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          @if (getPermisosPorGrupo(menu.idListGrupo).length > 0) {
+            <svg aria-hidden="true"
+              [class.rotate-180]="isGroupExpanded(menu.idListGrupo)"
+              [class.lg:hidden]="isCollapsed"
+              class="transition-transform duration-200 opacity-40 group-hover:opacity-90 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           }
         </button>
 
-        
-        @if (!isCollapsed && isGroupExpanded(menu.idListGrupo)) {
-          <div class="flex flex-col gap-0.5 pl-[18px] pr-2 py-1 relative">
-            <div class="absolute left-[7px] top-1 bottom-1 w-px bg-white/[0.08]"></div>
-
+        @if (isGroupExpanded(menu.idListGrupo)) {
+          <div class="flex flex-col gap-0.5 pl-3 pr-2 py-1 relative" [class.lg:hidden]="isCollapsed">
             @for (permiso of getPermisosPorGrupo(menu.idListGrupo); track permiso.opciones) {
-              <a href="{{permiso.claveWeb}}" [routerLink]="permiso.claveWeb" routerLinkActive="active-subnav text-teal-300 bg-teal-400/10 font-semibold" [routerLinkActiveOptions]="{exact: false}"
+              <a href="{{permiso.claveWeb}}" [routerLink]="permiso.claveWeb" (click)="closeMobileSidebarEvent.emit()" routerLinkActive="text-teal-300 bg-teal-400/10 font-semibold" [routerLinkActiveOptions]="{exact: false}"
                  class="group/sub flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] text-slate-400 hover:text-white hover:bg-white/[0.07] transition-colors relative">
 
                  <icono-ruta [ruta]="permiso.claveWeb"></icono-ruta>
                  <span class="flex-1 whitespace-normal break-words leading-tight">{{ permiso.menu }}</span>
-
-                 
-                 <div class="flex gap-1 ml-2 opacity-0 group-hover/sub:opacity-100 transition-opacity">
-                   @if (permiso.agregar) { <div class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Puede agregar"></div> }
-                   @if (permiso.modificar) { <div class="w-1.5 h-1.5 rounded-full bg-amber-500" title="Puede modificar"></div> }
-                   @if (permiso.eliminar) { <div class="w-1.5 h-1.5 rounded-full bg-red-500" title="Puede eliminar"></div> }
-                 </div>
               </a>
             }
           </div>
@@ -81,4 +88,4 @@
     }
   </nav>
 
-</aside>
+</aside>

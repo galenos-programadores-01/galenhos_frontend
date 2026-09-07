@@ -8,20 +8,43 @@
   <div style="display: grid; grid-template-columns: 1fr 1fr auto auto auto; gap: 10px; align-items: end;">
     <div>
       <label for="tipo-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de documento</label>
-        <select id="tipo-de-documento" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
-              [(ngModel)]="srv.formulario.idDocIdentidad" [disabled]="srv.formulario.pacienteNn">
+        <select autocomplete="off" id="tipo-de-documento" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
+              [(ngModel)]="srv.formulario.idDocIdentidad" (ngModelChange)="onTipoDocumentoChange($event)" [disabled]="srv.formulario.pacienteNn">
         @for (tipo of srv.tiposDocumentos; track tipo.id) {
           <option [value]="tipo.id">{{ tipo.descripcion }}</option>
         }
       </select>
     </div>
+    @if (!srv.esFiliacion) {
     <div>
       <label for="numero-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Número de documento</label>
-        <input id="numero-de-documento" type="text" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
+        <input autocomplete="off" id="numero-de-documento" type="text" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
              placeholder="Ej: 45220357" [(ngModel)]="srv.formulario.nroDocumento" name="nroDocumento" #nroDocCtrl="ngModel" required pattern="^[0-9A-Za-z]{8,12}$"
              [disabled]="srv.formulario.pacienteNn" (keydown.enter)="onEnterDocumento($event)">
       <app-error-mensaje [control]="nroDocCtrl"></app-error-mensaje>
     </div>
+    } @else {
+    <div style="display: flex; gap: 10px; align-items: end;">
+      <div>
+        <label for="afiliacion-disa" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">DISA</label>
+          <input autocomplete="off" id="afiliacion-disa" type="text" placeholder="Disa" [(ngModel)]="srv.formulario.afiliacionDisa" name="afiliacionDisa" value="035"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 120px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+      <div>
+        <label for="afiliacion-tipo-formato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de formato</label>
+          <input autocomplete="off" id="afiliacion-tipo-formato" type="text" placeholder="Tipo de formato" [(ngModel)]="srv.formulario.afiliacionTipoFormato" name="afiliacionTipoFormato" value="E"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 140px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+      <div>
+        <label for="afiliacion-nro-contrato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">N° de contrato</label>
+          <input autocomplete="off" id="afiliacion-nro-contrato" type="text" placeholder="N° de contrato" [(ngModel)]="srv.formulario.afiliacionNroContrato" name="afiliacionNroContrato"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 160px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+    </div>
+    }
     <div style="display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border: 1px solid #d5dceb; border-radius: 11px; background: #f8fafc;">
       <span style="font-size: 13px; font-weight: 600; color: #263c7a; white-space: nowrap;">Paciente NN</span>
       <button type="button" (click)="toggleNN(!srv.formulario.pacienteNn)" [attr.aria-pressed]="srv.formulario.pacienteNn"
@@ -59,6 +82,12 @@
     </div>
   }
 
+  @if (srv.mensajeInfo) {
+    <div style="margin-top: 14px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+      {{ srv.mensajeInfo }}
+    </div>
+  }
+
   @if (srv.sisConsultado && srv.sisActivo) {
     <div style="margin-top: 14px; display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; font-size: 13px; font-weight: 600; background: #ecfdf5; border: 1px solid #6ee7b7; color: #047857;">
       <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5" /></svg>
@@ -90,34 +119,34 @@
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
             <div>
               <label for="apellido-paterno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido paterno</label>
-        <input id="apellido-paterno" type="text" placeholder="Apellido paterno" [disabled]="srv.formulario.pacienteNn"
+        <input autocomplete="off" id="apellido-paterno" type="text" placeholder="Apellido paterno" [disabled]="srv.formulario.pacienteNn"
                      [(ngModel)]="srv.formulario.apellidoPaterno" name="apellidoPaterno" #apPatCtrl="ngModel" required minlength="2"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="apPatCtrl"></app-error-mensaje>
             </div>
             <div>
               <label for="apellido-materno" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Apellido materno</label>
-        <input id="apellido-materno" type="text" placeholder="Apellido materno" [disabled]="srv.formulario.pacienteNn"
+        <input autocomplete="off" id="apellido-materno" type="text" placeholder="Apellido materno" [disabled]="srv.formulario.pacienteNn"
                      [(ngModel)]="srv.formulario.apellidoMaterno" name="apellidoMaterno" #apMatCtrl="ngModel" required minlength="2"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="apMatCtrl"></app-error-mensaje>
             </div>
             <div>
               <label for="primer-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Primer nombre</label>
-        <input id="primer-nombre" type="text" placeholder="Primer nombre" [disabled]="srv.formulario.pacienteNn"
+        <input autocomplete="off" id="primer-nombre" type="text" placeholder="Primer nombre" [disabled]="srv.formulario.pacienteNn"
                      [(ngModel)]="srv.formulario.primerNombre" name="primerNombre" #nomCtrl="ngModel" required minlength="2"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="nomCtrl"></app-error-mensaje>
             </div>
             <div>
               <label for="segundo-nombre" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Segundo nombre</label>
-        <input id="segundo-nombre" type="text" placeholder="Segundo nombre" [disabled]="srv.formulario.pacienteNn"
+        <input autocomplete="off" id="segundo-nombre" type="text" placeholder="Segundo nombre" [disabled]="srv.formulario.pacienteNn"
                      [(ngModel)]="srv.formulario.segundoNombre"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             </div>
             <div>
               <label for="fecha-de-nacimiento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha de nacimiento</label>
-        <input id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" name="fechaNac" #fNacCtrl="ngModel" required
+        <input autocomplete="off" id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" name="fechaNac" #fNacCtrl="ngModel" required
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="fNacCtrl"></app-error-mensaje>
             </div>
@@ -125,7 +154,7 @@
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 14px;">
             <div>
               <label for="sexo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Sexo</label>
-        <select id="sexo" [(ngModel)]="srv.formulario.idTipoSexo"
+        <select autocomplete="off" id="sexo" [(ngModel)]="srv.formulario.idTipoSexo"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (sexo of srv.tiposSexo; track sexo.id) {
@@ -135,7 +164,7 @@
             </div>
             <div>
               <label for="estado-civil" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado civil</label>
-        <select id="estado-civil" [(ngModel)]="srv.formulario.idEstadoCivil"
+        <select autocomplete="off" id="estado-civil" [(ngModel)]="srv.formulario.idEstadoCivil"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (estado of srv.estadosCivil; track estado.id) {
@@ -145,13 +174,13 @@
             </div>
             <div>
               <label for="telefono" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Teléfono</label>
-        <input id="telefono" type="text" placeholder="9xx xxx xxx" [(ngModel)]="srv.formulario.telefono" name="telefono" #telCtrl="ngModel" pattern="^[0-9]{9}$"
+        <input autocomplete="off" id="telefono" type="text" placeholder="9xx xxx xxx" [(ngModel)]="srv.formulario.telefono" name="telefono" #telCtrl="ngModel" pattern="^[0-9]{9}$"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="telCtrl"></app-error-mensaje>
             </div>
             <div>
               <label for="departamento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Departamento</label>
-        <select id="departamento" [(ngModel)]="srv.formulario.idDepartamentoDomicilio" (change)="cargarProvincias()"
+        <select autocomplete="off" id="departamento" [(ngModel)]="srv.formulario.idDepartamentoDomicilio" (change)="cargarProvincias()"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (depto of srv.departamentos; track depto.id) {
@@ -161,7 +190,7 @@
             </div>
             <div>
               <label for="provincia" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Provincia</label>
-        <select id="provincia" [(ngModel)]="srv.formulario.idProvinciaDomicilio" (change)="cargarDistritos()"
+        <select autocomplete="off" id="provincia" [(ngModel)]="srv.formulario.idProvinciaDomicilio" (change)="cargarDistritos()"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (prov of srv.provincias; track prov.id) {
@@ -173,7 +202,7 @@
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 14px;">
             <div>
               <label for="distrito" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Distrito</label>
-        <select id="distrito" [(ngModel)]="srv.formulario.idDistritoDomicilio" (change)="cargarCentrosPoblados()"
+        <select autocomplete="off" id="distrito" [(ngModel)]="srv.formulario.idDistritoDomicilio" (change)="cargarCentrosPoblados()"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (dist of srv.distritos; track dist.id) {
@@ -183,7 +212,7 @@
             </div>
             <div>
               <label for="centro-poblado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Centro poblado</label>
-        <select id="centro-poblado" [(ngModel)]="srv.formulario.idCentroPobladoDomicilio"
+        <select autocomplete="off" id="centro-poblado" [(ngModel)]="srv.formulario.idCentroPobladoDomicilio"
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (cp of srv.centrosPoblados; track cp.id) {
@@ -193,7 +222,7 @@
             </div>
             <div style="grid-column: span 2;">
               <label for="direccion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Dirección</label>
-        <input id="direccion" type="text" placeholder="Dirección completa" [(ngModel)]="srv.formulario.direccionDomicilio"
+        <input autocomplete="off" id="direccion" type="text" placeholder="Dirección completa" [(ngModel)]="srv.formulario.direccionDomicilio"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             </div>
           </div>
@@ -250,8 +279,8 @@
           </div>
           <div>
             <label for="iafa-select" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">IAFA</label>
-            <select id="iafa-select" [(ngModel)]="srv.formulario.idFuenteFinanciamiento" name="idFuenteFinanciamiento" [disabled]="srv.sisIntegrado"
-                    [style.background]="srv.sisIntegrado ? '#eef1f6' : '#f8fafc'"
+            <select autocomplete="off" id="iafa-select" [(ngModel)]="srv.formulario.idFuenteFinanciamiento" name="idFuenteFinanciamiento" [disabled]="srv.sisIntegrado || srv.formulario.pacienteNn"
+                    [style.background]="(srv.sisIntegrado || srv.formulario.pacienteNn) ? '#eef1f6' : '#f8fafc'"
                     style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; color: #07153a;">
               <option value="">Seleccionar...</option>
               @for (fuente of srv.fuentesFinanciamiento; track fuente.idFuenteFinanciamiento) {
@@ -260,8 +289,8 @@
             </select>
           </div>
           <div>
-            <label for="como-llego" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Cómo llegó</label>
-        <select id="como-llego" [(ngModel)]="srv.formulario.idEstadoLlego"
+            <label for="como-llego" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Cómo llegó <span style="color: #ef4444;">*</span></label>
+        <select autocomplete="off" id="como-llego" [(ngModel)]="srv.formulario.idEstadoLlego"
                     style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <option value="">Seleccionar...</option>
               @for (estado of srv.estadosLlegoPaciente; track estado.id) {
@@ -273,115 +302,68 @@
 
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
           <div>
-            <label for="f-cardiaca-lpm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">F. Cardiaca (lpm)</label>
-        <input id="f-cardiaca-lpm" type="text" placeholder="82" [(ngModel)]="srv.formulario.frecCardiaca" name="fc" #fcCtrl="ngModel" pattern="^[0-9]{1,3}$"
+            <label for="f-cardiaca-lpm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">F. Cardiaca (lpm) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="f-cardiaca-lpm" type="text" placeholder="82" [(ngModel)]="srv.formulario.frecCardiaca" name="fc" #fcCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="fcCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="temp-c" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Temp (°C)</label>
-        <input id="temp-c" type="text" placeholder="36.8" [(ngModel)]="srv.formulario.temperatura" name="temp" #tempCtrl="ngModel" pattern="^[0-9]{2}(\.[0-9]{1,2})?$"
+            <label for="temp-c" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Temp (°C) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="temp-c" type="text" placeholder="36.8" [(ngModel)]="srv.formulario.temperatura" name="temp" #tempCtrl="ngModel" pattern="^[0-9]{2}(\.[0-9]{1,2})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="tempCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="pa-mmhg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">P.A. (mmHg)</label>
-        <input id="pa-mmhg" type="text" placeholder="120/80" [(ngModel)]="srv.formulario.presionArterial" name="pa" #paCtrl="ngModel" pattern="^[0-9]{2,3}\/[0-9]{2,3}$"
+            <label for="pa-mmhg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">P.A. (mmHg) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="pa-mmhg" type="text" placeholder="120/80" [(ngModel)]="srv.formulario.presionArterial" name="pa" #paCtrl="ngModel" pattern="^[0-9]{2,3}\/[0-9]{2,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="paCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="sat-o" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">SAT O₂ (%)</label>
-        <input id="sat-o" type="text" placeholder="98" [(ngModel)]="srv.formulario.saturacion" name="sat" #satCtrl="ngModel" pattern="^[0-9]{1,3}$"
+            <label for="sat-o" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">SAT O₂ (%) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="sat-o" type="text" placeholder="98" [(ngModel)]="srv.formulario.saturacion" name="sat" #satCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="satCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="fr-rpm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">F.R. (rpm)</label>
-        <input id="fr-rpm" type="text" placeholder="18" [(ngModel)]="srv.formulario.frecRespiratoria" name="fr" #frCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="fr-rpm" type="text" placeholder="18" [(ngModel)]="srv.formulario.frecRespiratoria" name="fr" #frCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="frCtrl"></app-error-mensaje>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 14px;">
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 14px;">
           <div>
             <label for="fio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">FIO₂ (%)</label>
-        <input id="fio" type="text" placeholder="21" [(ngModel)]="srv.formulario.fiO2" name="fio2" #fiCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="fio" type="text" placeholder="21" [(ngModel)]="srv.formulario.fiO2" name="fio2" #fiCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="fiCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="peso-kg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Peso (kg)</label>
-        <input id="peso-kg" type="text" placeholder="70" [(ngModel)]="srv.formulario.peso" (ngModelChange)="calcularImc()" name="peso" #pesoCtrl="ngModel" pattern="^[0-9]{1,3}(\.[0-9]{1,2})?$"
+            <label for="peso-kg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Peso (kg) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="peso-kg" type="text" placeholder="70" [(ngModel)]="srv.formulario.peso" (ngModelChange)="calcularImc()" name="peso" #pesoCtrl="ngModel" pattern="^[0-9]{1,3}(\.[0-9]{1,2})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="pesoCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="talla-cm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Talla (cm)</label>
-        <input id="talla-cm" type="text" placeholder="172" [(ngModel)]="srv.formulario.talla" (ngModelChange)="calcularImc()" name="talla" #tallaCtrl="ngModel" pattern="^[0-9]{2,3}(\.[0-9]{1,2})?$"
+            <label for="talla-cm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Talla (cm) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="talla-cm" type="text" placeholder="172" [(ngModel)]="srv.formulario.talla" (ngModelChange)="calcularImc()" name="talla" #tallaCtrl="ngModel" pattern="^[0-9]{2,3}(\.[0-9]{1,2})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="tallaCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="imc" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">IMC</label>
-        <input id="imc" type="text" disabled [value]="imc || '—'"
+        <input autocomplete="off" id="imc" type="text" disabled [value]="imc || '—'"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f3f5fb; color: #07153a;">
           </div>
-        </div>
-
-        <div style="margin-top: 16px;">
-          <label for="sintomas-principales" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Síntomas principales</label>
-        <textarea id="sintomas-principales" placeholder="Describa los síntomas principales del paciente" rows="2" [(ngModel)]="srv.formulario.motivo" name="motivo" #motCtrl="ngModel" required minlength="5"
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a; resize: vertical; font-family: inherit;"></textarea>
-          <app-error-mensaje [control]="motCtrl"></app-error-mensaje>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 16px;">
+          @if (esMujer) {
           <div>
-            <label for="tiempo-de-sintomas" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tiempo de síntomas</label>
-        <input id="tiempo-de-sintomas" type="text" placeholder="Ej: 3" [(ngModel)]="srv.formulario.tiempoEvolucionCantidad"
+            <label for="fur" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">FUR</label>
+        <input autocomplete="off" id="fur" type="date" [(ngModel)]="srv.formulario.fechaUltimaRegla" [attr.max]="hoy"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
           </div>
-          <div>
-            <label for="frecuencia" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Frecuencia</label>
-        <select id="frecuencia" [(ngModel)]="srv.formulario.tiempoEvolucionCantidadUnidad"
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-              <option value="">Seleccionar...</option>
-              @for (u of srv.unidadesTiempo; track u.value) {
-                <option [value]="u.value">{{ u.label }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label for="escala-del-dolor" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Escala del dolor</label>
-        <select id="escala-del-dolor" [(ngModel)]="srv.formulario.escalaDolor"
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-              <option value="">Seleccionar...</option>
-              @for (n of [0,1,2,3,4,5,6,7,8,9,10]; track n) {
-                <option [value]="n">{{ n }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label for="escala-de-glasgow" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Escala de Glasgow</label>
-        <select id="escala-de-glasgow" [(ngModel)]="srv.formulario.escalaGlasgow"
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-              <option value="">Seleccionar...</option>
-              @for (n of [3,4,5,6,7,8,9,10,11,12,13,14,15]; track n) {
-                <option [value]="n">{{ n }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label for="servicio-derivado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Servicio derivado</label>
-        <select id="servicio-derivado" [(ngModel)]="srv.formulario.idServicio"
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-              <option value="">Buscar y seleccionar servicio...</option>
-              @for (s of srv.servicios; track s.id) {
-                <option [value]="s.id">{{ s.nombre }}</option>
-              }
-            </select>
-          </div>
+
+          }
         </div>
 
         <div style="margin-top: 18px;">
@@ -397,12 +379,69 @@
               </button>
             }
           </div>
+        </div>        
+
+        <div style="margin-top: 16px;">
+          <label for="sintomas-principales" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Síntomas principales @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <textarea autocomplete="off" id="sintomas-principales" placeholder="Describa los síntomas principales del paciente" rows="2" [(ngModel)]="srv.formulario.motivo" name="motivo" #motCtrl="ngModel" required minlength="5"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a; resize: vertical; font-family: inherit;"></textarea>
+          <app-error-mensaje [control]="motCtrl"></app-error-mensaje>
         </div>
+
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 16px;">
+          <div>
+            <label for="tiempo-de-sintomas" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tiempo de síntomas @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <input autocomplete="off" id="tiempo-de-sintomas" type="text" placeholder="Ej: 3" [(ngModel)]="srv.formulario.tiempoEvolucionCantidad"
+                   style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+          </div>
+          <div>
+            <label for="frecuencia" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Frecuencia @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <select autocomplete="off" id="frecuencia" [(ngModel)]="srv.formulario.tiempoEvolucionCantidadUnidad"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+              <option value="">Seleccionar...</option>
+              @for (u of srv.unidadesTiempo; track u.value) {
+                <option [value]="u.value">{{ u.label }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="escala-del-dolor" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Escala del dolor @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <select autocomplete="off" id="escala-del-dolor" [(ngModel)]="srv.formulario.escalaDolor"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+              <option value="">Seleccionar...</option>
+              @for (n of [0,1,2,3,4,5,6,7,8,9,10]; track n) {
+                <option [value]="n">{{ n }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="escala-de-glasgow" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Escala de Glasgow @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+        <select autocomplete="off" id="escala-de-glasgow" [(ngModel)]="srv.formulario.escalaGlasgow"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+              <option value="">Seleccionar...</option>
+              @for (n of [3,4,5,6,7,8,9,10,11,12,13,14,15]; track n) {
+                <option [value]="n">{{ n }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="servicio-derivado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Servicio derivado <span style="color: #ef4444;">*</span></label>
+        <select autocomplete="off" id="servicio-derivado" [(ngModel)]="srv.formulario.idServicio"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+              <option value="">Buscar y seleccionar servicio...</option>
+              @for (s of srv.servicios; track s.id) {
+                <option [value]="s.id">{{ s.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+
       </div>
     </div>
   }
 
-  <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px;">
+  <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
     <button type="button" (click)="cerrar()"
             style="padding: 10px 20px; border: 1px solid #e0e6f1; border-radius: 11px; background: #fff; font-size: 14px; font-weight: 600; color: #54617f; cursor: pointer;">
       Cancelar

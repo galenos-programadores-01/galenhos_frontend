@@ -25,6 +25,9 @@ export class AuthService {
   readonly menus = signal<IMenu[]>(this.getStoredMenus());
   readonly permisos = signal<IMenuPermiso[]>(this.getStoredPermisos());
   readonly userProfile = signal<IUserProfile | null>(this.getStoredProfile());
+  readonly nombreCompleto = computed<string>(
+    () => this.userProfile()?.nombreCompleto || this.username() || '',
+  );
 
   readonly fotoUrl = computed<string | null>(() => {
     const profile = this.userProfile();
