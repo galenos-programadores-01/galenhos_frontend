@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import {
   ApiClientService,
   ApiRequestError,
@@ -9,7 +9,7 @@ import type {
 } from '../../../../../compartido/tipos/api-tipos';
 import { AuthService } from '../../../../auth/aplicacion/auth.service';
 
-export interface RegistroTriajePayload {
+export interface RegistroTriajeObstetricoPayload {
   idTriaje?: number;
   idDocIdentidad?: number;
   nroDocumento?: string;
@@ -49,7 +49,7 @@ export interface RegistroTriajePayload {
   idServicio?: number;
   idTipoPrioridad?: number;
   fechaUltimaRegla?: string;
-  esGestante?: boolean;
+  esGestante?: boolean | null;
   fur?: string | null;
   edadGestacional?: number | null;
   fpp?: string | null;
@@ -58,7 +58,7 @@ export interface RegistroTriajePayload {
   idEmpleado?: number;
 }
 
-export interface PendientesAdmisionParams {
+export interface PendientesAdmisionObstetricoParams {
   fecha: string;
   filtro?: string;
   nroCta?: number;
@@ -68,7 +68,7 @@ export interface PendientesAdmisionParams {
   idTipoServicio?: number;
 }
 
-export interface CrearAdmisionPayload {
+export interface CrearAdmisionObstetricoPayload {
   idTriaje: number;
   idPacienteTriaje: number;
   nroDocumento?: string;
@@ -83,12 +83,12 @@ export interface RespuestaSp {
   resultado: string;
 }
 
-export interface ReporteTriajeParams {
+export interface ReporteTriajeObstetricoParams {
   id?: number;
   idPaciente?: number;
 }
 
-export interface TriajeConsultaPayload {
+export interface TriajeObstetricoConsultaPayload {
   idAtencion: number;
   idPaciente: number;
   idEmpleado: number;
@@ -111,7 +111,7 @@ export interface TriajeConsultaPayload {
   gestante?: string;
 }
 
-export interface TriajeConsultaParams {
+export interface TriajeObstetricoConsultaParams {
   fini: string;
   ffin: string;
   filtro?: string;
@@ -121,7 +121,7 @@ export interface TriajeConsultaParams {
 @Injectable({
   providedIn: 'root',
 })
-export class TriajeApiService {
+export class TriajeObstetricoApiService {
   private apiClient = inject(ApiClientService);
   private authService = inject(AuthService);
 
@@ -143,13 +143,13 @@ export class TriajeApiService {
                 0,
               ),
             ),
-          TriajeApiService.RENIEC_TIMEOUT_MS,
+          TriajeObstetricoApiService.RENIEC_TIMEOUT_MS,
         ),
       ),
     ]);
   }
 
-  registrar(payload: RegistroTriajePayload): Promise<RespuestaSp> {
+  registrar(payload: RegistroTriajeObstetricoPayload): Promise<RespuestaSp> {
     return this.apiClient.request<RespuestaSp>('/api/v1/triaje', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -174,7 +174,7 @@ export class TriajeApiService {
   }
 
   listarPendientesAdmision(
-    params: PendientesAdmisionParams,
+    params: PendientesAdmisionObstetricoParams,
   ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams();
     query.append('fecha', params.fecha);
@@ -193,14 +193,16 @@ export class TriajeApiService {
     );
   }
 
-  crearAdmision(payload: CrearAdmisionPayload): Promise<RespuestaSp> {
+  crearAdmision(payload: CrearAdmisionObstetricoPayload): Promise<RespuestaSp> {
     return this.apiClient.request<RespuestaSp>('/api/v1/triaje/admision', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   }
 
-  obtenerReporte(params: ReporteTriajeParams): Promise<IFilaBackend[]> {
+  obtenerReporte(
+    params: ReporteTriajeObstetricoParams,
+  ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams();
     if (params.id) query.append('id', String(params.id));
     if (params.idPaciente)
@@ -270,7 +272,9 @@ export class TriajeApiService {
     );
   }
 
-  listarTriajeConsulta(params: TriajeConsultaParams): Promise<IFilaBackend[]> {
+  listarTriajeConsulta(
+    params: TriajeObstetricoConsultaParams,
+  ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams({ fini: params.fini, ffin: params.ffin });
     if (params.filtro) query.append('filtro', params.filtro);
     if (params.idServicio)
@@ -281,7 +285,7 @@ export class TriajeApiService {
   }
 
   registrarTriajeConsulta(
-    payload: TriajeConsultaPayload,
+    payload: TriajeObstetricoConsultaPayload,
   ): Promise<RespuestaSp> {
     return this.apiClient.request<RespuestaSp>('/api/v1/triaje/consulta', {
       method: 'POST',

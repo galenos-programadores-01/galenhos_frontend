@@ -324,6 +324,31 @@ export class RegistroPacienteService {
     await this.verificarParametro296();
   }
 
+  async verificarPacienteExistente(): Promise<void> {
+    const nroDoc = this.form.nroDocumento.trim();
+    const idTipoDoc = this.form.idDocIdentidad;
+    if (!nroDoc || !idTipoDoc) return;
+
+    try {
+      const paciente = await this.pacientesApi.porDocumento(nroDoc, Number(idTipoDoc));
+      if (paciente) {
+        const nombre = [
+          paciente.paternalSurname,
+          paciente.maternalSurname,
+          paciente.firstName,
+          paciente.secondName,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        this.error = `El paciente ${nombre} ya se encuentra registrado en el sistema con el documento N.º ${paciente.documentNumber}.`;
+        this.form.nroDocumento = '';
+        this.form.idDocIdentidad = '';
+      }
+    } catch {
+      // 404 u otros errores = paciente no existe, no se muestra nada
+    }
+  }
+
   async verificarParametro296(): Promise<void> {
     try {
       const param = await this.maestrosApi.getParametro(296);
@@ -454,7 +479,7 @@ export class RegistroPacienteService {
     pacienteId: number | string | null,
     modo: 'paciente' | 'triaje',
   ): Promise<string | null> {
-    const errorValidacion = this.validarGuardado();
+    const errorValidacion = this.validarGuardado(modo);
     if (errorValidacion) {
       this.error = errorValidacion;
       return null;
@@ -483,13 +508,39 @@ export class RegistroPacienteService {
     }
   }
 
-  private validarGuardado(): string | null {
+  private validarGuardado(modo: 'paciente' | 'triaje'): string | null {
     const f = this.form;
     const nroDocumento = sanitizar(f.nroDocumento);
     const apellidoPaterno = normalizarNombre(f.apellidoPaterno);
     const primerNombre = normalizarNombre(f.primerNombre);
     if (!nroDocumento || !apellidoPaterno || !primerNombre) {
       return 'Complete al menos documento, apellido paterno y primer nombre.';
+    }
+    if (!f.fechaNacimiento) {
+      return 'La fecha de nacimiento es obligatoria.';
+    }
+    if (!f.idTipoSexo) {
+      return 'El sexo es obligatorio.';
+    }
+    if (modo === 'paciente') {
+      if (!f.idEtnia) {
+        return 'La etnia es obligatoria.';
+      }
+      if (!f.idIdioma) {
+        return 'El idioma es obligatorio.';
+      }
+    }
+    if (!sanitizar(f.direccionDomicilio)) {
+      return 'La dirección de domicilio es obligatoria.';
+    }
+    if (!f.idDepartamentoDomicilio) {
+      return 'El departamento de domicilio es obligatorio.';
+    }
+    if (!f.idProvinciaDomicilio) {
+      return 'La provincia de domicilio es obligatoria.';
+    }
+    if (!f.idDistritoDomicilio) {
+      return 'El distrito de domicilio es obligatorio.';
     }
     const email = sanitizar(f.email);
     if (

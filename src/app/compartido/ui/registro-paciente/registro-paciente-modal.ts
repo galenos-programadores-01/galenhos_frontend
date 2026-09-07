@@ -60,6 +60,12 @@ export class RegistroPacienteModal implements OnChanges {
     await this.srv.consultarReniec();
   }
 
+  async verificarPacienteExistente(): Promise<void> {
+    if (!this.pacienteId) {
+      await this.srv.verificarPacienteExistente();
+    }
+  }
+
   async guardar(): Promise<void> {
     const nombre = await this.srv.guardar(this.pacienteId, this.modo);
     if (nombre) {

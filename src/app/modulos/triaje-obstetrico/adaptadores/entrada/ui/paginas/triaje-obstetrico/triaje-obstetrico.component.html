@@ -290,26 +290,26 @@
     </div>
   </div>
 
-  <app-registro-triaje-modal
+  <app-registro-triaje-obstetrico-modal
     [abierto]="modalRegistro"
     (alCerrar)="cerrarModalRegistro()"
     (triajeIniciado)="onPacienteRegistrado()"
   >
-  </app-registro-triaje-modal>
+  </app-registro-triaje-obstetrico-modal>
 
   @if (reporteTriajeId) {
-    <app-reporte-triaje
+    <app-reporte-triaje-obstetrico
       [idTriaje]="reporteTriajeId"
       (alCerrar)="cerrarReporte()"
-    ></app-reporte-triaje>
+    ></app-reporte-triaje-obstetrico>
   }
 
   @if (modalFirma) {
-    <app-firma-masiva-modal
+    <app-firma-masiva-obstetrico-modal
       [ids]="firmaIds"
       (alCerrar)="cerrarFirmaMasiva()"
       (firmaCompletada)="onFirmaMasivaCompletada($event)"
-    ></app-firma-masiva-modal>
+    ></app-firma-masiva-obstetrico-modal>
   }
 
   @if (authService.hasPermission('agregar')) {

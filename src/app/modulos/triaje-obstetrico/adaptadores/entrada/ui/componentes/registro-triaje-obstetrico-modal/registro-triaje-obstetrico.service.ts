@@ -1,5 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { MaestrosApiService } from '../../../../../../../compartido/api/maestros.api.service';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { ApiRequestError } from '../../../../../../../compartido/api-client/api-client.service';
 import type {
   ICatalogoDescripcion,
@@ -8,17 +9,16 @@ import type {
   RegistroPacientePayload,
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.mapper';
-import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { PacientesApiService } from '../../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
   type SisAfiliado,
   SisApiService,
 } from '../../../../../../sis/adaptadores/salida/http/sis.api.service';
 import {
-  type RegistroTriajePayload,
-  TriajeApiService,
-} from '../../../../salida/http/triaje.api.service';
-import type { FormRegistroTriaje } from './registro-triaje.interfaces';
+  type RegistroTriajeObstetricoPayload,
+  TriajeObstetricoApiService,
+} from '../../../../salida/http/triaje-obstetrico.api.service';
+import type { FormRegistroTriajeObstetrico } from './registro-triaje-obstetrico.interfaces';
 
 // Parámetros que habilitan/deshabilitan la integración con webservices
 // externos: 'S' habilita la consulta, 'N' la deshabilita.
@@ -26,21 +26,20 @@ const PARAMETRO_SIS_ID = 322;
 const PARAMETRO_RENIEC_ID = 296;
 
 @Injectable()
-export class RegistroTriajeService {
+export class RegistroTriajeObstetricoService {
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly pacientesApi = inject(PacientesApiService);
   private readonly sisApi = inject(SisApiService);
-  private readonly triajeApi = inject(TriajeApiService);
+  private readonly triajeApi = inject(TriajeObstetricoApiService);
   private readonly reniecMapper = inject(ReniecMapper);
   private readonly authService = inject(AuthService);
 
-  formulario: FormRegistroTriaje = this.crearFormularioVacio();
+  formulario: FormRegistroTriajeObstetrico = this.crearFormularioVacio();
 
   buscando = false;
   guardando = false;
   pacienteEncontrado = false;
   mensajeError = '';
-  mensajeInfo = '';
 
   sisConsultado = false;
   sisActivo = false;
@@ -63,12 +62,47 @@ export class RegistroTriajeService {
   servicios: ICatalogoNombre[] = [];
 
   prioridades = [
-    { value: '1', label: 'I. Emerg. o Gravedad', color: '#3b82f6' },
-    { value: '2', label: 'II. Urgencia Mayor', color: '#22c55e' },
-    { value: '3', label: 'III. Urgencia Menor', color: '#eab308' },
-    { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
-    { value: '6', label: 'Llegó Cadáver', color: '#ef4444' },
+    {
+      value: '1',
+      label: 'Prioridad I',
+      subtitulo: 'Riesgo de muerte inminente (atención inmediata)',
+      color: '#ef4444',
+      opciones: [
+        'Sangrado vaginal masivo o signos de shock hipovolémico (palidez, hipotensión, taquicardia)',
+        'Dolor abdominal severo con signos de abdomen agudo (sospecha embarazo ectópico complicado)',
+        'Convulsiones o pérdida de conciencia (sospecha de eclampsia)',
+        'Ausencia de movimientos fetales referida por la gestante',
+        'Trabajo de parto en periodo expulsivo o parto inminente',
+      ],
+    },
+    {
+      value: '2',
+      label: 'Prioridad II',
+      subtitulo: 'Urgencia mayor (espera máx. 10 minutos)',
+      color: '#f97316',
+      opciones: [
+        'Presión arterial ≥ 140/90 con cefalea o visión borrosa (sospecha de preeclampsia)',
+        'Contracciones uterinas regulares en gestante pretérmino (<37 semanas)',
+        'Pérdida de líquido por vía vaginal (sospecha de rotura prematura de membranas)',
+        'Sangrado vaginal moderado en gestante, con funciones vitales estables',
+        'Fiebre ≥ 38°C asociada a dolor pélvico (sospecha de proceso infeccioso)',
+      ],
+    },
+    {
+      value: '3',
+      label: 'Prioridad III',
+      subtitulo: 'Urgencia menor (sin riesgo vital, espera ≥ 20 minutos)',
+      color: '#eab308',
+      opciones: [
+        'Sangrado vaginal leve en no gestante, con funciones vitales estables',
+        'Secreción vaginal anormal sin fiebre asociada',
+        'Dolor pélvico leve, con funciones vitales estables',
+        'Control prenatal de rutina, sin signos de alarma',
+      ],
+    },
   ];
+
+  opcionesSeleccionadas: Record<string, string[]> = {};
 
   unidadesTiempo = [
     { value: 'Años', label: 'Años' },
@@ -81,13 +115,10 @@ export class RegistroTriajeService {
 
   pasoActual = 1;
 
-  crearFormularioVacio(): FormRegistroTriaje {
+  crearFormularioVacio(): FormRegistroTriajeObstetrico {
     return {
       idDocIdentidad: '1',
       nroDocumento: '',
-      afiliacionDisa: '035',
-      afiliacionTipoFormato: 'E',
-      afiliacionNroContrato: '',
       pacienteNn: false,
       apellidoPaterno: '',
       apellidoMaterno: '',
@@ -122,6 +153,10 @@ export class RegistroTriajeService {
       idTipoPrioridad: '',
       fechaUltimaRegla: '',
       esGestante: false,
+      edadGestacional: '',
+      fpp: '',
+      nroControles: '',
+      movimientosFetales: '',
     };
   }
 
@@ -168,7 +203,6 @@ export class RegistroTriajeService {
     this.buscando = false;
     this.guardando = false;
     this.mensajeError = '';
-    this.mensajeInfo = '';
     this.sisConsultado = false;
     this.sisActivo = false;
     this.sisDescripcion = '';
@@ -184,11 +218,6 @@ export class RegistroTriajeService {
       return;
     }
 
-    if (this.esFiliacion) {
-      await this.buscarPorAfiliacion();
-      return;
-    }
-
     if (!this.formulario.nroDocumento) {
       this.mensajeError = 'Ingrese un número de documento';
       return;
@@ -197,7 +226,6 @@ export class RegistroTriajeService {
     this.formulario.nroDocumento = this.formulario.nroDocumento.trim();
     this.buscando = true;
     this.mensajeError = '';
-    this.mensajeInfo = '';
     this.pacienteEncontrado = false;
     this.sisConsultado = false;
     this.sisActivo = false;
@@ -223,63 +251,15 @@ export class RegistroTriajeService {
         await this.consultarSis();
       }
 
-      // Si el paciente no se encontró en BD, RENIEC ni SIS, se habilitan
-      // los textbox para que el usuario ingrese los datos manualmente.
-      if (!this.pacienteEncontrado) {
-        this.pacienteEncontrado = true;
-        this.pasoActual = 2;
-        this.mensajeInfo =
-          'El paciente no fue encontrado. Ingrese los datos manualmente.';
+      if (!this.pacienteEncontrado && !this.mensajeError) {
+        this.mensajeError =
+          'No se encontró el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
       }
     } catch (error: unknown) {
       this.mensajeError =
         error instanceof ApiRequestError
           ? error.message
           : 'Error inesperado al buscar paciente.';
-    } finally {
-      this.buscando = false;
-    }
-  }
-
-  // Busca por afiliación SIS (intOpcion=2): requiere DISA, tipo de formato y
-  // número de contrato, sin número de documento.
-  private async buscarPorAfiliacion(): Promise<void> {
-    const disa = this.formulario.afiliacionDisa.trim();
-    const tipoFormato = this.formulario.afiliacionTipoFormato.trim();
-    const nroContrato = this.formulario.afiliacionNroContrato.trim();
-
-    if (!disa || !tipoFormato || !nroContrato) {
-      this.mensajeError =
-        'Ingrese DISA, tipo de formato y número de contrato de la afiliación.';
-      return;
-    }
-
-    this.formulario.nroDocumento = '';
-    this.buscando = true;
-    this.mensajeError = '';
-    this.pacienteEncontrado = false;
-    this.sisConsultado = false;
-    this.sisActivo = false;
-
-    try {
-      await this.cargarParametrosIntegracion();
-
-      if (this.sisIntegrado) {
-        this.formulario.afiliacionDisa = disa;
-        this.formulario.afiliacionTipoFormato = tipoFormato;
-        this.formulario.afiliacionNroContrato = nroContrato;
-        await this.consultarSis();
-      }
-
-      if (!this.pacienteEncontrado && !this.mensajeError) {
-        this.mensajeError =
-          'No se encontró la afiliación en SIS. Complete los datos manualmente o active el modo Paciente NN.';
-      }
-    } catch (error: unknown) {
-      this.mensajeError =
-        error instanceof ApiRequestError
-          ? error.message
-          : 'Error inesperado al buscar la afiliación.';
     } finally {
       this.buscando = false;
     }
@@ -399,20 +379,11 @@ export class RegistroTriajeService {
 
   private async consultarSis(): Promise<void> {
     try {
-      let sisResponse: SisAfiliado;
-      if (this.esFiliacion) {
-        sisResponse = await this.sisApi.consultarAfiliado('', 0, {
-          disa: this.formulario.afiliacionDisa,
-          tipoFormato: this.formulario.afiliacionTipoFormato,
-          nroContrato: this.formulario.afiliacionNroContrato,
-        });
-      } else {
-        const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
-        sisResponse = await this.sisApi.consultarAfiliado(
-          this.formulario.nroDocumento,
-          tipoDoc,
-        );
-      }
+      const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
+      const sisResponse = await this.sisApi.consultarAfiliado(
+        this.formulario.nroDocumento,
+        tipoDoc,
+      );
 
       this.sisConsultado = true;
 
@@ -463,13 +434,10 @@ export class RegistroTriajeService {
       }
 
       this.actualizarIafaAutomatico();
-    } catch (error: unknown) {
+    } catch {
       this.sisConsultado = true;
       this.sisActivo = false;
       this.actualizarIafaAutomatico();
-      if (error instanceof ApiRequestError) {
-        this.mensajeError = error.message;
-      }
     }
   }
 
@@ -554,21 +522,6 @@ export class RegistroTriajeService {
 
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
-
-    // Si se buscó por afiliación (sin documento), el SIS puede devolver el
-    // tipo y número de documento real del paciente, o un recién nacido sin
-    // documento. Con número se usa tal cual; sin número se trata como
-    // "Sin Documento" (SD), igual que el modo NN, para poder grabar el triaje.
-    if (this.esFiliacion) {
-      if (sis.nroDocumento) {
-        this.formulario.nroDocumento = sis.nroDocumento;
-        if (sis.tipoDocumento && sis.tipoDocumento !== '99') {
-          this.formulario.idDocIdentidad = sis.tipoDocumento;
-        }
-      } else {
-        this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
-      }
-    }
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
       this.formulario.fechaNacimiento = `${sis.fecNacimiento.slice(0, 4)}-${sis.fecNacimiento.slice(4, 6)}-${sis.fecNacimiento.slice(6, 8)}`;
@@ -713,19 +666,27 @@ export class RegistroTriajeService {
     );
   }
 
-  get esFiliacion(): boolean {
-    return this.formulario.idDocIdentidad === '99';
-  }
-
-  private idTipoDocumentoSinDocumento(): string {
-    const sd = this.tiposDocumentos.find(
-      (t) => (t.descripcion || '').toUpperCase() === 'SD',
-    );
-    return sd ? String(sd.id) : '';
-  }
-
   get esCadaver(): boolean {
     return this.formulario.idTipoPrioridad === '6';
+  }
+
+  get opcionesPrioridadActual(): string[] {
+    if (!this.formulario.idTipoPrioridad) return [];
+    const pri = this.prioridades.find(
+      (p) => p.value === this.formulario.idTipoPrioridad,
+    );
+    return pri?.opciones ?? [];
+  }
+
+  toggleOpcionPrioridad(opcion: string): void {
+    const clave = this.formulario.idTipoPrioridad;
+    if (!clave) return;
+    const actual = this.opcionesSeleccionadas[clave] ?? [];
+    if (actual.includes(opcion)) {
+      this.opcionesSeleccionadas[clave] = actual.filter((o) => o !== opcion);
+    } else {
+      this.opcionesSeleccionadas[clave] = [...actual, opcion];
+    }
   }
 
   async guardarYContinuar(): Promise<void> {
@@ -839,11 +800,7 @@ export class RegistroTriajeService {
           Number(this.formulario.idCentroPobladoDomicilio) || undefined,
       };
 
-      if (
-        !idPacienteFinal &&
-        !this.formulario.pacienteNn &&
-        this.formulario.nroDocumento
-      ) {
+      if (!idPacienteFinal && !this.formulario.pacienteNn) {
         await this.pacientesApi.registrar(
           payloadPaciente as unknown as RegistroPacientePayload,
         );
@@ -854,7 +811,7 @@ export class RegistroTriajeService {
         );
       }
 
-      const payloadTriaje: RegistroTriajePayload = {
+      const payloadTriaje: RegistroTriajeObstetricoPayload = {
         idDocIdentidad: Number(this.formulario.idDocIdentidad) || 1,
         nroDocumento: this.formulario.nroDocumento,
         apellidoPaterno: this.formulario.apellidoPaterno,
@@ -898,10 +855,11 @@ export class RegistroTriajeService {
         gestante: this.formulario.esGestante ? 1 : 0,
         fechaUltimaRegla: this.formulario.fechaUltimaRegla || undefined,
         fur: this.formulario.fechaUltimaRegla || null,
-        edadGestacional: null,
-        fpp: null,
-        nroControlesPrenatales: null,
-        movimientosFetales: null,
+        esGestante: this.formulario.esGestante || null,
+        edadGestacional: Number(this.formulario.edadGestacional) || null,
+        fpp: this.formulario.fpp || null,
+        nroControlesPrenatales: Number(this.formulario.nroControles) || null,
+        movimientosFetales: Number(this.formulario.movimientosFetales) || null,
         idEmpleado:
           this.authService.getIdEmpleado() > 0
             ? this.authService.getIdEmpleado()

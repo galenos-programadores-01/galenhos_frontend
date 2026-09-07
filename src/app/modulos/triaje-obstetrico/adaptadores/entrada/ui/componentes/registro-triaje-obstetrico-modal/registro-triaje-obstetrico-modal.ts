@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
   Component,
@@ -12,31 +12,31 @@ import { FormsModule } from '@angular/forms';
 import type { IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
 import { ErrorMensajeComponent } from '../../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
-import { BuscarPacienteModal } from '../buscar-paciente-modal/buscar-paciente-modal';
-import { ReporteTriajeComponent } from '../reporte-triaje/reporte-triaje.component';
-import { RegistroTriajeService } from './registro-triaje.service';
+import { BuscarPacienteObstetricoModal } from '../buscar-paciente-modal/buscar-paciente-modal';
+import { ReporteTriajeObstetricoComponent } from '../reporte-triaje-obstetrico/reporte-triaje-obstetrico.component';
+import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.service';
 
 @Component({
-  selector: 'app-registro-triaje-modal',
+  selector: 'app-registro-triaje-obstetrico-modal',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     VentanaModal,
-    ReporteTriajeComponent,
+    ReporteTriajeObstetricoComponent,
     ErrorMensajeComponent,
-    BuscarPacienteModal,
+    BuscarPacienteObstetricoModal,
   ],
-  providers: [RegistroTriajeService],
-  templateUrl: './registro-triaje-modal.html',
+  providers: [RegistroTriajeObstetricoService],
+  templateUrl: './registro-triaje-obstetrico-modal.html',
   styles: [`@keyframes spin { to { transform: rotate(360deg); } }`],
 })
-export class RegistroTriajeModal implements OnInit {
+export class RegistroTriajeObstetricoModal implements OnInit {
   @Input() abierto = false;
   @Output() alCerrar = new EventEmitter<void>();
   @Output() triajeIniciado = new EventEmitter<void>();
 
-  public readonly srv = inject(RegistroTriajeService);
+  public readonly srv = inject(RegistroTriajeObstetricoService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   reporteId: number | null = null;
@@ -66,16 +66,6 @@ export class RegistroTriajeModal implements OnInit {
   onEnterDocumento(_event: Event): void {
     if (!this.srv.buscando && !this.srv.formulario.pacienteNn) {
       this.buscarPaciente();
-    }
-  }
-
-  onTipoDocumentoChange(valor: string): void {
-    if (valor === '99') {
-      this.srv.formulario.nroDocumento = '';
-      this.srv.pacienteEncontrado = false;
-      this.srv.mensajeError = '';
-      this.srv.sisConsultado = false;
-      this.srv.sisActivo = false;
     }
   }
 

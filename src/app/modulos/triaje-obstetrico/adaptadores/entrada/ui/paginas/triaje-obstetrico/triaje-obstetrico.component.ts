@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
   Component,
@@ -19,12 +19,12 @@ import type {
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
-  type RegistroTriajePayload,
-  TriajeApiService,
-} from '../../../../salida/http/triaje.api.service';
-import { FirmaMasivaModal } from '../../componentes/firma-masiva/firma-masiva-modal';
-import { RegistroTriajeModal } from '../../componentes/registro-triaje-modal/registro-triaje-modal';
-import { ReporteTriajeComponent } from '../../componentes/reporte-triaje/reporte-triaje.component';
+  type RegistroTriajeObstetricoPayload,
+  TriajeObstetricoApiService,
+} from '../../../../salida/http/triaje-obstetrico.api.service';
+import { FirmaMasivaObstetricoModal } from '../../componentes/firma-masiva/firma-masiva-obstetrico-modal';
+import { RegistroTriajeObstetricoModal } from '../../componentes/registro-triaje-obstetrico-modal/registro-triaje-obstetrico-modal';
+import { ReporteTriajeObstetricoComponent } from '../../componentes/reporte-triaje-obstetrico/reporte-triaje-obstetrico.component';
 
 interface FormEvaluacion {
   motivo: string;
@@ -106,16 +106,16 @@ const SI_NO = [
   imports: [
     FormsModule,
     CommonModule,
-    RegistroTriajeModal,
-    ReporteTriajeComponent,
-    FirmaMasivaModal,
+    RegistroTriajeObstetricoModal,
+    ReporteTriajeObstetricoComponent,
+    FirmaMasivaObstetricoModal,
     TablaComponent,
     ColumnaTemplateDirective,
   ],
-  templateUrl: './triaje.component.html',
+  templateUrl: './triaje-obstetrico.component.html',
 })
-export class TriajeComponent implements OnInit {
-  private readonly triajeApi = inject(TriajeApiService);
+export class TriajeObstetricoComponent implements OnInit {
+  private readonly triajeApi = inject(TriajeObstetricoApiService);
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly cdr = inject(ChangeDetectorRef);
   public readonly authService = inject(AuthService);
@@ -516,8 +516,8 @@ export class TriajeComponent implements OnInit {
     f: FormEvaluacion,
     motivo: string,
     presionArterial: string,
-  ): RegistroTriajePayload {
-    const payload: RegistroTriajePayload = {
+  ): RegistroTriajeObstetricoPayload {
+    const payload: RegistroTriajeObstetricoPayload = {
       idTriaje,
       motivo,
       presionArterial,

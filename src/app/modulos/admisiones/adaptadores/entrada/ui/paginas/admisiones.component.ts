@@ -301,6 +301,7 @@ export class AdmisionesComponent implements OnInit {
     const payload: CrearAdmisionPayload = {
       idTriaje,
       idPacienteTriaje,
+      nroDocumento: this.documento(item) || undefined,
       idMedico: this.formAdmision.idMedico
         ? Number(this.formAdmision.idMedico)
         : undefined,

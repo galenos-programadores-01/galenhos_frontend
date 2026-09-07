@@ -9,13 +9,12 @@
     <div>
       <label for="tipo-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de documento</label>
         <select autocomplete="off" id="tipo-de-documento" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
-              [(ngModel)]="srv.formulario.idDocIdentidad" (ngModelChange)="onTipoDocumentoChange($event)" [disabled]="srv.formulario.pacienteNn">
+              [(ngModel)]="srv.formulario.idDocIdentidad" [disabled]="srv.formulario.pacienteNn">
         @for (tipo of srv.tiposDocumentos; track tipo.id) {
           <option [value]="tipo.id">{{ tipo.descripcion }}</option>
         }
       </select>
     </div>
-    @if (!srv.esFiliacion) {
     <div>
       <label for="numero-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Número de documento</label>
         <input autocomplete="off" id="numero-de-documento" type="text" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
@@ -23,28 +22,6 @@
              [disabled]="srv.formulario.pacienteNn" (keydown.enter)="onEnterDocumento($event)">
       <app-error-mensaje [control]="nroDocCtrl"></app-error-mensaje>
     </div>
-    } @else {
-    <div style="display: flex; gap: 10px; align-items: end;">
-      <div>
-        <label for="afiliacion-disa" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">DISA</label>
-          <input autocomplete="off" id="afiliacion-disa" type="text" placeholder="Disa" [(ngModel)]="srv.formulario.afiliacionDisa" name="afiliacionDisa" value="035"
-                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
-                 style="width: 100%; max-width: 120px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-      </div>
-      <div>
-        <label for="afiliacion-tipo-formato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de formato</label>
-          <input autocomplete="off" id="afiliacion-tipo-formato" type="text" placeholder="Tipo de formato" [(ngModel)]="srv.formulario.afiliacionTipoFormato" name="afiliacionTipoFormato" value="E"
-                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
-                 style="width: 100%; max-width: 140px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-      </div>
-      <div>
-        <label for="afiliacion-nro-contrato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">N° de contrato</label>
-          <input autocomplete="off" id="afiliacion-nro-contrato" type="text" placeholder="N° de contrato" [(ngModel)]="srv.formulario.afiliacionNroContrato" name="afiliacionNroContrato"
-                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
-                 style="width: 100%; max-width: 160px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-      </div>
-    </div>
-    }
     <div style="display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border: 1px solid #d5dceb; border-radius: 11px; background: #f8fafc;">
       <span style="font-size: 13px; font-weight: 600; color: #263c7a; white-space: nowrap;">Paciente NN</span>
       <button type="button" (click)="toggleNN(!srv.formulario.pacienteNn)" [attr.aria-pressed]="srv.formulario.pacienteNn"
@@ -79,12 +56,6 @@
   @if (srv.mensajeError) {
     <div style="margin-top: 14px; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
       {{ srv.mensajeError }}
-    </div>
-  }
-
-  @if (srv.mensajeInfo) {
-    <div style="margin-top: 14px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
-      {{ srv.mensajeInfo }}
     </div>
   }
 
@@ -362,23 +333,89 @@
         <input autocomplete="off" id="fur" type="date" [(ngModel)]="srv.formulario.fechaUltimaRegla" [attr.max]="hoy"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
           </div>
-
+          <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Gestante</label>
+            <div style="display: flex; align-items: center; gap: 10px; height: 42px;">
+              <button type="button" (click)="srv.formulario.esGestante = !srv.formulario.esGestante"
+                      [attr.aria-pressed]="srv.formulario.esGestante"
+                      style="width: 44px; height: 24px; border-radius: 999px; border: none; cursor: pointer; position: relative; transition: background .2s;"
+                      [style.background]="srv.formulario.esGestante ? '#0d9488' : '#d5dceb'">
+                <span style="position: absolute; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s;"
+                      [style.left]="srv.formulario.esGestante ? '23px' : '3px'"></span>
+              </button>
+              <span style="font-size: 13px; font-weight: 600; color: #07153a;">{{ srv.formulario.esGestante ? 'Sí' : 'No' }}</span>
+            </div>
+          </div>
           }
         </div>
+
+        @if (srv.formulario.esGestante) {
+        <div style="margin-top: 18px; border-radius: 14px; border: 1px solid #d5dceb; overflow: hidden;">
+          <div style="padding: 11px 16px; background: #f0f4ff; font-size: 12px; font-weight: 700; color: #263c7a; text-transform: uppercase; letter-spacing: .04em;">
+            Datos de la gestación
+          </div>
+          <div style="padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+            <div>
+              <label for="edad-gestacional" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Edad Gestacional</label>
+              <input autocomplete="off" id="edad-gestacional" type="number" placeholder="Ej: 12" [(ngModel)]="srv.formulario.edadGestacional"
+                     style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            </div>
+            <div>
+              <label for="fpp" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">FPP</label>
+              <input autocomplete="off" id="fpp" type="date" [(ngModel)]="srv.formulario.fpp" [attr.min]="hoy"
+                     style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            </div>
+            <div>
+              <label for="nro-controles" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Nro. Controles</label>
+              <input autocomplete="off" id="nro-controles" type="number" placeholder="Ej: 4" [(ngModel)]="srv.formulario.nroControles"
+                     style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            </div>
+            <div>
+              <label for="movimientos-fetales" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Movimientos Fetales</label>
+              <select autocomplete="off" id="movimientos-fetales" [(ngModel)]="srv.formulario.movimientosFetales"
+                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+                <option value="">Seleccionar...</option>
+                <option value="1">Presentes</option>
+                <option value="2">Disminuidos</option>
+                <option value="3">Ausentes</option>
+                <option value="4">No aplica</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        }
 
         <div style="margin-top: 18px;">
           <label for="prioridad" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 8px;">Tipo de prioridad</label>
           <div style="display: flex; gap: 10px;">
             @for (op of srv.prioridades; track op.value) {
               <button type="button" (click)="seleccionarPrioridad(op.value)"
-                      style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; border-radius: 11px; cursor: pointer; white-space: nowrap; font-size: 12.5px; font-weight: 600; color: #07153a;"
+                      style="flex: 1; display: flex; align-items: flex-start; gap: 6px; padding: 10px 8px; border-radius: 11px; cursor: pointer; white-space: normal; text-align: left; font-size: 12.5px; font-weight: 600; color: #07153a; line-height: 1.3;"
                       [style.border]="srv.formulario.idTipoPrioridad === op.value ? '2px solid ' + op.color : '1px solid #e0e6f1'"
                       [style.background]="srv.formulario.idTipoPrioridad === op.value ? op.color + '1a' : '#fff'">
-                <span [style.width.px]="12" [style.height.px]="12" [style.border-radius]="'50%'" [style.background]="op.color" [style.flex-shrink]="'0'"></span>
-                {{ op.label }}
+                <span [style.width.px]="12" [style.height.px]="12" [style.border-radius]="'50%'" [style.background]="op.color" [style.flex-shrink]="'0'" style="margin-top:2px;"></span>
+                <span style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <span>{{ op.label }}</span>
+                  <span style="font-weight: 500; font-size: 10.5px; color: #54617f;">{{ op.subtitulo }}</span>
+                </span>
               </button>
             }
           </div>
+
+          <!-- @if (srv.formulario.idTipoPrioridad && srv.opcionesPrioridadActual.length) {
+            <div style="margin-top: 14px; border-radius: 12px; border: 1px solid #d5dceb; padding: 12px 14px; background: #fbfcfe; display: grid; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: #54617f; text-transform: uppercase; letter-spacing: .04em;">Seleccione los signos o síntomas (puede marcar varios)</span>
+              @for (opcion of srv.opcionesPrioridadActual; track opcion) {
+                <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 13px; color: #07153a; line-height: 1.35;">
+                  <input autocomplete="off" type="checkbox"
+                         [checked]="srv.opcionesSeleccionadas[srv.formulario.idTipoPrioridad]?.includes(opcion)"
+                         (change)="srv.toggleOpcionPrioridad(opcion)"
+                         style="margin-top: 2px; flex-shrink: 0;">
+                  <span>{{ opcion }}</span>
+                </label>
+              }
+            </div>
+          } -->
         </div>        
 
         <div style="margin-top: 16px;">
@@ -468,9 +505,9 @@
 </ventana-modal>
 }
 @if (buscarAbierto) {
-  <app-buscar-paciente-modal (alCerrar)="cerrarBuscador()" (seleccionado)="onPacienteSeleccionado($event)"></app-buscar-paciente-modal>
+  <app-buscar-paciente-obstetrico-modal (alCerrar)="cerrarBuscador()" (seleccionado)="onPacienteSeleccionado($event)"></app-buscar-paciente-obstetrico-modal>
 }
 
 @if (reporteId) {
-  <app-reporte-triaje [idTriaje]="reporteId" (alCerrar)="cerrarReporte()"></app-reporte-triaje>
+  <app-reporte-triaje-obstetrico [idTriaje]="reporteId" (alCerrar)="cerrarReporte()"></app-reporte-triaje-obstetrico>
 }

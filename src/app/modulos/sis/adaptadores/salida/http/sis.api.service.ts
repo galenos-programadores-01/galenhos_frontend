@@ -76,9 +76,27 @@ export interface SisAfiliacionPayload {
 export class SisApiService {
   private apiClient = inject(ApiClientService);
 
-  consultarAfiliado(nrodoc: string, tipoDocumento = 1): Promise<SisAfiliado> {
+  consultarAfiliado(
+    nrodoc: string,
+    tipoDocumento = 1,
+    afiliacion?: { disa: string; tipoFormato: string; nroContrato: string },
+  ): Promise<SisAfiliado> {
+    const opcion = afiliacion ? 2 : 1;
+    const query = new URLSearchParams();
+    query.append('intOpcion', String(opcion));
+    if (opcion === 1) {
+      query.append('strTipoDocumento', String(tipoDocumento));
+    } else if (afiliacion) {
+      // En opción 2 la búsqueda es por afiliación y el número de documento no
+      // es obligatorio; la ruta exige un segmento no vacío, así que se envía
+      // un valor comodín que el backend ignora.
+      query.append('strDisa', afiliacion.disa);
+      query.append('strTipoFormato', afiliacion.tipoFormato);
+      query.append('strNroContrato', afiliacion.nroContrato);
+    }
+    const docSegment = nrodoc.trim() || '0';
     return this.apiClient.request<SisAfiliado>(
-      `/api/v1/sis/afiliado/${encodeURIComponent(nrodoc)}?strTipoDocumento=${tipoDocumento}`,
+      `/api/v1/sis/afiliado/${encodeURIComponent(docSegment)}?${query.toString()}`,
     );
   }
 

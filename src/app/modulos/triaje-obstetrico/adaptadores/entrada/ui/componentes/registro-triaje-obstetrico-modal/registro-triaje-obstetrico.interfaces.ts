@@ -1,9 +1,6 @@
-export interface FormRegistroTriaje {
+﻿export interface FormRegistroTriajeObstetrico {
   idDocIdentidad: string;
   nroDocumento: string;
-  afiliacionDisa: string;
-  afiliacionTipoFormato: string;
-  afiliacionNroContrato: string;
   pacienteNn: boolean;
   apellidoPaterno: string;
   apellidoMaterno: string;
@@ -39,4 +36,8 @@ export interface FormRegistroTriaje {
   idTipoPrioridad: string;
   fechaUltimaRegla: string;
   esGestante: boolean;
+  edadGestacional: string;
+  fpp: string;
+  nroControles: string;
+  movimientosFetales: string;
 }
