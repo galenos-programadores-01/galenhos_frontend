@@ -1,0 +1,140 @@
+<div class="flex md:hidden overflow-x-auto gap-2 p-2 bg-white rounded-lg border border-slate-200 shadow-xs custom-scrollbar shrink-0">
+  @for (paso of pasos; track paso.id) {
+    <button
+      type="button"
+      (click)="seleccionarPanel.emit(paso.id)"
+      class="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer"
+      [class.bg-[#263c7a]]="activePanel === paso.id"
+      [class.text-white]="activePanel === paso.id"
+      [class.shadow-xs]="activePanel === paso.id"
+      [class.bg-slate-100]="activePanel !== paso.id"
+      [class.text-slate-600]="activePanel !== paso.id"
+      [class.hover:bg-slate-200]="activePanel !== paso.id"
+    >
+      <span
+        class="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
+        [class.bg-white]="activePanel === paso.id"
+        [class.text-[#263c7a]]="activePanel === paso.id"
+        [class.bg-slate-300]="activePanel !== paso.id"
+        [class.text-slate-700]="activePanel !== paso.id"
+      >
+        {{ paso.num }}
+      </span>
+      <span>{{ paso.label }}</span>
+    </button>
+  }
+</div>
+
+<nav class="hidden md:flex bg-white rounded-lg border border-slate-200 py-4 flex-col shadow-sm shrink-0 md:sticky md:top-[97px] self-start w-full md:w-[256px]">
+  <div class="px-4 pb-4 mb-2 border-b border-slate-100 text-center">
+    <p class="text-[10px] font-bold uppercase tracking-widest text-[#54617f] mb-1">Evolucionando a</p>
+    <p class="text-[13px] font-bold text-[#07153a] leading-tight truncate">{{ paciente.nombre }}</p>
+    <p class="text-[11px] text-[#54617f] font-mono">Cama {{ paciente.cama }} · HC {{ paciente.historia }}</p>
+  </div>
+
+  <div class="mb-1">
+    <div class="px-4 py-2 flex items-center gap-2">
+      <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Encuentro</span>
+    </div>
+    <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+      [class.bg-blue-50]="activePanel === 'p1'" [class.border-[#263c7a]]="activePanel === 'p1'"
+      [class.text-[#263c7a]]="activePanel === 'p1'" [class.font-semibold]="activePanel === 'p1'"
+      [class.border-transparent]="activePanel !== 'p1'" [class.text-[#54617f]]="activePanel !== 'p1'"
+      [class.hover:bg-slate-50]="activePanel !== 'p1'"
+      (click)="seleccionarPanel.emit('p1')">
+      <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+        [class.bg-[#263c7a]]="activePanel === 'p1'" [class.text-white]="activePanel === 'p1'"
+        [class.bg-slate-200]="activePanel !== 'p1'" [class.text-[#54617f]]="activePanel !== 'p1'">
+        1
+      </span>
+      Información general
+    </button>
+    <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+      [class.bg-blue-50]="activePanel === 'p2'" [class.border-[#263c7a]]="activePanel === 'p2'"
+      [class.text-[#263c7a]]="activePanel === 'p2'" [class.font-semibold]="activePanel === 'p2'"
+      [class.border-transparent]="activePanel !== 'p2'" [class.text-[#54617f]]="activePanel !== 'p2'"
+      [class.hover:bg-slate-50]="activePanel !== 'p2'"
+      (click)="seleccionarPanel.emit('p2')">
+      <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+        [class.bg-[#263c7a]]="activePanel === 'p2'" [class.text-white]="activePanel === 'p2'"
+        [class.bg-slate-200]="activePanel !== 'p2'" [class.text-[#54617f]]="activePanel !== 'p2'">
+        2
+      </span>
+      Apreciación clínica
+    </button>
+  </div>
+
+  <div class="mb-1">
+    <div class="px-4 py-2 flex items-center gap-2">
+      <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Evolución clínica</span>
+    </div>
+    @for (item of [
+      {id: 'p3', num: '3', label: 'Subjetivo'},
+      {id: 'p4', num: '4', label: 'Objetivo'},
+      {id: 'p5', num: '5', label: 'Resultados'},
+      {id: 'p6', num: '6', label: 'Evaluación'},
+      {id: 'p7', num: '7', label: 'Plan'}
+    ]; track item.id) {
+      <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+        [class.bg-blue-50]="activePanel === item.id" [class.border-[#263c7a]]="activePanel === item.id"
+        [class.text-[#263c7a]]="activePanel === item.id" [class.font-semibold]="activePanel === item.id"
+        [class.border-transparent]="activePanel !== item.id" [class.text-[#54617f]]="activePanel !== item.id"
+        [class.hover:bg-slate-50]="activePanel !== item.id"
+        (click)="seleccionarPanel.emit(item.id)">
+        <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+          [class.bg-[#263c7a]]="activePanel === item.id" [class.text-white]="activePanel === item.id"
+          [class.bg-slate-200]="activePanel !== item.id" [class.text-[#54617f]]="activePanel !== item.id">
+          {{ item.num }}
+        </span>
+        {{ item.label }}
+      </button>
+    }
+  </div>
+
+  <div class="mb-1">
+    <div class="px-4 py-2 flex items-center gap-2">
+      <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2h11l5 5v14a2 2 0 01-2 2z"/></svg>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Documentación</span>
+    </div>
+    @for (item of [
+      {id: 'p9', num: '8', label: 'Alta médica'},
+      {id: 'p14', num: '9', label: 'Adjuntos'}
+    ]; track item.id) {
+      <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+        [class.bg-blue-50]="activePanel === item.id" [class.border-[#263c7a]]="activePanel === item.id"
+        [class.text-[#263c7a]]="activePanel === item.id" [class.font-semibold]="activePanel === item.id"
+        [class.border-transparent]="activePanel !== item.id" [class.text-[#54617f]]="activePanel !== item.id"
+        [class.hover:bg-slate-50]="activePanel !== item.id"
+        (click)="seleccionarPanel.emit(item.id)">
+        <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+          [class.bg-[#263c7a]]="activePanel === item.id" [class.text-white]="activePanel === item.id"
+          [class.bg-slate-200]="activePanel !== item.id" [class.text-[#54617f]]="activePanel !== item.id">
+          {{ item.num }}
+        </span>
+        {{ item.label }}
+      </button>
+    }
+  </div>
+
+  <div class="mt-4">
+    <div class="px-4 py-2 flex items-center gap-2">
+      <svg aria-hidden="true" class="w-3.5 h-3.5 text-[#54617f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-[#54617f]">Cierre</span>
+    </div>
+    <button type="button" class="w-full text-left py-2.5 px-4 pl-9 text-[13px] transition-all border-l-[3px] flex items-center gap-2"
+      [class.bg-blue-50]="activePanel === 'p15'" [class.border-[#263c7a]]="activePanel === 'p15'"
+      [class.text-[#263c7a]]="activePanel === 'p15'" [class.font-semibold]="activePanel === 'p15'"
+      [class.border-transparent]="activePanel !== 'p15'" [class.text-[#54617f]]="activePanel !== 'p15'"
+      [class.hover:bg-slate-50]="activePanel !== 'p15'"
+      (click)="seleccionarPanel.emit('p15')">
+      <span class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+        [class.bg-[#0f766e]]="activePanel === 'p15'" [class.text-white]="activePanel === 'p15'"
+        [class.bg-emerald-100]="activePanel !== 'p15'" [class.text-emerald-700]="activePanel !== 'p15'">
+        ✓
+      </span>
+      Firma y verificación
+    </button>
+  </div>
+</nav>

@@ -83,6 +83,31 @@ export interface IUserProfile {
   apellidoPaterno: string;
   apellidoMaterno: string;
   nombreCompleto: string;
+  dni?: string;
+  colegiatura?: string;
+  rne?: string;
   foto: string;
   rol?: string;
+  especialidad?: string;
+}
+
+export interface IPacienteDatosAdicionales {
+  idPaciente: number;
+  antecedentes: string;
+  antecedAlergico: string;
+  antecedObstetrico: string;
+  antecedQuirurgico: string;
+  antecedFamiliar: string;
+  antecedPatologico: string;
+  fNacimientoCalculada?: boolean | number;
+  hipertensionArterial?: number;
+  obesidad?: number;
+  dislipidemia?: number;
+  anemia?: number;
+  higadoGraso?: number;
+  enfTiroidea?: number;
+  tuberculosis?: number;
+  fumaActualmente?: number;
+  cancer?: number;
+  otrosComorbilidad?: string;
 }

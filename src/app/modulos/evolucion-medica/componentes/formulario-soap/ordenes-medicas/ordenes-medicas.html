@@ -1,5 +1,5 @@
 @if (errorMessage()) {
-  <div class="mb-5 flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-lg px-4 py-3">
+  <div class="mb-5 flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-md px-4 py-3">
     <svg aria-hidden="true" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
       <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -8,7 +8,7 @@
   </div>
 }
 @if (successMessage()) {
-  <div class="mb-5 flex items-center gap-2 bg-teal-50 text-teal-700 text-[12.5px] rounded-lg px-4 py-3 transition-all animate-in fade-in">
+  <div class="mb-5 flex items-center gap-2 bg-teal-50 text-teal-700 text-[12.5px] rounded-md px-4 py-3 transition-all animate-in fade-in">
     <svg aria-hidden="true" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
     </svg>
@@ -29,21 +29,26 @@
   <div class="flex flex-col gap-4">
     <div class="flex flex-wrap gap-x-5 gap-y-2.5">
       <label class="flex items-center gap-1.5 text-[13.3px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-        <input type="radio" formControlName="orden" value="alta" class="accent-teal-600 w-4 h-4"> Alta médica
+        <input id="orden_alta" name="orden" type="radio" formControlName="orden" value="alta" class="accent-teal-600 w-4 h-4"> Alta médica
       </label>
       <label class="flex items-center gap-1.5 text-[13.3px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-        <input type="radio" formControlName="orden" value="hospitalizacion" class="accent-teal-600 w-4 h-4"> Ingreso hospitalario
+        <input id="orden_hospitalizacion" name="orden" type="radio" formControlName="orden" value="hospitalizacion" class="accent-teal-600 w-4 h-4"> Ingreso hospitalario
       </label>
       <label class="flex items-center gap-1.5 text-[13.3px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-        <input type="radio" formControlName="orden" value="observacion" class="accent-teal-600 w-4 h-4"> Observación
+        <input id="orden_observacion" name="orden" type="radio" formControlName="orden" value="observacion" class="accent-teal-600 w-4 h-4"> Observación
       </label>
       <label class="flex items-center gap-1.5 text-[13.3px] text-slate-700 cursor-pointer hover:text-teal-700 transition-colors">
-        <input type="radio" formControlName="orden" value="traslado" class="accent-teal-600 w-4 h-4"> Traslado
+        <input id="orden_traslado" name="orden" type="radio" formControlName="orden" value="traslado" class="accent-teal-600 w-4 h-4"> Traslado
       </label>
     </div>
     <div class="flex flex-col">
-      <label for="detalleOrden" class="text-[11.5px] font-semibold text-slate-500 mb-1">Detalle de la orden (servicio, cama, especialidad...)</label>
-      <textarea id="detalleOrden" rows="2" formControlName="detalle" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Detalles..."></textarea>
+      <div class="flex items-center justify-between mb-1">
+        <label for="detalleOrden" class="text-[11.5px] font-semibold text-slate-500">Detalle de la orden (servicio, cama, especialidad...)</label>
+        <span class="text-[10.5px] text-slate-400 font-mono">
+          {{ ordenesGroup.get('detalle')?.value?.length || 0 }} / 1000
+        </span>
+      </div>
+      <textarea id="detalleOrden" rows="2" maxlength="1000" formControlName="detalle" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Detalles específicos de la orden..."></textarea>
       <app-error-mensaje [control]="ordenesGroup.get('detalle')"></app-error-mensaje>
     </div>
 

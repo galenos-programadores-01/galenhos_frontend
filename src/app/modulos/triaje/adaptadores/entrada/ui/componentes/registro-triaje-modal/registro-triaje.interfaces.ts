@@ -1,6 +1,9 @@
 export interface FormRegistroTriaje {
   idDocIdentidad: string;
   nroDocumento: string;
+  afiliacionDisa: string;
+  afiliacionTipoFormato: string;
+  afiliacionNroContrato: string;
   pacienteNn: boolean;
   apellidoPaterno: string;
   apellidoMaterno: string;
@@ -34,4 +37,6 @@ export interface FormRegistroTriaje {
   tiempoEvolucionCantidadUnidad: string;
   idServicio: string;
   idTipoPrioridad: string;
+  fechaUltimaRegla: string;
+  esGestante: boolean;
 }

@@ -61,4 +61,17 @@ export class SintomaService {
       return false;
     }
   }
+
+  async obtenerSintomas(idRegAtencion: number): Promise<SintomaSeleccionado[]> {
+    try {
+      const datos = await this.api.request<SintomaSeleccionado[]>(
+        `/api/v1/evoluciones/${idRegAtencion}/sintomas`,
+        { method: 'GET' },
+      );
+      return datos ?? [];
+    } catch (error) {
+      console.error('Error al obtener síntomas de la evolución:', error);
+      return [];
+    }
+  }
 }

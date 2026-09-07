@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../modulos/auth/aplicacion/auth.service';
@@ -14,19 +14,29 @@ export class ContenedorPrincipal {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  tituloActual: string = '';
-  isSidebarOpen: boolean = true;
+  tituloActual = signal<string>('Galenos Pro');
+  isSidebarOpen = signal<boolean>(true);
+  isMobileSidebarOpen = signal<boolean>(false);
 
   constructor() {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.actualizarTitulo();
+        this.isMobileSidebarOpen.set(false);
       });
   }
 
   toggleSidebar() {
-    this.isSidebarOpen = !this.isSidebarOpen;
+    this.isSidebarOpen.update((abierto) => !abierto);
+  }
+
+  toggleMobileSidebar() {
+    this.isMobileSidebarOpen.update((abierto) => !abierto);
+  }
+
+  cerrarMobileSidebar() {
+    this.isMobileSidebarOpen.set(false);
   }
 
   private actualizarTitulo() {
@@ -36,6 +46,6 @@ export class ContenedorPrincipal {
       currentRoute = currentRoute.firstChild;
     }
     const data = currentRoute.data as { title?: string };
-    this.tituloActual = data.title || 'Galenos Pro';
+    this.tituloActual.set(data.title || 'Galenos Pro');
   }
 }

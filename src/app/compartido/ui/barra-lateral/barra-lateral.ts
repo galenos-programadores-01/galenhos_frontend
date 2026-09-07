@@ -19,6 +19,7 @@ export class BarraLateral {
   @Input() username: string | null = null;
   @Input() isCollapsed: boolean = false;
   @Output() toggleSidebarEvent = new EventEmitter<void>();
+  @Output() closeMobileSidebarEvent = new EventEmitter<void>();
 
   authService = inject(AuthService);
 

@@ -43,6 +43,7 @@ export class RegistroTriajeModal implements OnInit {
   mostrarPaciente = true;
   buscarAbierto = false;
   imc = '';
+  hoy = new Date().toISOString().slice(0, 10);
 
   ngOnInit(): void {
     void this.srv.cargarCatalogosIniciales();
@@ -65,6 +66,16 @@ export class RegistroTriajeModal implements OnInit {
   onEnterDocumento(_event: Event): void {
     if (!this.srv.buscando && !this.srv.formulario.pacienteNn) {
       this.buscarPaciente();
+    }
+  }
+
+  onTipoDocumentoChange(valor: string): void {
+    if (valor === '99') {
+      this.srv.formulario.nroDocumento = '';
+      this.srv.pacienteEncontrado = false;
+      this.srv.mensajeError = '';
+      this.srv.sisConsultado = false;
+      this.srv.sisActivo = false;
     }
   }
 
@@ -112,6 +123,7 @@ export class RegistroTriajeModal implements OnInit {
       this.srv.formulario.segundoNombre = '';
       this.srv.pacienteEncontrado = true;
       this.srv.actualizarIafaAutomatico();
+      this.srv.fijarFuenteParticular();
       this.srv.avanzarPaso();
       this.mostrarPaciente = true;
     } else {
@@ -162,6 +174,15 @@ export class RegistroTriajeModal implements OnInit {
       !this.srv.formulario.esAccidenteTransito;
     this.srv.actualizarIafaAutomatico();
     this.cdr.detectChanges();
+  }
+
+  get esMujer(): boolean {
+    const id = this.srv.formulario.idTipoSexo;
+    return (
+      id === '2' ||
+      id?.toUpperCase() === 'FEMENINO' ||
+      id?.toUpperCase() === 'MUJER'
+    );
   }
 
   obtenerSexo(): string {

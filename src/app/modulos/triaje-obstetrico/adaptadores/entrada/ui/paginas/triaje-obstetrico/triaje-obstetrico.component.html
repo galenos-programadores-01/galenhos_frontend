@@ -1,0 +1,342 @@
+<div class="gp-in flex flex-col gap-[18px]">
+  <div class="flex items-start justify-between gap-5">
+    <div></div>
+  </div>
+
+  <div class="bg-white border border-[#e6eaf2] rounded-2xl px-5 py-[18px]">
+    <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
+      <h2 class="m-0 text-lg font-bold text-[#07153a]">
+        Triajes registrados
+      </h2>
+      @if (authService.hasPermission('imprimir')) {
+        <div class="flex items-center gap-2.5 flex-wrap">
+          @if (seleccionFirma.size === 0) {
+            <button
+              type="button"
+              (click)="seleccionarTodosVisibles()"
+              class="px-[14px] py-2 bg-white border border-[#e0e6f1] rounded-[9px] text-[13px] font-semibold text-[#54617f] cursor-pointer"
+            >
+              Seleccionar todos
+            </button>
+          } @else {
+            <span class="text-[13px] font-semibold text-[#07153a]"
+              >{{ seleccionFirma.size }} seleccionado(s)</span
+            >
+            <button
+              type="button"
+              (click)="limpiarSeleccionFirma()"
+              class="px-[14px] py-2 bg-white border border-[#e0e6f1] rounded-[9px] text-[13px] font-semibold text-[#54617f] cursor-pointer"
+            >
+              Limpiar
+            </button>
+            <button
+              type="button"
+              (click)="abrirFirmaMasiva()"
+              class="inline-flex items-center gap-2 px-4 py-[9px] bg-[#263c7a] text-white rounded-[9px] text-[13px] font-semibold cursor-pointer whitespace-nowrap"
+            >
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              Firmar por lote
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end mb-4">
+      <div>
+        <label
+          for="fecha-inicio"
+          class="block text-xs font-semibold text-[#54617f] mb-1.5"
+          >Fecha inicio</label
+        >
+        <input autocomplete="off"
+          id="fecha-inicio"
+          type="date"
+          [(ngModel)]="fechaInicio"
+          class="w-full px-[14px] py-[9px] border border-[#d5dceb] rounded-[11px] text-sm bg-slate-50 text-[#07153a]"
+        />
+      </div>
+      <div>
+        <label
+          for="fecha-fin"
+          class="block text-xs font-semibold text-[#54617f] mb-1.5"
+          >Fecha fin</label
+        >
+        <input autocomplete="off"
+          id="fecha-fin"
+          type="date"
+          [(ngModel)]="fechaFin"
+          class="w-full px-[14px] py-[9px] border border-[#d5dceb] rounded-[11px] text-sm bg-slate-50 text-[#07153a]"
+        />
+      </div>
+      <div>
+        <label
+          for="servicio-derivado"
+          class="block text-xs font-semibold text-[#54617f] mb-1.5"
+          >Servicio derivado</label
+        >
+        <select autocomplete="off"
+          id="servicio-derivado"
+          [(ngModel)]="servicioFiltro"
+          class="w-full px-[14px] py-[9px] border border-[#d5dceb] rounded-[11px] text-sm bg-slate-50 text-[#07153a]"
+        >
+          <option value="">Todos</option>
+          @for (s of serviciosFiltro; track s.id) {
+            <option [value]="s.id">{{ s.nombre }}</option>
+          }
+        </select>
+      </div>
+      <button
+        type="button"
+        (click)="cargarLista()"
+        [disabled]="cargando"
+        class="flex items-center gap-[7px] h-[42px] px-5 bg-[#263c7a] text-white rounded-[11px] text-sm font-semibold cursor-pointer whitespace-nowrap"
+        [style.opacity]="cargando ? 0.7 : 1"
+      >
+        @if (cargando) {
+          <svg
+            aria-hidden="true"
+            class="animate-spin"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          <span>Buscando...</span>
+        } @else {
+          <svg
+            aria-hidden="true"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+          <span>Buscar</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    @if (error) {
+      <div class="mb-3 bg-red-100 border border-red-300 text-red-700 text-[13px] font-medium px-[13px] py-2.5 rounded-[11px]">
+        {{ error }}
+      </div>
+    }
+
+    @if (mensajeExito) {
+      <div class="mb-3 bg-green-50 border border-green-200 text-green-800 text-[13px] font-medium px-[13px] py-2.5 rounded-[11px]">
+        {{ mensajeExito }}
+      </div>
+    }
+
+    <div class="overflow-x-auto">
+      <app-tabla
+        [columnas]="columnasTabla"
+        [datos]="pacientes"
+        [cargando]="cargando"
+        mensajeCargando="Buscando..."
+        [mostrarFiltroRequerido]="!triajesBuscados"
+        mensajeFiltroRequerido="Realice una búsqueda para ver los triajes registrados."
+        mensajeVacio="No se encontraron triajes para los filtros seleccionados."
+      >
+        <ng-template appColumnaTemplate="seleccionCustom" let-p>
+          @if (idTriaje(p)) {
+            <input autocomplete="off"
+              type="checkbox"
+              [checked]="seleccionFirma.has(idTriaje(p))"
+              (change)="toggleSeleccionFirma(idTriaje(p))"
+              aria-label="Seleccionar triaje"
+              class="w-4 h-4 accent-[#263c7a] cursor-pointer"
+            />
+          }
+        </ng-template>
+
+        <ng-template appColumnaTemplate="idTriajeCustom" let-p>
+          <span class="font-semibold text-[#263c7a]">{{ idTriaje(p) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="documentoCustom" let-p>
+          <span class="text-[#54617f]">{{ documento(p) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="pacienteCustom" let-p>
+          <span class="font-semibold text-[#07153a]">{{ nombrePaciente(p) }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="sexoCustom" let-p>
+          @if (
+            sexo(p) === '1' ||
+            sexo(p)?.toUpperCase() === 'MASCULINO' ||
+            sexo(p)?.toUpperCase() === 'VARÓN' ||
+            sexo(p)?.toUpperCase() === 'VARON' ||
+            sexo(p)?.toUpperCase() === 'M' ||
+            sexo(p)?.toUpperCase() === 'V'
+          ) {
+            <svg
+              aria-hidden="true"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2563eb"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              title="Varón"
+              class="m-auto"
+            >
+              <circle cx="10" cy="14" r="5"></circle>
+              <path d="M13.5 10.5 21 3"></path>
+              <path d="M16 3h5v5"></path>
+            </svg>
+          } @else if (
+            sexo(p) === '2' ||
+            sexo(p)?.toUpperCase() === 'FEMENINO' ||
+            sexo(p)?.toUpperCase() === 'MUJER' ||
+            sexo(p)?.toUpperCase() === 'F'
+          ) {
+            <svg
+              aria-hidden="true"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ec4899"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              title="Mujer"
+              class="m-auto"
+            >
+              <circle cx="12" cy="10" r="5"></circle>
+              <path d="M12 15v7"></path>
+              <path d="M9 19h6"></path>
+            </svg>
+          } @else {
+            <span class="text-[#94a0bd] font-bold text-base">—</span>
+          }
+        </ng-template>
+
+        <ng-template appColumnaTemplate="fechaCustom" let-p>
+          <span class="text-[#54617f]">{{ fechaRegistro(p) }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="servicioCustom" let-p>
+          <span class="text-[#54617f]">{{
+            campo(p, ['Servicio', 'servicio', 'NombreServicio']) || 'NO ASIGNADO'
+          }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="gravedadCustom" let-p>
+          <span class="text-[#54617f]">{{
+            campo(p, ['TipoGravedad', 'tipoGravedad', 'Prioridad', 'prioridad']) || '—'
+          }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="estadoCustom" let-p>
+          @if (estadoTriaje(p) === 'triado') {
+            <span class="inline-flex items-center px-[10px] py-[2px] rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-300">Activo</span>
+          } @else {
+            <span class="inline-flex items-center px-[10px] py-[2px] rounded-full text-[11px] font-semibold bg-slate-50 text-[#54617f] border border-[#e0e6f1]">Otro</span>
+          }
+        </ng-template>
+
+        <ng-template appColumnaTemplate="accionCustom" let-p>
+          @if (idTriaje(p)) {
+            <button
+              type="button"
+              (click)="abrirReporte(idTriaje(p))"
+              class="inline-flex items-center gap-1.5 px-[14px] py-[7px] bg-[#263c7a] text-white rounded-[9px] text-xs font-semibold cursor-pointer whitespace-nowrap"
+            >
+              <svg
+                aria-hidden="true"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+                <path d="M16 13H8M16 17H8M10 9H8" />
+              </svg>
+              Reporte
+            </button>
+          }
+        </ng-template>
+      </app-tabla>
+    </div>
+  </div>
+
+  <app-registro-triaje-obstetrico-modal
+    [abierto]="modalRegistro"
+    (alCerrar)="cerrarModalRegistro()"
+    (triajeIniciado)="onPacienteRegistrado()"
+  >
+  </app-registro-triaje-obstetrico-modal>
+
+  @if (reporteTriajeId) {
+    <app-reporte-triaje-obstetrico
+      [idTriaje]="reporteTriajeId"
+      (alCerrar)="cerrarReporte()"
+    ></app-reporte-triaje-obstetrico>
+  }
+
+  @if (modalFirma) {
+    <app-firma-masiva-obstetrico-modal
+      [ids]="firmaIds"
+      (alCerrar)="cerrarFirmaMasiva()"
+      (firmaCompletada)="onFirmaMasivaCompletada($event)"
+    ></app-firma-masiva-obstetrico-modal>
+  }
+
+  @if (authService.hasPermission('agregar')) {
+    <div class="sticky bottom-0 left-0 right-0 flex justify-end px-5 py-4 -mt-4 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
+      <button
+        type="button"
+        (click)="abrirModalRegistro()"
+        class="pointer-events-auto shrink-0 flex items-center gap-2.5 px-6 py-3 bg-gradient-to-r from-[#0f766e] to-[#0d9488] text-white rounded-xl text-sm font-bold cursor-pointer whitespace-nowrap shadow-[0_4px_20px_rgba(15,118,110,0.35)] hover:shadow-[0_6px_28px_rgba(15,118,110,0.5)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 border border-teal-400/20"
+      >
+        <span class="flex items-center justify-center w-7 h-7 bg-white/20 rounded-lg">
+          <svg
+            aria-hidden="true"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.8"
+            stroke-linecap="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </span>
+        Registrar Triaje
+      </button>
+    </div>
+  }
+</div>
+

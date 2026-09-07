@@ -1,5 +1,6 @@
 import { computed, Injectable, inject, signal } from '@angular/core';
 import { ApiClientService } from '../../../compartido/api-client/api-client.service';
+import type { IPacienteDatosAdicionales } from '../../../compartido/tipos/tipos';
 
 export type ViewMode = 'tray' | 'form';
 
@@ -11,6 +12,8 @@ export interface PacienteItem {
   edad: string;
   sexo: string;
   ubicacion: string;
+  servicio?: string;
+  especialidad?: string;
   cama: string;
   estado: string;
 }
@@ -30,6 +33,7 @@ export interface EvolucionFirma {
   rutaBase: string;
   dataB64: string;
   idEmpleadoRegistra: number;
+  medicoNombre?: string;
   fechaRegistro: string;
   estado: number;
 }
@@ -46,6 +50,53 @@ export interface DiagnosticoBusqueda {
   idTipoSexo: number;
   cancer: number;
   yaRegistrado: number;
+}
+
+export interface EvolucionMedicaPayload {
+  idAtencion: number;
+  idPaciente: number;
+  idMedico: number;
+  motivo: string | null;
+  motivoConsulta: string | null;
+  subjetivo: string | null;
+  escalaDolor: number;
+  glasgow: number | null;
+  paSistolica: number | null;
+  paDiastolica: number | null;
+  frecuenciaCardiaca: number | null;
+  frecuenciaRespiratoria: number | null;
+  temperatura: number | null;
+  saturacionOxigeno: number | null;
+  peso: number | null;
+  talla: number | null;
+  imc: number | null;
+  glicemia: number | null;
+  examenFisicoGeneral: string | null;
+  examenFisicoPiel: string | null;
+  examenFisicoCabezaCuello: string | null;
+  examenFisicoToraxPulmon: string | null;
+  examenFisicoCorazon: string | null;
+  examenFisicoAbdomen: string | null;
+  examenFisicoGenitourinario: string | null;
+  examenFisicoExtremidadesOsteomuscular: string | null;
+  examenFisicoNeurologicoMental: string | null;
+  idEstadoClinico: number | null;
+  idPronostico: number | null;
+  indicacionDieta: string | null;
+  indicacionReposo: string | null;
+  indicacionHidratacion: string | null;
+  indicacionOxigeno: string | null;
+  indicacionRestriccion: string | null;
+  sugerencia: string | null;
+  usuarioCreacion: number;
+  estadoRegistro: number;
+  estadoFirma: number;
+  ubicacionArchivo: string | null;
+}
+
+export interface RespuestaGuardadoEvolucion {
+  idEvolucion: number;
+  mensaje: string;
 }
 
 @Injectable({
@@ -67,6 +118,8 @@ export class EvolucionService {
   public readonly pageSize = signal<number>(6);
 
   public readonly activePatient = signal<PacienteItem | null>(null);
+  public readonly antecedentesActivos =
+    signal<IPacienteDatosAdicionales | null>(null);
 
   public readonly filteredPacientes = computed(() => {
     const term = this.patientSearch().toLowerCase();
@@ -191,18 +244,24 @@ export class EvolucionService {
   }
 
   decodificarEvolucion(dataB64: string): Record<string, unknown> | null {
-    try {
-      const binario = atob(dataB64);
-      let texto = '';
-      for (let i = 0; i < binario.length; i++) {
-        const code = binario.codePointAt(i) || 0;
-        texto +=
-          code > 127 ? `%${code.toString(16).padStart(2, '0')}` : binario[i];
-      }
-      return JSON.parse(decodeURIComponent(texto));
-    } catch (error) {
-      console.error('Error decodificando evolución:', error);
+    if (!dataB64 || typeof dataB64 !== 'string') {
       return null;
+    }
+
+    try {
+      const binario = atob(dataB64.trim());
+      const bytes = new Uint8Array(binario.length);
+      for (let indice = 0; indice < binario.length; indice++) {
+        bytes[indice] = binario.codePointAt(indice) ?? 0;
+      }
+      const textoUtf8 = new TextDecoder('utf-8').decode(bytes);
+      return JSON.parse(textoUtf8) as Record<string, unknown>;
+    } catch {
+      try {
+        return JSON.parse(dataB64) as Record<string, unknown>;
+      } catch {
+        return null;
+      }
     }
   }
 
@@ -238,6 +297,7 @@ export class EvolucionService {
 
   public clearSelection() {
     this.activePatient.set(null);
+    this.antecedentesActivos.set(null);
     this.setViewMode('tray');
     this.cargarPacientes();
   }
@@ -260,9 +320,9 @@ export class EvolucionService {
   }
 
   async guardarEvolucionMedica(
-    datos: Record<string, unknown>,
-  ): Promise<{ idEvolucion: number; mensaje: string }> {
-    return this.api.request<{ idEvolucion: number; mensaje: string }>(
+    datos: EvolucionMedicaPayload,
+  ): Promise<RespuestaGuardadoEvolucion> {
+    return this.api.request<RespuestaGuardadoEvolucion>(
       '/api/v1/evoluciones/registro',
       {
         method: 'POST',

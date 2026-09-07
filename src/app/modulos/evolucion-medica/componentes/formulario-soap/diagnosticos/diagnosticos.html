@@ -1,75 +1,151 @@
-<div class="mb-8">
-      <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-2">
-        <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<div class="space-y-4">
+  <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-md bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center shrink-0">
+        <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2s7 4 7 10v6l-7 4-7-4v-6c0-6 7-10 7-10z"></path>
         </svg>
-        Diagnósticos
-      </h3>
-      <p class="text-slate-500 text-[12.5px] mb-4">Incluya diagnóstico principal, secundarios, nuevos y descartados. Cada uno con código CIE-10, tipo, condición y estado.</p>
-      
-      @if (showWarning()) {
-        <div class="fixed top-6 right-6 z-[9999] bg-white border border-red-200 rounded-lg shadow-xl p-4 w-80 animate-in slide-in-from-top-8 fade-in duration-300 flex items-start gap-3">
-          <div class="bg-red-100 text-red-600 rounded-full p-1.5 shrink-0">
-            <svg aria-hidden="true" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-[13px] font-bold text-slate-800">Diagnóstico duplicado</h4>
-            <p class="text-[12px] text-slate-600 mt-0.5 leading-snug">Este diagnóstico ya se encuentra registrado para este paciente.</p>
-          </div>
-          <button type="button" (click)="showWarning.set(false)" class="text-slate-400 hover:text-slate-600 p-1 -mt-1 -mr-1">
-            <svg aria-hidden="true" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
+      </div>
+      <div>
+        <h3 class="text-[13px] font-bold text-teal-950 flex items-center gap-2">
+          Diagnósticos Médicos (CIE-10)
+          <span class="text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+            {{ formArray.controls.length }} {{ formArray.controls.length === 1 ? 'diagnóstico' : 'diagnósticos' }}
+          </span>
+        </h3>
+      </div>
+      @if (formArray.controls.length === 0) {
+        <span class="text-[11px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+          Se requiere al menos 1 diagnóstico
+        </span>
       }
+    </div>
 
-      <div class="w-full overflow-visible">
-        <app-tabla [columnas]="columnasDiagnosticos" [datos]="formArray.controls" [cargando]="false"
-                   mensajeVacio="No hay diagnósticos registrados.">
+    <button
+      type="button"
+      (click)="agregarDx()"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-teal-600 text-white text-[12px] font-semibold hover:bg-teal-700 shadow-xs hover:shadow transition-all cursor-pointer"
+    >
+      <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Agregar diagnóstico
+    </button>
+  </div>
 
-          <ng-template appColumnaTemplate="detallesCustom" let-dx let-i="index">
-            <div [formGroup]="dx" class="p-3 flex flex-col gap-3">
+  @if (showWarning()) {
+    <div class="fixed top-6 right-6 z-[9999] bg-white border border-red-200 rounded-lg shadow-2xl p-4 w-84 animate-in slide-in-from-top-8 fade-in duration-300 flex items-start gap-3">
+      <div class="bg-red-100 text-red-600 rounded-md p-1.5 shrink-0">
+        <svg aria-hidden="true" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h4 class="text-[13px] font-bold text-slate-800">Diagnóstico duplicado</h4>
+        <p class="text-[12px] text-slate-600 mt-0.5 leading-snug">Este diagnóstico ya se encuentra registrado para este paciente.</p>
+      </div>
+      <button type="button" (click)="showWarning.set(false)" class="text-slate-400 hover:text-slate-600 p-1 -mt-1 -mr-1 cursor-pointer" aria-label="Cerrar advertencia">
+        <svg aria-hidden="true" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  }
+
+  @if (formArray.controls.length === 0) {
+    <div class="bg-slate-50 border border-dashed border-slate-200 rounded-lg p-8 text-center">
+      <div class="w-12 h-12 rounded-md bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+        <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <p class="text-slate-700 font-semibold text-[13px]">No hay diagnósticos registrados</p>
+      <p class="text-slate-400 text-[12px] mt-1 mb-4">Añada al menos un diagnóstico principal para la evolución médica del paciente.</p>
+      <button
+        type="button"
+        (click)="agregarDx()"
+        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-teal-600 text-white text-[12px] font-semibold hover:bg-teal-700 transition-colors cursor-pointer shadow-xs"
+      >
+        <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Agregar primer diagnóstico
+      </button>
+    </div>
+  } @else {
+    <div class="border border-slate-200 rounded-lg bg-white shadow-xs overflow-hidden">
+      <div class="hidden lg:grid grid-cols-12 gap-2 px-3 py-2 bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <div class="col-span-1 text-center">#</div>
+        <div class="col-span-2">CIE-10</div>
+        <div class="col-span-4">Descripción / Diagnóstico</div>
+        <div class="col-span-2">Tipo</div>
+        <div class="col-span-1">Condición</div>
+        <div class="col-span-1">Estado</div>
+        <div class="col-span-1 text-center">Acción</div>
+      </div>
+
+      <div class="divide-y divide-slate-100">
+        @for (dxItem of diagnosticosPaginados; track dxItem.indiceOriginal) {
+          <div [formGroup]="dxItem.control" class="p-2.5 lg:px-3 lg:py-2 transition-colors hover:bg-slate-50/60">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-center">
               
-              <!-- Fila 1: CIE-10 (primero, no tan largo) -->
-              <div class="w-1/3 relative">
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-                  CIE-10
-                  <input type="text" formControlName="cie10" [id]="'cie_' + i" 
-                         (input)="onBuscar($event, i)" (blur)="cerrarBusqueda()"
-                         autocomplete="off" spellcheck="false"
-                         class="w-full border border-slate-200 rounded-md p-1.5 font-mono text-[12.5px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none mt-1 font-normal normal-case" 
-                         placeholder="Ej: A00.0">
-                </label>
-                <app-error-mensaje [control]="dx.get('cie10')"></app-error-mensaje>
+              <div class="flex items-center justify-between lg:justify-center lg:col-span-1">
+                <span class="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 text-slate-600 font-mono text-[11px] font-bold flex items-center justify-center">
+                  {{ dxItem.indiceOriginal + 1 }}
+                </span>
+                <button
+                  type="button"
+                  (click)="removerDx(dxItem.indiceOriginal)"
+                  class="lg:hidden inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-1 rounded-md transition-colors cursor-pointer"
+                  title="Eliminar diagnóstico"
+                  aria-label="Eliminar diagnóstico"
+                >
+                  <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  Quitar
+                </button>
+              </div>
 
-                @if (activeSearchIndex() === i && dx.get('cie10')?.value) {
-                  <div class="absolute left-0 top-[100%] mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto min-w-[350px] w-max">
+              <div class="lg:col-span-2 relative">
+                <label class="block">
+                  <span class="lg:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">CIE-10</span>
+                  <input
+                    type="text"
+                    maxlength="10"
+                    formControlName="cie10"
+                    [id]="'cie_' + dxItem.indiceOriginal"
+                    (input)="onBuscar($event, dxItem.indiceOriginal)"
+                    (blur)="cerrarBusqueda()"
+                    autocomplete="off"
+                    spellcheck="false"
+                    class="w-full border border-slate-200 rounded-md px-2.5 py-1.5 font-mono text-[12px] font-bold bg-white text-slate-800 uppercase focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 outline-none transition-all placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
+                    placeholder="Ej: K35.8"
+                  >
+                </label>
+                <app-error-mensaje [control]="dxItem.control.get('cie10')"></app-error-mensaje>
+
+                @if (activeSearchIndex() === dxItem.indiceOriginal && dxItem.control.get('cie10')?.value) {
+                  <div class="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto min-w-[320px] w-max">
                     @if (isSearching()) {
-                      <div class="p-2 text-center text-[12px] text-slate-500">Buscando...</div>
+                      <div class="p-3 text-center text-[12px] text-slate-500">Buscando en catálogo CIE-10...</div>
                     } @else if (searchResults().length === 0) {
-                      <div class="p-2 text-center text-[12px] text-slate-500">Sin resultados</div>
+                      <div class="p-3 text-center text-[12px] text-slate-500">Sin resultados</div>
                     } @else {
-                      <ul class="py-1">
+                      <ul class="py-1 divide-y divide-slate-100">
                         @for (res of searchResults(); track res.idDiagnostico) {
-                          <li class="px-2.5 py-1.5 hover:bg-teal-50 cursor-pointer border-b border-slate-50 last:border-0"
-                              (mousedown)="seleccionarDx(res, i); $event.preventDefault()"
-                              (keydown.enter)="seleccionarDx(res, i)">
+                          <li
+                            class="px-3 py-2 hover:bg-teal-50/80 cursor-pointer transition-colors"
+                            (mousedown)="seleccionarDx(res, dxItem.indiceOriginal); $event.preventDefault()"
+                            (keydown.enter)="seleccionarDx(res, dxItem.indiceOriginal)"
+                          >
                             <div class="flex items-center gap-2">
-                              <span class="font-mono text-[11px] font-semibold px-1 rounded"
-                                    [class.text-red-700]="res.yaRegistrado > 0"
-                                    [class.bg-red-50]="res.yaRegistrado > 0"
-                                    [class.text-teal-700]="!res.yaRegistrado"
-                                    [class.bg-teal-50]="!res.yaRegistrado">{{ res.codigoCIE10 }}</span>
-                              <span class="text-[12px] break-words whitespace-normal leading-tight"
-                                    [class.text-red-700]="res.yaRegistrado > 0"
-                                    [class.text-slate-700]="!res.yaRegistrado"
-                                    [title]="res.descripcion">{{ res.descripcion }}</span>
-                              @if (res.yaRegistrado > 0) {
-                                <span class="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded flex-shrink-0 font-medium">Ya registrado</span>
-                              }
+                              <span class="font-mono text-[11px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200">
+                                {{ res.codigoCIE10 }}
+                              </span>
+                              <span class="text-[12px] text-slate-700 font-medium">
+                                {{ res.descripcion }}
+                              </span>
                             </div>
                           </li>
                         }
@@ -79,43 +155,45 @@
                 }
               </div>
 
-              <!-- Fila 2: Descripción (mantiene su largo auto) -->
-              <div class="w-full relative">
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-                  Descripción del diagnóstico
-                  <input type="text" formControlName="descripcion" [id]="'desc_' + i" 
-                         (input)="onBuscar($event, i)" (blur)="cerrarBusqueda()"
-                         autocomplete="off" spellcheck="false"
-                         class="w-full border border-slate-200 rounded-md p-1.5 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none mt-1 font-normal normal-case" 
-                         placeholder="Escriba para buscar...">
+              <div class="lg:col-span-4 relative">
+                <label class="block">
+                  <span class="lg:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Descripción / Diagnóstico</span>
+                  <input
+                    type="text"
+                    maxlength="250"
+                    formControlName="descripcion"
+                    [id]="'desc_' + dxItem.indiceOriginal"
+                    (input)="onBuscar($event, dxItem.indiceOriginal)"
+                    (blur)="cerrarBusqueda()"
+                    autocomplete="off"
+                    spellcheck="false"
+                    class="w-full border border-slate-200 rounded-md px-2.5 py-1.5 text-[12px] font-medium bg-white text-slate-800 focus:ring-2 focus:ring-teal-500/30 focus:border-teal-600 outline-none transition-all placeholder:text-slate-400"
+                    placeholder="Escriba diagnóstico o seleccione de la lista..."
+                  >
                 </label>
-                <app-error-mensaje [control]="dx.get('descripcion')"></app-error-mensaje>
+                <app-error-mensaje [control]="dxItem.control.get('descripcion')"></app-error-mensaje>
 
-                @if (activeSearchIndex() === i && dx.get('descripcion')?.value) {
-                  <div class="absolute left-0 right-0 top-[100%] mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                @if (activeSearchIndex() === dxItem.indiceOriginal && dxItem.control.get('descripcion')?.value && !dxItem.control.get('cie10')?.value) {
+                  <div class="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto w-full min-w-[320px]">
                     @if (isSearching()) {
-                      <div class="p-2 text-center text-[12px] text-slate-500">Buscando...</div>
+                      <div class="p-3 text-center text-[12px] text-slate-500">Buscando...</div>
                     } @else if (searchResults().length === 0) {
-                      <div class="p-2 text-center text-[12px] text-slate-500">Sin resultados</div>
+                      <div class="p-3 text-center text-[12px] text-slate-500">Sin resultados</div>
                     } @else {
-                      <ul class="py-1">
+                      <ul class="py-1 divide-y divide-slate-100">
                         @for (res of searchResults(); track res.idDiagnostico) {
-                          <li class="px-2.5 py-1.5 hover:bg-teal-50 cursor-pointer border-b border-slate-50 last:border-0"
-                              (mousedown)="seleccionarDx(res, i); $event.preventDefault()"
-                              (keydown.enter)="seleccionarDx(res, i)">
+                          <li
+                            class="px-3 py-2 hover:bg-teal-50/80 cursor-pointer transition-colors"
+                            (mousedown)="seleccionarDx(res, dxItem.indiceOriginal); $event.preventDefault()"
+                            (keydown.enter)="seleccionarDx(res, dxItem.indiceOriginal)"
+                          >
                             <div class="flex items-center gap-2">
-                              <span class="font-mono text-[11px] font-semibold px-1 rounded"
-                                    [class.text-red-700]="res.yaRegistrado > 0"
-                                    [class.bg-red-50]="res.yaRegistrado > 0"
-                                    [class.text-teal-700]="!res.yaRegistrado"
-                                    [class.bg-teal-50]="!res.yaRegistrado">{{ res.codigoCIE10 }}</span>
-                              <span class="text-[12px] break-words whitespace-normal leading-tight"
-                                    [class.text-red-700]="res.yaRegistrado > 0"
-                                    [class.text-slate-700]="!res.yaRegistrado"
-                                    [title]="res.descripcion">{{ res.descripcion }}</span>
-                              @if (res.yaRegistrado > 0) {
-                                <span class="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded flex-shrink-0 font-medium">Ya registrado</span>
-                              }
+                              <span class="font-mono text-[11px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200">
+                                {{ res.codigoCIE10 }}
+                              </span>
+                              <span class="text-[12px] text-slate-700 font-medium">
+                                {{ res.descripcion }}
+                              </span>
                             </div>
                           </li>
                         }
@@ -125,43 +203,70 @@
                 }
               </div>
 
-              <!-- Fila 3: Los demás (Tipo, Condición, Estado) -->
-              <div class="flex gap-3 w-full">
-                <div class="flex-1 flex flex-col">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo</span>
-                  <app-select-global formControlName="tipo" [id]="'tipo_' + i">
-                    <option value="Presuntivo">Presuntivo</option>
-                    <option value="Definitivo">Definitivo</option>
-                  </app-select-global>
-                </div>
-                <div class="flex-1 flex flex-col">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Condición</span>
-                  <app-select-global formControlName="condicion" [id]="'cond_' + i">
-                    <option value="Principal">Principal</option>
-                    <option value="Secundario">Secundario</option>
-                  </app-select-global>
-                </div>
-                <div class="flex-1 flex flex-col">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estado</span>
-                  <app-select-global formControlName="estado" [id]="'estado_' + i">
-                    <option value="Activo">Activo</option>
-                    <option value="Resuelto">Resuelto</option>
-                    <option value="Descartado">Descartado</option>
-                  </app-select-global>
-                </div>
+              <div class="lg:col-span-2">
+                <span class="lg:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Tipo</span>
+                <app-select-global
+                  formControlName="tipo"
+                  [id]="'tipo_' + dxItem.indiceOriginal"
+                >
+                  <option value="Presuntivo">Presuntivo</option>
+                  <option value="Definitivo">Definitivo</option>
+                  <option value="Repetido">Repetido</option>
+                </app-select-global>
+              </div>
+
+              <div class="lg:col-span-1">
+                <span class="lg:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Condición</span>
+                <app-select-global
+                  formControlName="condicion"
+                  [id]="'cond_' + dxItem.indiceOriginal"
+                >
+                  <option value="Principal">Principal</option>
+                  <option value="Secundario">Secundario</option>
+                </app-select-global>
+              </div>
+
+              <div class="lg:col-span-1">
+                <span class="lg:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Estado</span>
+                <app-select-global
+                  formControlName="estado"
+                  [id]="'estado_' + dxItem.indiceOriginal"
+                >
+                  <option value="Activo">Activo</option>
+                  <option value="Resuelto">Resuelto</option>
+                  <option value="Descartado">Descartado</option>
+                </app-select-global>
+              </div>
+
+              <div class="hidden lg:flex items-center justify-center lg:col-span-1">
+                <button
+                  type="button"
+                  (click)="removerDx(dxItem.indiceOriginal)"
+                  class="w-8 h-8 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all cursor-pointer"
+                  title="Eliminar diagnóstico"
+                  aria-label="Eliminar diagnóstico"
+                >
+                  <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
               </div>
 
             </div>
-          </ng-template>
-
-          <ng-template appColumnaTemplate="accionesCustom" let-dx let-i="index">
-            @if (authService.hasPermission('modificar') || authService.hasPermission('eliminar')) {
-              <button type="button" (click)="removerDx(i)" class="text-slate-400 hover:text-rose-600 transition-colors mt-1.5" title="Eliminar fila">
-                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-              </button>
-            }
-          </ng-template>
-        </app-tabla>
+          </div>
+        }
       </div>
 
+      @if (formArray.controls.length > elementosPorPagina) {
+        <div class="p-3 border-t border-slate-100">
+          <app-paginacion
+            [page]="paginaActual()"
+            [totalPages]="totalPaginas"
+            [totalItems]="formArray.controls.length"
+            (pageChange)="paginaActual.set($event)"
+          />
+        </div>
+      }
     </div>
+  }
+</div>

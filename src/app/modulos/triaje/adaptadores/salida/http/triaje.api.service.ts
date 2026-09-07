@@ -48,6 +48,14 @@ export interface RegistroTriajePayload {
   tiempoEvolucionCantidadUnidad?: string;
   idServicio?: number;
   idTipoPrioridad?: number;
+  fechaUltimaRegla?: string;
+  esGestante?: boolean;
+  fur?: string | null;
+  edadGestacional?: number | null;
+  fpp?: string | null;
+  nroControlesPrenatales?: number | null;
+  movimientosFetales?: number | null;
+  idEmpleado?: number;
 }
 
 export interface PendientesAdmisionParams {
@@ -63,6 +71,7 @@ export interface PendientesAdmisionParams {
 export interface CrearAdmisionPayload {
   idTriaje: number;
   idPacienteTriaje: number;
+  nroDocumento?: string;
   idMedico?: number;
   nombreAcompanante?: string;
   telefonoAcompanante?: string;
@@ -151,13 +160,13 @@ export class TriajeApiService {
     fini: string,
     ffin: string,
     derivadoAServicio = '-100',
-    idEstado = '-100',
+    idEmpleado: number = this.authService.getIdEmpleado(),
   ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams({
       fini,
       ffin,
       derivadoAServicio,
-      idEstado,
+      idEmpleado: String(idEmpleado),
     });
     return this.apiClient.request<IFilaBackend[]>(
       `/api/v1/triaje?${query.toString()}`,

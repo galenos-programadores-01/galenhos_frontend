@@ -4,6 +4,7 @@ import {
   Component,
   type ElementRef,
   Input,
+  type OnInit,
   type QueryList,
   ViewChildren,
 } from '@angular/core';
@@ -11,6 +12,7 @@ import {
   type FormArray,
   type FormGroup,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/error-mensaje.component';
 
@@ -21,7 +23,7 @@ import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/e
   templateUrl: './examen-fisico.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ExamenFisicoComponent {
+export class ExamenFisicoComponent implements OnInit {
   @Input({ required: true }) formArray!: FormArray;
 
   @ViewChildren('hallazgoInput') textareas!: QueryList<
@@ -43,6 +45,30 @@ export class ExamenFisicoComponent {
     { nombre: 'Neurológico y estado mental' },
   ];
 
+  ngOnInit(): void {
+    this.aplicarValidadoresIniciales();
+  }
+
+  aplicarValidadoresIniciales(): void {
+    for (let i = 0; i < this.formArray.length; i++) {
+      const grupo = this.getFormGroup(i);
+      const esNormal = grupo.get('normal')?.value === true;
+      const hallazgoControl = grupo.get('hallazgo');
+      if (hallazgoControl) {
+        if (!esNormal) {
+          hallazgoControl.setValidators([
+            Validators.required,
+            Validators.minLength(3),
+            Validators.maxLength(500),
+          ]);
+        } else {
+          hallazgoControl.clearValidators();
+        }
+        hallazgoControl.updateValueAndValidity({ emitEvent: false });
+      }
+    }
+  }
+
   getFormGroup(index: number): FormGroup {
     return this.formArray.at(index) as FormGroup;
   }
@@ -53,18 +79,33 @@ export class ExamenFisicoComponent {
 
   marcarNormal(index: number): void {
     const grupo = this.getFormGroup(index);
+    const hallazgoControl = grupo.get('hallazgo');
     grupo.patchValue({ normal: true, hallazgo: '' });
+    if (hallazgoControl) {
+      hallazgoControl.clearValidators();
+      hallazgoControl.updateValueAndValidity();
+    }
   }
 
   marcarAnormal(index: number): void {
-    this.getFormGroup(index).patchValue({ normal: false });
+    const grupo = this.getFormGroup(index);
+    const hallazgoControl = grupo.get('hallazgo');
+    grupo.patchValue({ normal: false });
+    if (hallazgoControl) {
+      hallazgoControl.setValidators([
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(500),
+      ]);
+      hallazgoControl.updateValueAndValidity();
+    }
     this.focusTextarea(index);
   }
 
   marcarTodoNormal(): void {
-    this.formArray.controls.forEach((g) => {
-      g.patchValue({ normal: true, hallazgo: '' });
-    });
+    for (let i = 0; i < this.formArray.length; i++) {
+      this.marcarNormal(i);
+    }
   }
 
   private focusTextarea(index: number): void {

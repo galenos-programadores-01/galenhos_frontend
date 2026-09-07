@@ -199,7 +199,6 @@ export class TriajeComponent implements OnInit {
         this.fechaInicio,
         this.fechaFin,
         derivado,
-        '-100',
       );
       this.pacientes = Array.isArray(items) ? items : [];
     } catch (error: unknown) {

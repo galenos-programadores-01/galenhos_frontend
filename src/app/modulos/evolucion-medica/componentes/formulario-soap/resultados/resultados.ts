@@ -13,6 +13,7 @@ import {
   type ColumnaTabla,
   TablaComponent,
 } from '../../../../../compartido/componentes/tabla/tabla.component';
+import { PaginacionComponent } from '../../../../../compartido/ui/paginacion/paginacion';
 import { VentanaModal } from '../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { EvolucionService } from '../../../servicios/evolucion.service';
 import {
@@ -31,6 +32,7 @@ import {
     TablaComponent,
     ColumnaTemplateDirective,
     VentanaModal,
+    PaginacionComponent,
   ],
   templateUrl: './resultados.html',
 })
@@ -45,6 +47,35 @@ export class ResultadosComponent implements OnInit {
   public readonly imagenes = signal<ResultadoInfo[]>([]);
   public readonly isLoading = signal<boolean>(false);
   public readonly errorMessage = signal<string>('');
+
+  public readonly paginaLab = signal<number>(1);
+  public readonly elementosPorPaginaLab = 5;
+
+  public readonly paginaImg = signal<number>(1);
+  public readonly elementosPorPaginaImg = 5;
+
+  get totalPaginasLab(): number {
+    return (
+      Math.ceil(this.laboratorios().length / this.elementosPorPaginaLab) || 1
+    );
+  }
+
+  get laboratoriosPaginados(): ResultadoInfo[] {
+    const inicio = (this.paginaLab() - 1) * this.elementosPorPaginaLab;
+    return this.laboratorios().slice(
+      inicio,
+      inicio + this.elementosPorPaginaLab,
+    );
+  }
+
+  get totalPaginasImg(): number {
+    return Math.ceil(this.imagenes().length / this.elementosPorPaginaImg) || 1;
+  }
+
+  get imagenesPaginadas(): ResultadoInfo[] {
+    const inicio = (this.paginaImg() - 1) * this.elementosPorPaginaImg;
+    return this.imagenes().slice(inicio, inicio + this.elementosPorPaginaImg);
+  }
 
   public readonly modalDetalleOpen = signal<boolean>(false);
   public readonly modalDetalleTitulo = signal<string>('');
@@ -63,7 +94,6 @@ export class ResultadosComponent implements OnInit {
     { campo: 'fechaCustom', cabecera: 'Fecha' },
     { campo: 'resultadoCustom', cabecera: 'Resultado / Detalle' },
     { campo: 'estadoCustom', cabecera: 'Estado' },
-    { campo: 'revisadoCustom', cabecera: 'Revisado', alineacion: 'center' },
   ];
 
   columnasImagenes: ColumnaTabla[] = [
@@ -71,7 +101,6 @@ export class ResultadosComponent implements OnInit {
     { campo: 'fechaCustom', cabecera: 'Fecha' },
     { campo: 'informeCustom', cabecera: 'Informe / Conclusión' },
     { campo: 'estadoCustom', cabecera: 'Estado' },
-    { campo: 'revisadoCustom', cabecera: 'Revisado', alineacion: 'center' },
   ];
 
   ngOnInit(): void {
@@ -141,13 +170,25 @@ export class ResultadosComponent implements OnInit {
     this.cdr.markForCheck();
 
     try {
-      const idOrden = item.idOrden > 0 ? item.idOrden : 7710774;
-      const idProducto = item.idProducto > 0 ? item.idProducto : 53821;
+      const idParaConsulta =
+        item.idResultado > 0 ? item.idResultado : item.idOrden;
+      const idProducto = item.idProducto;
 
-      const detalle = await this.resultadoService.obtenerDetalleImagen(
-        idOrden,
+      let detalle = await this.resultadoService.obtenerDetalleImagen(
+        idParaConsulta,
         idProducto,
       );
+
+      if (
+        !detalle?.informeTexto &&
+        item.idOrden > 0 &&
+        item.idOrden !== idParaConsulta
+      ) {
+        detalle = await this.resultadoService.obtenerDetalleImagen(
+          item.idOrden,
+          idProducto,
+        );
+      }
 
       if (detalle?.informeTexto) {
         detalle.informeTexto = detalle.informeTexto

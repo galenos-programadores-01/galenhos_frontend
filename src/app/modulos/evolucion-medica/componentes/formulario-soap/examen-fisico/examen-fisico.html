@@ -1,10 +1,10 @@
-<div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+<div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
   <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200">
     <div class="flex items-center gap-2.5">
       <h3 class="text-[14px] font-semibold text-teal-950 m-0">Examen físico por sistemas</h3>
     </div>
     <button type="button" (click)="marcarTodoNormal()"
-            class="text-[11.5px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3.5 py-1.5 cursor-pointer hover:brightness-95 transition whitespace-nowrap">
+            class="text-[11.5px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3.5 py-1.5 cursor-pointer hover:brightness-95 transition whitespace-nowrap">
       Marcar todo normal
     </button>
   </div>
@@ -24,21 +24,24 @@
                     [class]="esNormal($index)
                       ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold'
                       : 'bg-white border-slate-200 text-slate-500'"
-                    class="text-[12px] rounded-full px-3.5 py-1.5 cursor-pointer border transition-all">
+                    class="text-[12px] rounded-md px-3.5 py-1.5 cursor-pointer border transition-all">
               Normal
             </button>
             <button type="button" (click)="marcarAnormal($index)"
                     [class]="!esNormal($index)
                       ? 'bg-orange-50 border-orange-300 text-orange-700 font-bold'
                       : 'bg-white border-slate-200 text-slate-500'"
-                    class="text-[12px] rounded-full px-3.5 py-1.5 cursor-pointer border transition-all">
+                    class="text-[12px] rounded-md px-3.5 py-1.5 cursor-pointer border transition-all">
               Hallazgo
             </button>
           </div>
           @if (!esNormal($index)) {
-            <textarea #hallazgoInput formControlName="hallazgo" rows="2"
-                      class="w-full border border-orange-200 rounded-lg p-2.5 text-[13px] bg-orange-50 text-slate-800 focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all resize-y"
-                      placeholder="Describir hallazgo de {{ sistema.nombre | lowercase }}..."></textarea>
+            <label class="block">
+              <span class="sr-only">Describir hallazgo de {{ sistema.nombre }}</span>
+              <textarea #hallazgoInput [id]="'hallazgo_' + $index" [name]="'hallazgo_' + $index" formControlName="hallazgo" rows="2" maxlength="500"
+                        class="w-full border border-orange-200 rounded-md p-2.5 text-[13px] bg-orange-50 text-slate-800 focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all resize-y"
+                        placeholder="Describir hallazgo de {{ sistema.nombre | lowercase }}..."></textarea>
+            </label>
             <app-error-mensaje [control]="getFormGroup($index).get('hallazgo')"></app-error-mensaje>
           }
         </div>

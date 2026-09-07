@@ -14,29 +14,39 @@
     <form [formGroup]="interconsultaForm" (ngSubmit)="solicitar()" class="flex flex-col gap-5 mb-2">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border-b border-slate-100">
         <div class="text-[12.5px] text-slate-500 font-semibold">
-          Médico Solicitante: <span class="font-medium text-slate-800">{{ authService.username() || 'RAMIREZ CALDERON CARLOS' }}</span>
+          Médico Solicitante: <span class="font-medium text-slate-800">{{ authService.nombreCompleto() || authService.username() || 'MÉDICO' }}</span>
         </div>
         <div class="text-[12.5px] text-slate-500 font-semibold md:text-right">
           Fecha: <span class="font-medium text-slate-800">{{ fechaActual | date:'dd/MM/yyyy' }}</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="flex flex-col">
           <label for="ic-prioridad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Prioridad:</label>
           <app-select-global id="ic-prioridad" formControlName="prioridad">
-            <option value="">--SELECCIONAR--</option>
             <option value="NORMAL">NORMAL</option>
             <option value="URGENTE">URGENTE</option>
           </app-select-global>
         </div>
 
         <div class="flex flex-col">
-          <label for="ic-especialidad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Especialidad:</label>
+          <label for="ic-especialidad" class="text-[11.5px] font-semibold text-slate-500 mb-1">Especialidad solicitada:</label>
           <app-select-global id="ic-especialidad" formControlName="IdEspecialidad" (change)="onEspecialidadChange($event)">
-            <option value="">--SELECCIONAR--</option>
+            <option value="">--SELECCIONAR ESPECIALIDAD--</option>
             @for (esp of especialidades(); track esp.IdEspecialidad) {
               <option [value]="esp.IdEspecialidad">{{ esp.nombre }}</option>
+            }
+          </app-select-global>
+          <app-error-mensaje [control]="interconsultaForm.get('IdEspecialidad')"></app-error-mensaje>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="ic-medico" class="text-[11.5px] font-semibold text-slate-500 mb-1">Médico destino (Opcional):</label>
+          <app-select-global id="ic-medico" formControlName="idMedicoDestino">
+            <option value="">--DISPONIBLE EN SERVICIO--</option>
+            @for (m of medicos(); track m.idMedico) {
+              <option [value]="m.idMedico">{{ m.medico }}</option>
             }
           </app-select-global>
         </div>
@@ -59,40 +69,49 @@
           </label>
         </div>
         
-        <div class="flex items-center gap-2 mt-3">
-          <label for="chk-otro" class="flex items-center gap-2 cursor-pointer whitespace-nowrap hover:text-teal-700 transition-colors">
-            <input id="chk-otro" type="checkbox" formControlName="chkOtro" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
-            <span class="text-[13px] text-slate-700 uppercase">Otro</span>
-          </label>
+        <div class="flex flex-col gap-1 mt-3">
+          <div class="flex items-center gap-2">
+            <label for="chk-otro" class="flex items-center gap-2 cursor-pointer whitespace-nowrap hover:text-teal-700 transition-colors">
+              <input id="chk-otro" type="checkbox" formControlName="chkOtro" class="accent-teal-600 w-4 h-4 rounded border-slate-300 focus:ring-teal-500">
+              <span class="text-[13px] text-slate-700 uppercase">Otro</span>
+            </label>
+            @if (interconsultaForm.get('chkOtro')?.value) {
+              <label for="txt-otro" class="sr-only">Especifique otro motivo</label>
+              <input id="txt-otro" type="text" maxlength="300" formControlName="motivoOtro" placeholder="Especifique motivo detallado..." 
+                class="border border-slate-300 rounded-md px-2.5 py-1 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none w-full max-w-sm">
+            }
+          </div>
           @if (interconsultaForm.get('chkOtro')?.value) {
-            <label for="txt-otro" class="sr-only">Especifique otro motivo</label>
-            <input id="txt-otro" type="text" formControlName="motivoOtro" placeholder="Especifique..." 
-              class="border border-slate-300 rounded-md px-2.5 py-1 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:outline-none w-full max-w-sm">
+            <app-error-mensaje [control]="interconsultaForm.get('motivoOtro')"></app-error-mensaje>
           }
         </div>
       </div>
 
       @if (errorMessage()) {
-        <div class="mt-2 flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-lg px-3 py-2">
+        <div class="mt-2 flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-md px-3 py-2">
           {{ errorMessage() }}
         </div>
       }
 
       <div class="flex justify-end mt-4">
-        @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
-          <button type="submit" [disabled]="interconsultaForm.invalid || isSubmitting()"
-            class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-6 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2">
-            @if (isSubmitting()) {
-              <svg aria-hidden="true" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Solicitando...
-            } @else {
-              Solicitar Interconsulta
-            }
-          </button>
-        }
+        <button
+          type="submit"
+          [disabled]="interconsultaForm.invalid || isSubmitting()"
+          class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2 cursor-pointer"
+        >
+          @if (isSubmitting()) {
+            <svg aria-hidden="true" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Guardando interconsulta...</span>
+          } @else {
+            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Agregar / Solicitar Interconsulta</span>
+          }
+        </button>
       </div>
     </form>
   </div>
@@ -124,11 +143,11 @@
       </div>
     } @else {
       <div class="overflow-x-auto">
-        <app-tabla [columnas]="columnasInterconsultas" [datos]="interconsultas()" [cargando]="false"
+        <app-tabla [columnas]="columnasInterconsultas" [datos]="interconsultasPaginadas" [cargando]="false"
                    mensajeVacio="No hay interconsultas registradas para esta atención.">
 
           <ng-template appColumnaTemplate="fechaCustom" let-ic>
-            <span class="font-mono text-[11.5px] text-slate-500">{{ ic.fechaSolicitud | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="font-mono text-[11.5px] text-slate-500">{{ obtenerFechaHora(ic.fechaSolicitud) }}</span>
           </ng-template>
 
           <ng-template appColumnaTemplate="especialidadCustom" let-ic>
@@ -140,7 +159,7 @@
           </ng-template>
 
           <ng-template appColumnaTemplate="estadoCustom" let-ic>
-            <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold border"
+            <span class="px-2 py-0.5 rounded-md text-[10.5px] font-semibold border"
               [ngClass]="{
                 'bg-slate-100 text-slate-600 border-slate-200': ic.estado === 'Pendiente' || !ic.estado,
                 'bg-teal-100 text-teal-700 border-teal-200': ic.estado === 'Firmado',
@@ -166,6 +185,17 @@
 
         </app-tabla>
       </div>
+
+      @if (interconsultas().length > elementosPorPagina) {
+        <div class="mt-3 pt-2 border-t border-slate-100">
+          <app-paginacion
+            [page]="paginaActual()"
+            [totalPages]="totalPaginas"
+            [totalItems]="interconsultas().length"
+            (pageChange)="paginaActual.set($event)"
+          />
+        </div>
+      }
     }
   </div>
 

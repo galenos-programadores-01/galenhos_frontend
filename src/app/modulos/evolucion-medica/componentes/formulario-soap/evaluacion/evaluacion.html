@@ -1,0 +1,50 @@
+<section class="animate-in fade-in duration-300 w-full" [formGroup]="soapForm">
+  <div class="mb-6 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-md bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">06</div>
+      <div>
+        <h2 class="font-bold text-[15px] text-[#07153a]">Evaluación</h2>
+        <p class="text-[12px] text-[#54617f]">Interpretación clínica y diagnósticos</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" formGroupName="evaluacion">
+        <div class="flex flex-col gap-1.5">
+          <label for="evaluacion-estado-clinico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Estado clínico</label>
+          <app-select-global id="evaluacion-estado-clinico" formControlName="estadoClinico">
+            <option value="Mejoría">Mejoría</option>
+            <option value="Estacionario">Estacionario</option>
+            <option value="Empeoramiento">Empeoramiento</option>
+            <option value="Resuelto">Resuelto</option>
+          </app-select-global>
+          <app-error-mensaje [control]="soapForm.get('evaluacion.estadoClinico')"></app-error-mensaje>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="evaluacion-pronostico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Pronóstico</label>
+          <app-select-global id="evaluacion-pronostico" formControlName="pronostico">
+            <option value="Bueno">Bueno</option>
+            <option value="Reservado">Reservado</option>
+            <option value="Malo">Malo</option>
+          </app-select-global>
+          <app-error-mensaje [control]="soapForm.get('evaluacion.pronostico')"></app-error-mensaje>
+        </div>
+      </div>
+      <div class="pt-6 border-t border-slate-100">
+        <app-diagnosticos [formArray]="diagnosticosArray" />
+      </div>
+      <div class="mt-8 pt-6 border-t border-slate-100">
+        <div class="flex items-center justify-between mb-2">
+          <label for="evolucion-libre" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Evolución clínica libre</label>
+          <span class="text-[11px] font-mono text-slate-400">
+            {{ soapForm.get('evolucionLibre')?.value?.length || 0 }} / 4000
+          </span>
+        </div>
+        <textarea id="evolucion-libre" maxlength="4000" formControlName="evolucionLibre" rows="8"
+          class="w-full border border-slate-200 rounded-md p-4 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y leading-relaxed transition-all"
+          [class.border-rose-300]="soapForm.get('evolucionLibre')?.invalid && soapForm.get('evolucionLibre')?.touched"
+          placeholder="Redacte la evolución clínica detallada..."></textarea>
+        <app-error-mensaje [control]="soapForm.get('evolucionLibre')"></app-error-mensaje>
+      </div>
+    </div>
+  </div>
+</section>

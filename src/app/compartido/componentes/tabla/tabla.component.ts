@@ -21,8 +21,8 @@ export interface ColumnaTabla {
   templateUrl: './tabla.component.html',
 })
 export class TablaComponent {
-  @Input() columnas: ColumnaTabla[] = [];
-  @Input() datos: unknown[] = [];
+  @Input() columnas: readonly ColumnaTabla[] | ColumnaTabla[] = [];
+  @Input() datos: readonly unknown[] | unknown[] = [];
   @Input() cargando: boolean = false;
   @Input() mensajeCargando: string = 'Consultando...';
   @Input() mostrarFiltroRequerido: boolean = false;
