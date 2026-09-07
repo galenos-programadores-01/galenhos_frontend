@@ -5,7 +5,7 @@
         @if (authService.hasPermission('imprimir')) {
           <button
             type="button"
-            class="flex items-center gap-1.5 font-semibold text-xs px-3 py-1.5 rounded-lg bg-white text-[#07153a] border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            class="flex items-center gap-1.5 font-semibold text-xs px-3 py-1.5 rounded-md bg-white text-[#07153a] border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
           >
             <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -16,7 +16,7 @@
         @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
           <button
             type="button"
-            class="flex items-center gap-1.5 font-semibold text-xs px-4 py-1.5 rounded-lg bg-[#263c7a] text-white border border-[#1a2d5e] hover:bg-[#1a2d5e] transition-colors shadow-sm"
+            class="flex items-center gap-1.5 font-semibold text-xs px-4 py-1.5 rounded-md bg-[#263c7a] text-white border border-[#1a2d5e] hover:bg-[#1a2d5e] transition-colors shadow-sm"
           >
             <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

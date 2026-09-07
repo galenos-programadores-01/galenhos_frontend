@@ -331,7 +331,12 @@ export async function construirPdfTriaje(
           align: 'center',
         },
         { span: 1, text: 'F.U.R.', kind: 'label' },
-        { span: 1, text: formatFechaPdf(c.FUR), kind: 'value', align: 'center' },
+        {
+          span: 1,
+          text: formatFechaPdf(c.FUR),
+          kind: 'value',
+          align: 'center',
+        },
         { span: 1, text: 'EDAD GEST.', kind: 'label' },
         {
           span: 1,
@@ -340,7 +345,12 @@ export async function construirPdfTriaje(
           align: 'center',
         },
         { span: 1, text: 'F.P.P.', kind: 'label' },
-        { span: 1, text: formatFechaPdf(c.FPP), kind: 'value', align: 'center' },
+        {
+          span: 1,
+          text: formatFechaPdf(c.FPP),
+          kind: 'value',
+          align: 'center',
+        },
       ],
       8,
     );

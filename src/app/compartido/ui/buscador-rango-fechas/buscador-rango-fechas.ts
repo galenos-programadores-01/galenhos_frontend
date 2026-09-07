@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -17,23 +16,23 @@ export interface CriteriosBusqueda {
 @Component({
   selector: 'buscador-rango-fechas',
   standalone: true,
-  imports: [FormsModule, NgIf],
+  imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './buscador-rango-fechas.html',
 })
 export class BuscadorRangoFechas {
-  @Input() placeholder: string = 'Buscar…';
-  @Input() textoBoton: string = 'Buscar';
-  @Input() cargando: boolean = false;
+  @Input() placeholder = 'Buscar…';
+  @Input() textoBoton = 'Buscar';
+  @Input() cargando = false;
 
-  @Input() set fechaDesdeInicial(v: string) {
-    this.fechaDesde = v ?? '';
+  @Input() set fechaDesdeInicial(valor: string) {
+    this.fechaDesde = valor ?? '';
   }
-  @Input() set fechaHastaInicial(v: string) {
-    this.fechaHasta = v ?? '';
+  @Input() set fechaHastaInicial(valor: string) {
+    this.fechaHasta = valor ?? '';
   }
-  @Input() set filtroInicial(v: string) {
-    this.filtro = v ?? '';
+  @Input() set filtroInicial(valor: string) {
+    this.filtro = valor ?? '';
   }
 
   @Output() buscar = new EventEmitter<CriteriosBusqueda>();
@@ -43,22 +42,28 @@ export class BuscadorRangoFechas {
   fechaDesde = '';
   fechaHasta = '';
 
-  emitirBusqueda() {
-    if (
-      this.fechaDesde &&
-      this.fechaHasta &&
-      this.fechaDesde > this.fechaHasta
-    ) {
-      [this.fechaDesde, this.fechaHasta] = [this.fechaHasta, this.fechaDesde];
+  emitirBusqueda(): void {
+    const filtroSaneado = this.filtro.trim().slice(0, 100);
+
+    let inicio = this.fechaDesde;
+    let fin = this.fechaHasta;
+
+    if (inicio && fin && inicio > fin) {
+      const temporal = inicio;
+      inicio = fin;
+      fin = temporal;
+      this.fechaDesde = inicio;
+      this.fechaHasta = fin;
     }
+
     this.buscar.emit({
-      filtro: this.filtro.trim(),
-      fechaDesde: this.fechaDesde,
-      fechaHasta: this.fechaHasta,
+      filtro: filtroSaneado,
+      fechaDesde: inicio,
+      fechaHasta: fin,
     });
   }
 
-  limpiar() {
+  limpiar(): void {
     this.filtro = '';
     this.fechaDesde = '';
     this.fechaHasta = '';

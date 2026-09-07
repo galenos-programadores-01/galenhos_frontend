@@ -1,13 +1,32 @@
-<div *ngIf="shouldShowErrors()" class="text-red-500 text-xs mt-1 font-medium transition-all duration-300">
-      <span *ngIf="errors?.['required']">Este campo es requerido.</span>
-      <span *ngIf="errors?.['minlength']">Mínimo {{ errors?.['minlength']?.requiredLength }} caracteres.</span>
-      <span *ngIf="errors?.['maxlength']">Máximo {{ errors?.['maxlength']?.requiredLength }} caracteres.</span>
-      <span *ngIf="errors?.['pattern']">El formato no es válido.</span>
-      <span *ngIf="errors?.['email']">Ingrese un correo electrónico válido.</span>
-      <span *ngIf="errors?.['min']">El valor mínimo es {{ errors?.['min']?.min }}.</span>
-      <span *ngIf="errors?.['max']">El valor máximo es {{ errors?.['max']?.max }}.</span>
-      <span *ngIf="errors?.['dniInvalido']">El DNI debe tener 8 dígitos numéricos.</span>
-      <span *ngIf="errors?.['historiaInvalida']">Formato de historia clínica no válido.</span>
-      <!-- Errores personalizados adicionales -->
-      <span *ngIf="errors?.['mensajePersonalizado']">{{ errors?.['mensajePersonalizado'] }}</span>
-    </div>
+@if (shouldShowErrors()) {
+  <div class="text-rose-600 text-[11.5px] mt-1 font-medium flex items-center gap-1 animate-in fade-in duration-200">
+    <svg aria-hidden="true" class="w-3.5 h-3.5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    <span>
+      @if (errors?.['mensajePersonalizado']) {
+        {{ errors?.['mensajePersonalizado'] }}
+      } @else if (errors?.['required']) {
+        Este campo es obligatorio.
+      } @else if (errors?.['minlength']) {
+        Mínimo {{ errors?.['minlength']?.requiredLength }} caracteres.
+      } @else if (errors?.['maxlength']) {
+        Máximo {{ errors?.['maxlength']?.requiredLength }} caracteres.
+      } @else if (errors?.['pattern']) {
+        El formato ingresado no es válido.
+      } @else if (errors?.['email']) {
+        Ingrese un correo electrónico válido.
+      } @else if (errors?.['min']) {
+        El valor mínimo permitido es {{ errors?.['min']?.min }}.
+      } @else if (errors?.['max']) {
+        El valor máximo permitido es {{ errors?.['max']?.max }}.
+      } @else if (errors?.['dniInvalido']) {
+        El DNI debe tener 8 dígitos numéricos.
+      } @else if (errors?.['historiaInvalida']) {
+        Formato de historia clínica no válido.
+      } @else {
+        Valor no válido.
+      }
+    </span>
+  </div>
+}

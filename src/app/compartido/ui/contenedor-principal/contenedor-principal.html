@@ -1,21 +1,36 @@
-<div class="flex h-screen overflow-hidden bg-[#eef1f6]">
-  <barra-lateral 
-    class="h-full block transition-all duration-300"
-    [isCollapsed]="!isSidebarOpen"
-    [username]="authService.username()"
-    (toggleSidebarEvent)="toggleSidebar()">
-  </barra-lateral>
+<div class="flex h-screen overflow-hidden bg-[#eef1f6] relative">
+  @if (isMobileSidebarOpen()) {
+    <div
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+      (click)="cerrarMobileSidebar()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <div
+    class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 h-full shrink-0"
+    [class.-translate-x-full]="!isMobileSidebarOpen()"
+    [class.translate-x-0]="isMobileSidebarOpen()"
+  >
+    <barra-lateral 
+      class="h-full block"
+      [isCollapsed]="!isSidebarOpen()"
+      [username]="authService.username()"
+      (toggleSidebarEvent)="toggleSidebar()"
+      (closeMobileSidebarEvent)="cerrarMobileSidebar()">
+    </barra-lateral>
+  </div>
 
   <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
     <barra-superior 
-      [title]="tituloActual" 
+      [title]="tituloActual()" 
       [username]="authService.username()"
+      (toggleMobileMenuEvent)="toggleMobileSidebar()"
       (logoutEvent)="authService.logout()">
     </barra-superior>
-    <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-[#f4f7f9] custom-scrollbar">
+    <main class="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 bg-[#f4f7f9] custom-scrollbar">
       <router-outlet></router-outlet>
-    </div>
+    </main>
   </div>
-
-
 </div>
+

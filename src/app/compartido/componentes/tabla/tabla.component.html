@@ -16,12 +16,12 @@
     } @else if (datos.length === 0) {
       <tr><td [attr.colspan]="columnas.length" style="padding: 20px 10px; color: #94a0bd; text-align: center;">{{ mensajeVacio }}</td></tr>
     } @else {
-      @for (item of datos; track $index) {
+      @for (item of datos; track $index; let indiceFila = $index) {
         <tr style="border-top: 1px solid #eef1f6;">
           @for (col of columnas; track col.campo) {
             <td [style.text-align]="col.alineacion || 'left'" style="padding: 12px 10px; vertical-align: middle;">
               @if (getTemplate(col.campo)) {
-                <ng-container *ngTemplateOutlet="getTemplate(col.campo)!; context: { $implicit: item, index: $index }"></ng-container>
+                <ng-container *ngTemplateOutlet="getTemplate(col.campo)!; context: { $implicit: item, index: indiceFila, indice: indiceFila }"></ng-container>
               } @else {
                 <span style="color: #54617f;">{{ $any(item)[col.campo] || '—' }}</span>
               }

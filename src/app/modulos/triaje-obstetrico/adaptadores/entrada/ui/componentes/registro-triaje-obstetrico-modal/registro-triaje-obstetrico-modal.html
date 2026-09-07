@@ -66,12 +66,6 @@
     </div>
   }
 
-  <!-- @if (srv.sisGuardado) {
-    <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; font-size: 13px; font-weight: 600; background: #ecfdf5; border: 1px solid #6ee7b7; color: #047857;">
-      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5" /></svg>
-      <span>Afiliación SIS guardada correctamente.</span>
-    </div>
-  } -->
 
   @if (srv.pacienteEncontrado) {
     <div style="margin-top: 16px; border-radius: 14px; overflow: hidden;"
@@ -334,9 +328,9 @@
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
           </div>
           <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-            <label style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Gestante</label>
+            <span style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Gestante</span>
             <div style="display: flex; align-items: center; gap: 10px; height: 42px;">
-              <button type="button" (click)="srv.formulario.esGestante = !srv.formulario.esGestante"
+              <button type="button" aria-label="Gestante" (click)="srv.formulario.esGestante = !srv.formulario.esGestante"
                       [attr.aria-pressed]="srv.formulario.esGestante"
                       style="width: 44px; height: 24px; border-radius: 999px; border: none; cursor: pointer; position: relative; transition: background .2s;"
                       [style.background]="srv.formulario.esGestante ? '#0d9488' : '#d5dceb'">
@@ -401,21 +395,6 @@
               </button>
             }
           </div>
-
-          <!-- @if (srv.formulario.idTipoPrioridad && srv.opcionesPrioridadActual.length) {
-            <div style="margin-top: 14px; border-radius: 12px; border: 1px solid #d5dceb; padding: 12px 14px; background: #fbfcfe; display: grid; gap: 8px;">
-              <span style="font-size: 11px; font-weight: 700; color: #54617f; text-transform: uppercase; letter-spacing: .04em;">Seleccione los signos o síntomas (puede marcar varios)</span>
-              @for (opcion of srv.opcionesPrioridadActual; track opcion) {
-                <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 13px; color: #07153a; line-height: 1.35;">
-                  <input autocomplete="off" type="checkbox"
-                         [checked]="srv.opcionesSeleccionadas[srv.formulario.idTipoPrioridad]?.includes(opcion)"
-                         (change)="srv.toggleOpcionPrioridad(opcion)"
-                         style="margin-top: 2px; flex-shrink: 0;">
-                  <span>{{ opcion }}</span>
-                </label>
-              }
-            </div>
-          } -->
         </div>        
 
         <div style="margin-top: 16px;">

@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
   Component,
@@ -13,10 +14,12 @@ import { VentanaModal } from '../ventana-modal/ventana-modal';
 import { normalizarNombre } from './registro-paciente.interfaces';
 import { RegistroPacienteService } from './registro-paciente.service';
 
+export type TipoUbicacion = 'domicilio' | 'nacimiento' | 'procedencia';
+
 @Component({
   selector: 'registro-paciente-modal',
   standalone: true,
-  imports: [FormsModule, VentanaModal],
+  imports: [CommonModule, FormsModule, VentanaModal],
   providers: [RegistroPacienteService],
   templateUrl: './registro-paciente-modal.html',
 })
@@ -34,16 +37,20 @@ export class RegistroPacienteModal implements OnChanges {
   private readonly cdr = inject(ChangeDetectorRef);
   public normalizarNombre = normalizarNombre;
 
-  async ngOnChanges(cambios: SimpleChanges): Promise<void> {
+  ngOnChanges(cambios: SimpleChanges): void {
     if (cambios.abierto?.currentValue === true) {
-      this.srv.limpiarEstado();
-      await this.srv.cargarCatalogos();
-      await this.srv.verificarParametro296();
-      if (this.pacienteId) {
-        await this.srv.cargarPaciente(this.pacienteId);
-      }
-      this.cdr.detectChanges();
+      void this.inicializarModal();
     }
+  }
+
+  private async inicializarModal(): Promise<void> {
+    this.srv.limpiarEstado();
+    await this.srv.cargarCatalogos();
+    await this.srv.verificarParametro296();
+    if (this.pacienteId) {
+      await this.srv.cargarPaciente(this.pacienteId);
+    }
+    this.cdr.detectChanges();
   }
 
   cerrar(): void {
@@ -78,13 +85,13 @@ export class RegistroPacienteModal implements OnChanges {
     }
   }
 
-  onCambioDepartamento(tipo: 'domicilio' | 'nacimiento' | 'procedencia'): void {
+  onCambioDepartamento(tipo: TipoUbicacion): void {
     this.srv.onCambioDepartamento(tipo);
   }
-  onCambioProvincia(tipo: 'domicilio' | 'nacimiento' | 'procedencia'): void {
+  onCambioProvincia(tipo: TipoUbicacion): void {
     this.srv.onCambioProvincia(tipo);
   }
-  onCambioDistrito(tipo: 'domicilio' | 'nacimiento' | 'procedencia'): void {
+  onCambioDistrito(tipo: TipoUbicacion): void {
     this.srv.onCambioDistrito(tipo);
   }
 }

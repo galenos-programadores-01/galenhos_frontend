@@ -330,7 +330,10 @@ export class RegistroPacienteService {
     if (!nroDoc || !idTipoDoc) return;
 
     try {
-      const paciente = await this.pacientesApi.porDocumento(nroDoc, Number(idTipoDoc));
+      const paciente = await this.pacientesApi.porDocumento(
+        nroDoc,
+        Number(idTipoDoc),
+      );
       if (paciente) {
         const nombre = [
           paciente.paternalSurname,

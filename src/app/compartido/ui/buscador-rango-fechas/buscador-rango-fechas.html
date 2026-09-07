@@ -1,64 +1,65 @@
 <div class="flex flex-wrap items-center gap-2 w-full">
-      <!-- Texto de búsqueda -->
-      <div class="relative flex-1 min-w-[200px]">
-        <svg aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a0bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <label for="filtroBusqueda" class="sr-only">Búsqueda general</label>
-        <input
-          id="filtroBusqueda"
-          type="text"
-          [(ngModel)]="filtro"
-          (keyup.enter)="emitirBusqueda()"
-          class="w-full border border-[#dde3ef] rounded-lg py-2 pl-9 pr-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all placeholder:text-[#94a0bd]"
-          [placeholder]="placeholder"
-        >
-      </div>
+  <div class="relative flex-1 min-w-[200px]">
+    <svg aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a0bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <label for="filtroBusqueda" class="sr-only">Búsqueda general</label>
+    <input
+      id="filtroBusqueda"
+      type="text"
+      maxlength="100"
+      [(ngModel)]="filtro"
+      (keyup.enter)="emitirBusqueda()"
+      class="w-full border border-[#dde3ef] rounded-md py-2 pl-9 pr-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all placeholder:text-[#94a0bd]"
+      [placeholder]="placeholder"
+    >
+  </div>
 
-      <!-- Desde -->
-      <label for="fechaDesde" class="sr-only">Desde</label>
-      <input
-        id="fechaDesde"
-        type="date"
-        [(ngModel)]="fechaDesde"
-        title="Desde"
-        class="border border-[#dde3ef] rounded-lg py-[7px] px-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all"
-      >
+  <label for="fechaDesde" class="sr-only">Desde</label>
+  <input
+    id="fechaDesde"
+    type="date"
+    [(ngModel)]="fechaDesde"
+    title="Desde"
+    class="border border-[#dde3ef] rounded-md py-[7px] px-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all"
+  >
 
-      <!-- Hasta -->
-      <label for="fechaHasta" class="sr-only">Hasta</label>
-      <input
-        id="fechaHasta"
-        type="date"
-        [(ngModel)]="fechaHasta"
-        title="Hasta"
-        class="border border-[#dde3ef] rounded-lg py-[7px] px-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all"
-      >
+  <label for="fechaHasta" class="sr-only">Hasta</label>
+  <input
+    id="fechaHasta"
+    type="date"
+    [(ngModel)]="fechaHasta"
+    title="Hasta"
+    class="border border-[#dde3ef] rounded-md py-[7px] px-3 text-sm text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] transition-all"
+  >
 
-      <button type="button"
-        (click)="emitirBusqueda()"
-        class="bg-[#263c7a] hover:bg-[#1c2f63] text-white text-sm font-semibold py-2 px-5 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        [disabled]="cargando"
-      >
-        <svg aria-hidden="true" *ngIf="!cargando" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-        <svg aria-hidden="true" *ngIf="cargando" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-        </svg>
-        {{ textoBoton }}
-      </button>
+  <button type="button"
+    (click)="emitirBusqueda()"
+    class="bg-[#263c7a] hover:bg-[#1c2f63] text-white text-sm font-semibold py-2 px-5 rounded-md transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+    [disabled]="cargando"
+  >
+    @if (!cargando) {
+      <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    } @else {
+      <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+    }
+    {{ textoBoton }}
+  </button>
 
-      <button type="button"
-        (click)="limpiar()"
-        title="Limpiar filtros"
-        class="text-[#54617f] hover:text-[#07153a] hover:bg-[#eef1f6] py-2 px-3 rounded-lg transition-colors cursor-pointer"
-      >
-        <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-      </button>
-    </div>
+  <button type="button"
+    (click)="limpiar()"
+    title="Limpiar filtros"
+    class="text-[#54617f] hover:text-[#07153a] hover:bg-[#eef1f6] py-2 px-3 rounded-md transition-colors cursor-pointer"
+  >
+    <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1 4 1 10 7 10"></polyline>
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+    </svg>
+  </button>
+</div>

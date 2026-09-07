@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, forwardRef, Input } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  Output,
+} from '@angular/core';
 import {
   type ControlValueAccessor,
   FormsModule,
@@ -17,6 +23,10 @@ import {
       multi: true,
     },
   ],
+  host: {
+    '[attr.id]': 'null',
+    class: 'block',
+  },
   template: `
     <div class="relative w-full">
       <select
@@ -25,12 +35,13 @@ import {
         [ngModel]="value"
         (ngModelChange)="onValueChange($event)"
         (blur)="onTouched()"
-        class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none pr-10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        [ngClass]="customClass"
+        class="w-full bg-slate-50/80 hover:bg-slate-50 border border-slate-200 focus:bg-white text-slate-800 text-[12px] font-semibold rounded-md focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 block py-1.5 px-2.5 outline-none transition-all appearance-none pr-8 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer truncate shadow-2xs"
       >
         <ng-content></ng-content>
       </select>
-      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
@@ -39,6 +50,8 @@ import {
 })
 export class SelectGlobalComponent implements ControlValueAccessor {
   @Input() id = '';
+  @Input() customClass = '';
+  @Output() readonly cambio = new EventEmitter<unknown>();
 
   value: unknown = '';
   disabled = false;
@@ -65,5 +78,6 @@ export class SelectGlobalComponent implements ControlValueAccessor {
   onValueChange(val: unknown) {
     this.value = val;
     this.onChange(val);
+    this.cambio.emit(val);
   }
 }

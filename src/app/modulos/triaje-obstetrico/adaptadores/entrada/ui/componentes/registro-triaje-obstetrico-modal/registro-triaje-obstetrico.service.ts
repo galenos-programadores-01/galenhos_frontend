@@ -1,6 +1,5 @@
 ﻿import { Injectable, inject } from '@angular/core';
 import { MaestrosApiService } from '../../../../../../../compartido/api/maestros.api.service';
-import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { ApiRequestError } from '../../../../../../../compartido/api-client/api-client.service';
 import type {
   ICatalogoDescripcion,
@@ -9,6 +8,7 @@ import type {
   RegistroPacientePayload,
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.mapper';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { PacientesApiService } from '../../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
   type SisAfiliado,

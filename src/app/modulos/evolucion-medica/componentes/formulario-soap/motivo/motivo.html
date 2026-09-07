@@ -1,6 +1,5 @@
 <div class="space-y-8">
 
-  
   <div>
     <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-5 pb-2 border-b border-slate-200">
       <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -12,9 +11,8 @@
       Motivo de Atención
     </h3>
 
-    <form [formGroup]="motivoForm" (ngSubmit)="registrarMotivo()" class="space-y-5">
+    <form [formGroup]="formGroup" (ngSubmit)="registrarMotivo()" class="space-y-5">
 
-      
       <fieldset>
         <legend class="block text-[11.5px] font-semibold text-slate-500 mb-2.5">Tipo de motivo</legend>
         <div class="flex flex-wrap gap-2">
@@ -22,12 +20,12 @@
             <button
               type="button"
               [id]="'motivo-tipo-' + tipo.valor"
-              (click)="motivoForm.get('tipo')?.setValue(tipo.valor)"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-all"
-              [class]="motivoForm.get('tipo')?.value === tipo.valor
+              (click)="formGroup.get('tipo')?.setValue(tipo.valor)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-[12.5px] font-medium transition-all cursor-pointer"
+              [class]="formGroup.get('tipo')?.value === tipo.valor
                 ? 'bg-teal-600 text-white border-teal-600 shadow-sm scale-105'
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-teal-400 hover:bg-teal-50'"
-              [attr.aria-pressed]="motivoForm.get('tipo')?.value === tipo.valor">
+              [attr.aria-pressed]="formGroup.get('tipo')?.value === tipo.valor">
               @switch (tipo.icono) {
                 @case ('usuario') {
                   <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -70,28 +68,41 @@
             </button>
           }
         </div>
-        <app-error-mensaje [control]="motivoForm.get('tipo')"></app-error-mensaje>
+        <app-error-mensaje [control]="formGroup.get('tipo')"></app-error-mensaje>
       </fieldset>
 
-      
       <div class="flex flex-col">
-        <label for="motivo-descripcion" class="text-[11.5px] font-semibold text-slate-500 mb-1">
-          Descripción detallada del motivo
-        </label>
+        <div class="flex items-center justify-between mb-1">
+          <label for="motivo-descripcion" class="text-[11.5px] font-semibold text-slate-500">
+            Descripción detallada del motivo
+          </label>
+          <span class="text-[10.5px] text-slate-400 font-mono">
+            {{ formGroup.get('descripcion')?.value?.length || 0 }} / 1000
+          </span>
+        </div>
         <textarea
           id="motivo-descripcion"
           formControlName="descripcion"
           rows="3"
+          maxlength="1000"
           placeholder="Describa el motivo de la consulta con el mayor detalle clínico posible..."
           class="w-full border border-slate-200 rounded-md p-2.5 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-y"
-          [class.border-red-300]="motivoForm.get('descripcion')?.invalid && motivoForm.get('descripcion')?.touched">
+          [class.border-red-300]="formGroup.get('descripcion')?.invalid && (formGroup.get('descripcion')?.touched || formGroup.get('descripcion')?.dirty)">
         </textarea>
-        <app-error-mensaje [control]="motivoForm.get('descripcion')"></app-error-mensaje>
+        <app-error-mensaje [control]="formGroup.get('descripcion')"></app-error-mensaje>
       </div>
 
-      
+      @if (guardadoExitoso()) {
+        <div class="flex items-center gap-2 bg-emerald-50 text-emerald-800 text-[12.5px] font-medium rounded-md px-3.5 py-2.5 border border-emerald-200 animate-in fade-in">
+          <svg aria-hidden="true" class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Motivo registrado y sincronizado exitosamente con la atención.
+        </div>
+      }
+
       @if (errorMessage()) {
-        <div class="flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-lg px-3 py-2">
+        <div class="flex items-center gap-2 bg-red-50 text-red-700 text-[12.5px] rounded-md px-3 py-2 border border-red-200">
           <svg aria-hidden="true" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
             <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -100,14 +111,13 @@
         </div>
       }
 
-      
-      <div class="flex justify-end">
+      <div class="flex justify-end items-center gap-3">
         @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
           <button
             id="btn-registrar-motivo"
             type="submit"
-            [disabled]="motivoForm.invalid || isSubmitting()"
-            class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-5 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2">
+            [disabled]="formGroup.invalid || isSubmitting()"
+            class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-5 rounded-md shadow-sm transition-all text-[13px] flex items-center gap-2 cursor-pointer">
             @if (isSubmitting()) {
               <svg aria-hidden="true" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -122,57 +132,4 @@
       </div>
     </form>
   </div>
-
-  
-  <div>
-    <h3 class="flex items-center gap-2 text-[13px] font-semibold text-teal-950 mb-5 pb-2 border-b border-slate-200">
-      <svg aria-hidden="true" class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-        <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-        <path d="M9 12h6"></path>
-        <path d="M9 16h6"></path>
-      </svg>
-      Motivos Registrados en esta Atención
-    </h3>
-
-    @if (isLoading()) {
-      <div class="flex justify-center items-center py-8 gap-3 text-slate-500">
-        <svg aria-hidden="true" class="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="text-[13px]">Cargando motivos...</span>
-      </div>
-    } @else if (motivos().length === 0) {
-      <div class="flex flex-col items-center gap-3 py-8">
-        <svg aria-hidden="true" class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-          <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-          <path d="M9 12h6"></path>
-          <path d="M9 16h6"></path>
-        </svg>
-        <p class="text-slate-500 text-[13px] italic">No hay motivos registrados aún para esta atención.</p>
-      </div>
-    } @else {
-      <div class="space-y-3">
-        @for (motivo of motivos(); track motivo.idMotivoAtencion) {
-          <div class="flex items-start gap-3 py-3 border-b border-slate-200">
-            <span class="px-2.5 py-1 rounded-full text-[11.5px] font-semibold shrink-0"
-              [class]="obtenerColorTipo(motivo.tipo)">
-              {{ motivo.tipo }}
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="text-[13px] text-slate-700">{{ motivo.descripcion }}</p>
-              @if (motivo.fechaRegistro) {
-                <p class="text-[11px] text-slate-400 mt-0.5 font-mono">
-                  {{ motivo.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}
-                </p>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </div>
-
 </div>

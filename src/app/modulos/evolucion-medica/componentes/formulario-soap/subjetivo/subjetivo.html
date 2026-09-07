@@ -1,0 +1,128 @@
+<section class="animate-in fade-in duration-300 w-full" [formGroup]="soapForm">
+  <div class="mb-6 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-md bg-[#07153a] flex items-center justify-center text-white text-[11px] font-bold shrink-0">03</div>
+      <div>
+        <h2 class="font-bold text-[15px] text-[#07153a]">Subjetivo</h2>
+        <p class="text-[12px] text-[#54617f]">Lo que refiere el paciente</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-[13px] font-bold text-[#07153a] uppercase tracking-wide">Síntomas referidos</h3>
+        @if (totalSintomasSeleccionados() > 0) {
+          <span class="text-[11px] font-mono text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-0.5 font-semibold">
+            {{ totalSintomasSeleccionados() }} seleccionado{{ totalSintomasSeleccionados() === 1 ? '' : 's' }}
+          </span>
+        }
+      </div>
+
+      @if (sintomasCargando()) {
+        <div class="text-center py-8">
+          <svg aria-hidden="true" class="w-5 h-5 text-[#0f766e] mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+          </svg>
+          <span class="text-[12.5px] text-[#54617f]">Cargando catálogo de síntomas...</span>
+        </div>
+      } @else {
+        <div class="border border-slate-200 rounded-lg overflow-hidden mb-5">
+          @for (grupo of sintomasPorSistema(); track grupo.clave) {
+            <div class="border-b border-slate-100 last:border-b-0">
+              <button type="button" (click)="toggleGrupoSintomas(grupo.clave)"
+                class="w-full flex items-center gap-3 px-5 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors cursor-pointer">
+                <span class="font-semibold text-[13px] text-[#07153a] flex-1">{{ grupo.etiqueta }}</span>
+                <span class="text-[11px] text-[#54617f] font-medium">
+                  {{ contarSintomasSistema(grupo.clave) }} sel.
+                </span>
+                <svg aria-hidden="true" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-150"
+                  [class.rotate-180]="grupoSintomasAbierto() === grupo.clave"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              @if (grupoSintomasAbierto() === grupo.clave) {
+                <div class="px-5 pb-4 pt-2 flex flex-wrap gap-2 bg-slate-50">
+                  @for (sintoma of grupo.sintomas; track sintoma.idSintoma) {
+                    <label
+                      class="inline-flex items-center gap-2 px-3 py-1.5 border rounded-md text-[12.5px] cursor-pointer select-none transition-all"
+                      [class.bg-amber-50]="sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.border-amber-400]="sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.text-amber-900]="sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.font-semibold]="sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.bg-white]="!sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.border-slate-200]="!sintomasSeleccionados().has(sintoma.idSintoma)"
+                      [class.text-[#54617f]]="!sintomasSeleccionados().has(sintoma.idSintoma)"
+                    >
+                      <input [id]="'sintoma_' + sintoma.idSintoma" [name]="'sintoma_' + sintoma.idSintoma" type="checkbox" class="accent-amber-500 w-3.5 h-3.5"
+                        [checked]="sintomasSeleccionados().has(sintoma.idSintoma)"
+                        (change)="toggleSintoma(sintoma.idSintoma)"
+                        [attr.aria-label]="sintoma.sintoma"
+                      >
+                      <span>{{ sintoma.sintoma }}</span>
+                    </label>
+                  } @empty {
+                    <span class="text-[12px] text-slate-400 italic py-1">Sin síntomas en este sistema.</span>
+                  }
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="text-center text-[13px] text-[#54617f] py-6">No hay síntomas disponibles.</div>
+          }
+
+          <div class="flex items-center gap-2.5 px-4 py-3 bg-slate-50 border-t border-slate-200">
+            <label for="nuevo-sintoma-texto" class="sr-only">Escribir síntoma nuevo</label>
+            <input id="nuevo-sintoma-texto" type="text" maxlength="100" [(ngModel)]="nuevoSintomaTexto"
+              [ngModelOptions]="{standalone: true}" (keydown.enter)="agregarSintomaNuevo()"
+              placeholder="Escribir síntoma nuevo..."
+              class="flex-1 min-w-0 border border-slate-200 rounded-md px-3 py-1.5 text-[12.5px] text-[#07153a] bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600">
+            <div class="w-44 shrink-0">
+              <label for="nuevo-sintoma-sistema" class="sr-only">Sistema del síntoma</label>
+              <app-select-global id="nuevo-sintoma-sistema" [(ngModel)]="nuevoSintomaSistema" [ngModelOptions]="{standalone: true}">
+                @for (grupo of sintomasPorSistema(); track grupo.clave) {
+                  <option [value]="grupo.clave">{{ grupo.etiqueta }}</option>
+                }
+              </app-select-global>
+            </div>
+            <button type="button" (click)="agregarSintomaNuevo()"
+              class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold px-3.5 py-1.5 rounded-md text-[12px] transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-xs">
+              Agregar
+            </button>
+          </div>
+        </div>
+      }
+
+      <div formGroupName="subjetivo" class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 pt-6 border-t border-slate-200">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between h-6">
+            <label for="subjetivo-evolucion" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f] leading-none">Evolución de síntomas</label>
+            <span class="text-[10px] text-slate-400 font-mono">
+              {{ soapForm.get('subjetivo.evolucionSintomas')?.value?.length || 0 }} / 2000
+            </span>
+          </div>
+          <textarea id="subjetivo-evolucion" rows="4" maxlength="2000" formControlName="evolucionSintomas"
+            class="w-full border border-slate-200 rounded-md p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y transition-all"
+            placeholder="Describa cómo han evolucionado los síntomas..."></textarea>
+          <app-error-mensaje [control]="soapForm.get('subjetivo.evolucionSintomas')"></app-error-mensaje>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between h-6">
+            <label for="subjetivo-escala-dolor" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f] leading-none">Escala del dolor EVA (0–10)</label>
+            <div class="h-5 flex items-center">
+              @if (obtenerEtiquetaDolor(soapForm.get('subjetivo.escalaDolor')?.value); as estadoDolor) {
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border leading-tight transition-all" [class]="estadoDolor.clase">
+                  {{ estadoDolor.etiqueta }}
+                </span>
+              }
+            </div>
+          </div>
+          <input id="subjetivo-escala-dolor" type="number" min="0" max="10" maxlength="2" formControlName="escalaDolor" (input)="validarEscalaDolor($event)"
+            class="w-full border border-slate-200 rounded-md p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            placeholder="0">
+          <app-error-mensaje [control]="soapForm.get('subjetivo.escalaDolor')"></app-error-mensaje>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

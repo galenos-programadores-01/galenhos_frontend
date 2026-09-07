@@ -138,9 +138,9 @@ export function generarHtmlReporteTriaje(
         const gestante = datosCabecera.EsGestante;
         const textoGestante =
           gestante !== undefined && gestante !== null && gestante !== ''
-            ? (String(gestante).toLowerCase() === 'true' ||
-                String(gestante) === '1' ||
-                String(gestante).toLowerCase() === 'sí')
+            ? String(gestante).toLowerCase() === 'true' ||
+              String(gestante) === '1' ||
+              String(gestante).toLowerCase() === 'sí'
               ? 'SÍ'
               : 'NO'
             : formatearValor(gestante);
