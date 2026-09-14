@@ -224,6 +224,14 @@ export class RegistroTriajeObstetricoService {
     }
 
     this.formulario.nroDocumento = this.formulario.nroDocumento.trim();
+
+    if (
+      this.formulario.idDocIdentidad === '1' &&
+      this.formulario.nroDocumento.length !== 8
+    ) {
+      this.mensajeError = 'DNI incorrecto, debe tener 8 dígitos.';
+      return;
+    }
     this.buscando = true;
     this.mensajeError = '';
     this.pacienteEncontrado = false;
@@ -367,12 +375,18 @@ export class RegistroTriajeObstetricoService {
 
         return true;
       } else {
-        this.mensajeError = 'No se encontraron datos en la RENIEC.';
+        const msgReniec =
+          resultado.resultado?.filter((r) => !!r?.trim()).join(' · ') ||
+          'No se encontraron datos en la RENIEC.';
+        this.mensajeError = msgReniec;
         return false;
       }
-    } catch {
+    } catch (error: unknown) {
       this.mensajeError =
-        'No se pudo consultar RENIEC. Complete los datos manualmente.';
+        error instanceof ApiRequestError
+          ? error.message ||
+            'No se pudo consultar RENIEC. Complete los datos manualmente.'
+          : 'No se pudo consultar RENIEC. Complete los datos manualmente.';
       return false;
     }
   }
@@ -916,7 +930,12 @@ export class RegistroTriajeObstetricoService {
             : 1,
       };
 
-      await this.triajeApi.registrar(payloadTriaje);
+      const resp = await this.triajeApi.registrar(payloadTriaje);
+
+      if (resp?.resultado?.startsWith('Error')) {
+        this.mensajeError = resp.resultado.replace(/^Error;\s*/, '');
+        return;
+      }
 
       this.ultimoTriajeId = await this.obtenerUltimoTriajeId();
     } catch (error: unknown) {

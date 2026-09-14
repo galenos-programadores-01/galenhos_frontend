@@ -72,6 +72,7 @@ export interface CrearAdmisionPayload {
   idTriaje: number;
   idPacienteTriaje: number;
   nroDocumento?: string;
+  idEmpleado?: number;
   idMedico?: number;
   nombreAcompanante?: string;
   telefonoAcompanante?: string;

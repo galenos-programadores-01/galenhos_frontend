@@ -306,6 +306,7 @@ export class AdmisionesComponent implements OnInit {
       idTriaje,
       idPacienteTriaje,
       nroDocumento: this.documento(item) || undefined,
+      idEmpleado: this.authService.getIdEmpleado() || undefined,
       idMedico: this.formAdmision.idMedico
         ? Number(this.formAdmision.idMedico)
         : undefined,
