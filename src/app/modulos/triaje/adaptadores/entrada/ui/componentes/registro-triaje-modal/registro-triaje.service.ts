@@ -903,20 +903,20 @@ export class RegistroTriajeService {
           Number(this.formulario.idCentroPobladoDomicilio) || undefined,
       };
 
-      if (
-        !idPacienteFinal &&
-        !this.formulario.pacienteNn &&
-        this.formulario.nroDocumento
-      ) {
-        await this.pacientesApi.registrar(
-          payloadPaciente as unknown as RegistroPacientePayload,
-        );
-      } else if (idPacienteFinal) {
-        await this.pacientesApi.actualizar(
-          idPacienteFinal,
-          payloadPaciente as unknown as RegistroPacientePayload,
-        );
-      }
+      // if (
+      //   !idPacienteFinal &&
+      //   !this.formulario.pacienteNn &&
+      //   this.formulario.nroDocumento
+      // ) {
+      //   await this.pacientesApi.registrar(
+      //     payloadPaciente as unknown as RegistroPacientePayload,
+      //   );
+      // } else if (idPacienteFinal) {
+      //   await this.pacientesApi.actualizar(
+      //     idPacienteFinal,
+      //     payloadPaciente as unknown as RegistroPacientePayload,
+      //   );
+      // }
 
       const payloadTriaje: RegistroTriajePayload = {
         idDocIdentidad: Number(this.formulario.idDocIdentidad) || 1,
