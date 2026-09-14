@@ -296,6 +296,10 @@ export class AdmisionesComponent implements OnInit {
       this.errorAdmision = 'La dirección del paciente es obligatoria.';
       return;
     }
+    if (!this.formAdmision.idMedico) {
+      this.errorAdmision = 'Debe seleccionar el médico.';
+      return;
+    }
     this.guardando = true;
     this.errorAdmision = '';
     const payload: CrearAdmisionPayload = {
@@ -315,6 +319,12 @@ export class AdmisionesComponent implements OnInit {
     };
     try {
       const resp = await this.triajeApi.crearAdmision(payload);
+      if (resp?.resultado?.startsWith('Error')) {
+        this.errorAdmision =
+          resp.resultado.replace(/^Error;\s*/, '') ||
+          'No se pudo registrar la admisión.';
+        return;
+      }
       this.handleAdmisionExitosa(
         resp?.resultado || 'Admisión registrada correctamente.',
       );

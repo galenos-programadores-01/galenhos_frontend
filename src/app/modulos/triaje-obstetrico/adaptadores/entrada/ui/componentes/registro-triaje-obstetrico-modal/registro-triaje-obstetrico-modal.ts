@@ -10,6 +10,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
+import {
+  PresionArterialDirective,
+  SoloDecimalDirective,
+  SoloNumericoDirective,
+} from '../../../../../../../compartido/ui/validacion/entrada-numerica.directive';
 import { ErrorMensajeComponent } from '../../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { BuscarPacienteObstetricoModal } from '../buscar-paciente-modal/buscar-paciente-modal';
@@ -26,6 +31,9 @@ import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.se
     ReporteTriajeObstetricoComponent,
     ErrorMensajeComponent,
     BuscarPacienteObstetricoModal,
+    SoloNumericoDirective,
+    SoloDecimalDirective,
+    PresionArterialDirective,
   ],
   providers: [RegistroTriajeObstetricoService],
   templateUrl: './registro-triaje-obstetrico-modal.html',

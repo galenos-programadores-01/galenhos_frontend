@@ -191,14 +191,15 @@
       </div>
 
       <div style="margin-top: 14px;">
-        <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Médico</label>
-        <select id="medico" [(ngModel)]="formAdmision.idMedico"
+        <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Médico *</label>
+        <select id="medico" name="medico" #medicoCtrl="ngModel" required [(ngModel)]="formAdmision.idMedico"
                 style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
           <option value="">— Seleccionar médico —</option>
           @for (med of medicosDisponibles; track med['idMedico']) {
             <option [ngValue]="med['idMedico']">{{ med['nombreCompleto'] }}</option>
           }
         </select>
+        <app-error-mensaje [control]="medicoCtrl"></app-error-mensaje>
         @if (cargandoMedicos) {
           <div style="font-size: 11px; color: #7a86a1; margin-top: 4px;">Cargando médicos...</div>
         }

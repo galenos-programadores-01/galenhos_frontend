@@ -10,6 +10,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
+import {
+  PresionArterialDirective,
+  SoloDecimalDirective,
+  SoloNumericoDirective,
+} from '../../../../../../../compartido/ui/validacion/entrada-numerica.directive';
 import { ErrorMensajeComponent } from '../../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { BuscarPacienteModal } from '../buscar-paciente-modal/buscar-paciente-modal';
@@ -26,6 +31,9 @@ import { RegistroTriajeService } from './registro-triaje.service';
     ReporteTriajeComponent,
     ErrorMensajeComponent,
     BuscarPacienteModal,
+    SoloNumericoDirective,
+    SoloDecimalDirective,
+    PresionArterialDirective,
   ],
   providers: [RegistroTriajeService],
   templateUrl: './registro-triaje-modal.html',

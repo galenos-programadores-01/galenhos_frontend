@@ -9,6 +9,7 @@ import { ConfiguracionComponent } from '../modulos/configuracion/adaptadores/ent
 import { DashboardComponent } from '../modulos/dashboard/adaptadores/entrada/ui/paginas/dashboard.component';
 import { DashrefconComponent } from '../modulos/dashrefcon/adaptadores/entrada/ui/paginas/dashrefcon.component';
 import { PacientesListaComponent } from '../modulos/pacientes/adaptadores/entrada/ui/paginas/pacientes-lista/pacientes-lista.component';
+import { RefpacienteComponent } from '../modulos/refpaciente/adaptadores/entrada/ui/paginas/refpaciente.component';
 import { TriajeComponent } from '../modulos/triaje/adaptadores/entrada/ui/paginas/triaje/triaje.component';
 import { TriajeConsultaComponent } from '../modulos/triaje/adaptadores/entrada/ui/paginas/triaje-consulta/triaje-consulta.component';
 import { TriajeObstetricoComponent } from '../modulos/triaje-obstetrico/adaptadores/entrada/ui/paginas/triaje-obstetrico/triaje-obstetrico.component';
@@ -87,6 +88,11 @@ export const rutasPrincipales: Routes = [
         path: 'dashrefcon',
         component: DashrefconComponent,
         data: { title: 'Dashboard referencias y contrarreferencias' },
+      },
+      {
+        path: 'refpaciente',
+        component: RefpacienteComponent,
+        data: { title: 'Referencias por paciente' },
       },
       {
         path: 'ListaEspera',

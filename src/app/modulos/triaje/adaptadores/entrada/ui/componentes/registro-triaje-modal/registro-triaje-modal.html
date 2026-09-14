@@ -76,12 +76,6 @@
     El sistema verifica automáticamente si el documento corresponde a un paciente ya registrado (SÍ) o a uno nuevo (NO). Si no existe, consulta a la RENIEC.
   </p>
 
-  @if (srv.mensajeError) {
-    <div style="margin-top: 14px; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
-      {{ srv.mensajeError }}
-    </div>
-  }
-
   @if (srv.mensajeInfo) {
     <div style="margin-top: 14px; background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
       {{ srv.mensajeInfo }}
@@ -153,14 +147,15 @@
           </div>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 14px;">
             <div>
-              <label for="sexo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Sexo</label>
-        <select autocomplete="off" id="sexo" [(ngModel)]="srv.formulario.idTipoSexo"
+              <label for="sexo" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Sexo <span style="color: #ef4444;">*</span></label>
+        <select autocomplete="off" id="sexo" [(ngModel)]="srv.formulario.idTipoSexo" name="sexo" #sexoCtrl="ngModel" required
                       style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
                 <option value="">Seleccionar...</option>
                 @for (sexo of srv.tiposSexo; track sexo.id) {
                   <option [value]="sexo.id">{{ sexo.descripcion }}</option>
                 }
               </select>
+              <app-error-mensaje [control]="sexoCtrl"></app-error-mensaje>
             </div>
             <div>
               <label for="estado-civil" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado civil</label>
@@ -303,31 +298,31 @@
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
           <div>
             <label for="f-cardiaca-lpm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">F. Cardiaca (lpm) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="f-cardiaca-lpm" type="text" placeholder="82" [(ngModel)]="srv.formulario.frecCardiaca" name="fc" #fcCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="f-cardiaca-lpm" type="text" placeholder="82" appSoloNumerico maxlength="3" [(ngModel)]="srv.formulario.frecCardiaca" name="fc" #fcCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="fcCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="temp-c" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Temp (°C) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="temp-c" type="text" placeholder="36.8" [(ngModel)]="srv.formulario.temperatura" name="temp" #tempCtrl="ngModel" pattern="^[0-9]{2}(\.[0-9]{1,2})?$"
+        <input autocomplete="off" id="temp-c" type="text" placeholder="36.8" appSoloDecimal maxlength="5" [(ngModel)]="srv.formulario.temperatura" name="temp" #tempCtrl="ngModel" pattern="^[0-9]{1,2}(\.[0-9]{1,2})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="tempCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="pa-mmhg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">P.A. (mmHg) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="pa-mmhg" type="text" placeholder="120/80" [(ngModel)]="srv.formulario.presionArterial" name="pa" #paCtrl="ngModel" pattern="^[0-9]{2,3}\/[0-9]{2,3}$"
+        <input autocomplete="off" id="pa-mmhg" type="text" placeholder="120/80" appPresionArterial maxlength="7" [(ngModel)]="srv.formulario.presionArterial" name="pa" #paCtrl="ngModel" pattern="^[0-9]{2,3}\/[0-9]{2,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="paCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="sat-o" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">SAT O₂ (%) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="sat-o" type="text" placeholder="98" [(ngModel)]="srv.formulario.saturacion" name="sat" #satCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="sat-o" type="text" placeholder="98" appSoloNumerico maxlength="3" [(ngModel)]="srv.formulario.saturacion" name="sat" #satCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="satCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="fr-rpm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">F.R. (rpm)</label>
-        <input autocomplete="off" id="fr-rpm" type="text" placeholder="18" [(ngModel)]="srv.formulario.frecRespiratoria" name="fr" #frCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="fr-rpm" type="text" placeholder="18" appSoloNumerico maxlength="3" [(ngModel)]="srv.formulario.frecRespiratoria" name="fr" #frCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="frCtrl"></app-error-mensaje>
           </div>
@@ -335,19 +330,19 @@
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 14px;">
           <div>
             <label for="fio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">FIO₂ (%)</label>
-        <input autocomplete="off" id="fio" type="text" placeholder="21" [(ngModel)]="srv.formulario.fiO2" name="fio2" #fiCtrl="ngModel" pattern="^[0-9]{1,3}$"
+        <input autocomplete="off" id="fio" type="text" placeholder="0.21" appSoloDecimal maxlength="5" [(ngModel)]="srv.formulario.fiO2" name="fio2" #fiCtrl="ngModel" pattern="^[0-9]{1,2}(\.[0-9]{1,2})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="fiCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="peso-kg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Peso (kg) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="peso-kg" type="text" placeholder="70" [(ngModel)]="srv.formulario.peso" (ngModelChange)="calcularImc()" name="peso" #pesoCtrl="ngModel" pattern="^[0-9]{1,3}(\.[0-9]{1,2})?$"
+        <input autocomplete="off" id="peso-kg" type="text" placeholder="5.400" appSoloDecimal maxlength="8" [(ngModel)]="srv.formulario.peso" (ngModelChange)="calcularImc()" name="peso" #pesoCtrl="ngModel" pattern="^[0-9]{1,3}(\.[0-9]{1,3})?$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="pesoCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="talla-cm" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Talla (cm) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="talla-cm" type="text" placeholder="172" [(ngModel)]="srv.formulario.talla" (ngModelChange)="calcularImc()" name="talla" #tallaCtrl="ngModel" pattern="^[0-9]{2,3}(\.[0-9]{1,2})?$"
+        <input autocomplete="off" id="talla-cm" type="text" placeholder="172" appSoloNumerico maxlength="3" [(ngModel)]="srv.formulario.talla" (ngModelChange)="calcularImc()" name="talla" #tallaCtrl="ngModel" pattern="^[0-9]{1,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="tallaCtrl"></app-error-mensaje>
           </div>
@@ -391,8 +386,9 @@
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 16px;">
           <div>
             <label for="tiempo-de-sintomas" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tiempo de síntomas @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
-        <input autocomplete="off" id="tiempo-de-sintomas" type="text" placeholder="Ej: 3" [(ngModel)]="srv.formulario.tiempoEvolucionCantidad"
+        <input autocomplete="off" id="tiempo-de-sintomas" type="text" placeholder="Ej: 3" appSoloNumerico maxlength="4" [(ngModel)]="srv.formulario.tiempoEvolucionCantidad" name="tiempoEvolucion" #tiempoCtrl="ngModel" pattern="^[0-9]{1,4}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+            <app-error-mensaje [control]="tiempoCtrl"></app-error-mensaje>
           </div>
           <div>
             <label for="frecuencia" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Frecuencia @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
@@ -441,7 +437,12 @@
     </div>
   }
 
-  <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+  <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+    @if (srv.mensajeError) {
+      <div style="margin-right: auto; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+        {{ srv.mensajeError }}
+      </div>
+    }
     <button type="button" (click)="cerrar()"
             style="padding: 10px 20px; border: 1px solid #e0e6f1; border-radius: 11px; background: #fff; font-size: 14px; font-weight: 600; color: #54617f; cursor: pointer;">
       Cancelar

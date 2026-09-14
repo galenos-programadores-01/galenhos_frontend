@@ -741,6 +741,11 @@ export class RegistroTriajeService {
       return;
     }
 
+    if (!this.formulario.idTipoSexo) {
+      this.mensajeError = 'Seleccione el sexo del paciente.';
+      return;
+    }
+
     if (!this.formulario.idFuenteFinanciamiento) {
       this.mensajeError = 'Seleccione la fuente de financiamiento (IAFA).';
       return;
@@ -770,24 +775,50 @@ export class RegistroTriajeService {
         this.mensajeError = 'Ingrese el peso del paciente.';
         return;
       }
+      if (!/^[0-9]{1,3}(\.[0-9]{1,3})?$/.test(this.formulario.peso)) {
+        this.mensajeError =
+          'El peso debe ser numérico (hasta 3 decimales, ej: 5.400).';
+        return;
+      }
       if (!this.formulario.talla) {
         this.mensajeError = 'Ingrese la talla del paciente.';
+        return;
+      }
+      if (!/^[0-9]{1,3}$/.test(this.formulario.talla)) {
+        this.mensajeError = 'La talla debe ser numérica.';
         return;
       }
       if (!this.formulario.presionArterial) {
         this.mensajeError = 'Ingrese la presión arterial.';
         return;
       }
+      if (!/^[0-9]{2,3}\/[0-9]{2,3}$/.test(this.formulario.presionArterial)) {
+        this.mensajeError = 'La presión arterial debe tener el formato 120/80.';
+        return;
+      }
       if (!this.formulario.saturacion) {
         this.mensajeError = 'Ingrese la saturación de O₂.';
+        return;
+      }
+      if (!/^[0-9]{1,3}$/.test(this.formulario.saturacion)) {
+        this.mensajeError = 'La saturación de O₂ debe ser numérica.';
         return;
       }
       if (!this.formulario.temperatura) {
         this.mensajeError = 'Ingrese la temperatura.';
         return;
       }
+      if (!/^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(this.formulario.temperatura)) {
+        this.mensajeError =
+          'La temperatura debe ser numérica con decimales (ej: 39.5).';
+        return;
+      }
       if (!this.formulario.tiempoEvolucionCantidad) {
         this.mensajeError = 'Ingrese el tiempo de síntomas.';
+        return;
+      }
+      if (!/^[0-9]{1,4}$/.test(this.formulario.tiempoEvolucionCantidad)) {
+        this.mensajeError = 'El tiempo de síntomas debe ser numérico.';
         return;
       }
       if (!this.formulario.tiempoEvolucionCantidadUnidad) {
@@ -796,6 +827,25 @@ export class RegistroTriajeService {
       }
       if (!this.formulario.frecCardiaca) {
         this.mensajeError = 'Ingrese la frecuencia cardíaca.';
+        return;
+      }
+      if (!/^[0-9]{1,3}$/.test(this.formulario.frecCardiaca)) {
+        this.mensajeError = 'La frecuencia cardíaca debe ser numérica.';
+        return;
+      }
+      if (
+        this.formulario.frecRespiratoria &&
+        !/^[0-9]{1,3}$/.test(this.formulario.frecRespiratoria)
+      ) {
+        this.mensajeError = 'La frecuencia respiratoria debe ser numérica.';
+        return;
+      }
+      if (
+        this.formulario.fiO2 &&
+        !/^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(this.formulario.fiO2)
+      ) {
+        this.mensajeError =
+          'El FIO₂ debe ser numérico con decimales (ej: 0.21).';
         return;
       }
       if (!this.formulario.escalaDolor && this.formulario.escalaDolor !== '0') {

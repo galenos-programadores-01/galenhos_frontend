@@ -48,6 +48,7 @@ export class ApiClientService {
     path: string,
     options: RequestInit = {},
     requiresAuth = true,
+    timeoutMs = 60000,
   ): Promise<TipoRespuesta> {
     const headers = new Headers(options.headers);
     headers.set('Accept', 'application/json');
@@ -58,13 +59,18 @@ export class ApiClientService {
       if (token) headers.set('Authorization', `Bearer ${token}`);
     }
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
     let response: Response;
     try {
       response = await fetch(`${this.getApiBaseUrl()}${path}`, {
         ...options,
         headers,
+        signal: controller.signal,
       });
     } catch {
+      clearTimeout(timer);
       throw new ApiRequestError(
         'NETWORK_ERROR',
         'No se pudo conectar con el servidor. Verifique la URL configurada y su conexión.',
@@ -81,6 +87,7 @@ export class ApiClientService {
           message: 'La respuesta del servidor no es válida.',
         },
       }));
+    clearTimeout(timer);
 
     if (!response.ok || !envelope.success) {
       if (response.status === 401 && requiresAuth) {
