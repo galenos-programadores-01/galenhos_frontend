@@ -174,6 +174,21 @@ export class TriajeApiService {
     );
   }
 
+  reporteTriajePorEmpleado(
+    idEmpleado: number,
+    fechaini: string,
+    fechafin: string,
+  ): Promise<IFilaBackend[]> {
+    const query = new URLSearchParams({
+      IdEmpleado: String(idEmpleado),
+      fechaini,
+      fechafin,
+    });
+    return this.apiClient.request<IFilaBackend[]>(
+      `/api/v1/triaje/reporte-por-empleado?${query.toString()}`,
+    );
+  }
+
   listarPendientesAdmision(
     params: PendientesAdmisionParams,
   ): Promise<IFilaBackend[]> {

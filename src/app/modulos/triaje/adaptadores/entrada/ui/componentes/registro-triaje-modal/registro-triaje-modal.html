@@ -309,7 +309,7 @@
             <app-error-mensaje [control]="tempCtrl"></app-error-mensaje>
           </div>
           <div>
-            <label for="pa-mmhg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">P.A. (mmHg) @if (!srv.esCadaver) { <span style="color: #ef4444;">*</span> }</label>
+            <label for="pa-mmhg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">P.A. (mmHg) @if (!srv.esCadaver && srv.tiene15OMas) { <span style="color: #ef4444;">*</span> }</label>
         <input autocomplete="off" id="pa-mmhg" type="text" placeholder="120/80" appPresionArterial maxlength="7" [(ngModel)]="srv.formulario.presionArterial" name="pa" #paCtrl="ngModel" pattern="^[0-9]{2,3}\/[0-9]{2,3}$"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             <app-error-mensaje [control]="paCtrl"></app-error-mensaje>

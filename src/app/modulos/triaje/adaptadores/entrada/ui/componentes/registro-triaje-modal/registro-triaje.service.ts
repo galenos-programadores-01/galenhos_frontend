@@ -742,6 +742,20 @@ export class RegistroTriajeService {
     return this.formulario.idTipoPrioridad === '6';
   }
 
+  get tiene15OMas(): boolean {
+    const fecha = this.formulario.fechaNacimiento;
+    if (!fecha) return false;
+    const nac = new Date(fecha);
+    if (Number.isNaN(nac.getTime())) return false;
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) {
+      edad--;
+    }
+    return edad >= 15;
+  }
+
   async guardarYContinuar(): Promise<void> {
     this.mensajeError = '';
 
@@ -802,11 +816,14 @@ export class RegistroTriajeService {
         this.mensajeError = 'La talla debe ser numérica.';
         return;
       }
-      if (!this.formulario.presionArterial) {
+      if (this.tiene15OMas && !this.formulario.presionArterial) {
         this.mensajeError = 'Ingrese la presión arterial.';
         return;
       }
-      if (!/^[0-9]{2,3}\/[0-9]{2,3}$/.test(this.formulario.presionArterial)) {
+      if (
+        this.formulario.presionArterial &&
+        !/^[0-9]{2,3}\/[0-9]{2,3}$/.test(this.formulario.presionArterial)
+      ) {
         this.mensajeError = 'La presión arterial debe tener el formato 120/80.';
         return;
       }

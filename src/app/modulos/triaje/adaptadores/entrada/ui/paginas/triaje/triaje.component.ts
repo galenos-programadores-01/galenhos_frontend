@@ -126,17 +126,22 @@ export class TriajeComponent implements OnInit {
   mensajeExito = '';
 
   filtro = '';
-  fechaInicio = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
-  fechaFin = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
+  fechaInicio = `${new Date().toISOString().slice(0, 10)}T00:00`;
+  fechaFin = new Date().toISOString().slice(0, 16);
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
+
+  tablero: {
+    Medico: string;
+    Topico_Medicina: number;
+    Topico_Cirugia: number;
+    Topico_Trauma: number;
+    TraumaShock: number;
+    Urgencias: number;
+  } | null = null;
+  cargandoTablero = false;
+  errorTablero = '';
 
   modalRegistro = false;
   reporteTriajeId: number | null = null;
@@ -201,6 +206,7 @@ export class TriajeComponent implements OnInit {
         derivado,
       );
       this.pacientes = Array.isArray(items) ? items : [];
+      this.cargarTablero();
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError
@@ -208,6 +214,38 @@ export class TriajeComponent implements OnInit {
           : 'No se pudo cargar el listado de triaje.';
     } finally {
       this.cargando = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async cargarTablero() {
+    const idEmpleado = this.authService.getIdEmpleado();
+    if (!idEmpleado) return;
+    this.cargandoTablero = true;
+    this.errorTablero = '';
+    try {
+      const items = await this.triajeApi.reporteTriajePorEmpleado(
+        idEmpleado,
+        this.fechaInicio,
+        this.fechaFin,
+      );
+      const row = Array.isArray(items) ? items[0] : undefined;
+      this.tablero = {
+        Medico: campo(row, ['Medico']),
+        Topico_Medicina: Number(campo(row, ['Topico_Medicina'])) || 0,
+        Topico_Cirugia: Number(campo(row, ['Topico_Cirugia'])) || 0,
+        Topico_Trauma: Number(campo(row, ['Topico_Trauma'])) || 0,
+        TraumaShock: Number(campo(row, ['TraumaShock'])) || 0,
+        Urgencias: Number(campo(row, ['Urgencias'])) || 0,
+      };
+    } catch (error: unknown) {
+      this.tablero = null;
+      this.errorTablero =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo cargar el reporte.';
+    } finally {
+      this.cargandoTablero = false;
       this.cdr.detectChanges();
     }
   }
