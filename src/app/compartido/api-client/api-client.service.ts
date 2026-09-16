@@ -32,8 +32,13 @@ export class ApiClientService {
       return savedUrl;
     }
 
-    const hostname = window.location.hostname;
-    return `http://${hostname}:8080`;
+    const { hostname, origin } = window.location;
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${hostname}:8080`;
+    }
+
+    return origin;
   }
 
   setApiBaseUrl(url: string): void {

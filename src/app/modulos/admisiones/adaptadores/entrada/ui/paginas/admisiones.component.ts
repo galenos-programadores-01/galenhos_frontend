@@ -188,6 +188,8 @@ export class AdmisionesComponent implements OnInit {
 
   modalFichaId: number | null = null;
   modalFuaId: number | null = null;
+  fichaImpresionAutomatica = false;
+  fuaImpresionAutomatica = false;
 
   ngOnInit() {
     this.cargarCatalogos();
@@ -374,10 +376,37 @@ export class AdmisionesComponent implements OnInit {
     }, 200);
   }
 
-  handleAdmisionExitosa(mensaje: string) {
+  async handleAdmisionExitosa(mensaje: string, filaAdmisionada: IFilaBackend) {
     this.modalAdmision = null;
+    await this.handleBuscar();
     this.mensajeExito = mensaje || 'Admisión registrada correctamente.';
-    this.handleBuscar();
+    this.dispararImpresionAutomatica(filaAdmisionada);
+  }
+
+  private dispararImpresionAutomatica(filaAdmisionada: IFilaBackend) {
+    const filaActual =
+      this.items.find((it) => this.mismaAdmision(it, filaAdmisionada)) ?? null;
+    if (!filaActual) return;
+    const idCuenta = this.idCuentaAtencion(filaActual);
+    if (!idCuenta) return;
+    this.modalFichaId = idCuenta;
+    this.fichaImpresionAutomatica = true;
+    if (this.esSis(filaActual)) {
+      this.modalFuaId = idCuenta;
+      this.fuaImpresionAutomatica = true;
+    }
+  }
+
+  private mismaAdmision(a: IFilaBackend, b: IFilaBackend): boolean {
+    for (const claves of [
+      ['IdTriaje', 'idTriaje', 'IDTriaje'],
+      ['IdPacienteTriaje', 'idPacienteTriaje', 'IdpacienteTriaje'],
+    ]) {
+      const va = campoNum(a, claves);
+      const vb = campoNum(b, claves);
+      if (va && vb && va === vb) return true;
+    }
+    return false;
   }
 
   async admitir() {
@@ -433,8 +462,9 @@ export class AdmisionesComponent implements OnInit {
           'No se pudo registrar la admisión.';
         return;
       }
-      this.handleAdmisionExitosa(
+      await this.handleAdmisionExitosa(
         resp?.resultado || 'Admisión registrada correctamente.',
+        item,
       );
     } catch (err: unknown) {
       this.errorAdmision =
@@ -456,20 +486,28 @@ export class AdmisionesComponent implements OnInit {
       'Cuenta',
       'cuenta',
     ]);
-    if (id) this.modalFichaId = id;
+    if (id) {
+      this.fichaImpresionAutomatica = false;
+      this.modalFichaId = id;
+    }
   }
 
   cerrarFicha() {
     this.modalFichaId = null;
+    this.fichaImpresionAutomatica = false;
   }
 
   abrirFua(item: IFilaBackend) {
     const id = campoNum(item, ['IdCuentaAtencion', 'idCuentaAtencion']);
-    if (id) this.modalFuaId = id;
+    if (id) {
+      this.fuaImpresionAutomatica = false;
+      this.modalFuaId = id;
+    }
   }
 
   cerrarFua() {
     this.modalFuaId = null;
+    this.fuaImpresionAutomatica = false;
   }
 
   cerrarExito() {

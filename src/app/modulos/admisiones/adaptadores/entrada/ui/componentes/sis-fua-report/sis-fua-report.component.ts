@@ -64,6 +64,7 @@ interface DatosInstitucion {
 })
 export class SisFuaReportComponent implements OnInit {
   @Input() idCuentaAtencion!: number;
+  @Input() imprimirAutomatico = false;
   @Output() alCerrar = new EventEmitter<void>();
   @ViewChild('fuaFrame') fuaFrame!: ElementRef<HTMLIFrameElement>;
 
@@ -127,6 +128,11 @@ export class SisFuaReportComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
       setTimeout(() => this.escribirIframe(), 0);
+      if (this.imprimirAutomatico) {
+        setTimeout(() => {
+          if (this.htmlFua) this.imprimir();
+        }, 500);
+      }
     } catch {
       this.error = 'No se pudo cargar el FUA.';
       this.cargando = false;

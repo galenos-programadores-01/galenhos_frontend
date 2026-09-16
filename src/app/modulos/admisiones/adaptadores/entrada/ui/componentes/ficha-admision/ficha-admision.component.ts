@@ -84,6 +84,7 @@ function decodificarBase64(valor: string | null | undefined): string {
 })
 export class FichaAdmisionComponent implements OnInit {
   @Input() idCuentaAtencion!: number;
+  @Input() imprimirAutomatico = false;
   @Output() alCerrar = new EventEmitter<void>();
   @ViewChild('fichaFrame') fichaFrame!: ElementRef<HTMLIFrameElement>;
 
@@ -121,6 +122,11 @@ export class FichaAdmisionComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
       setTimeout(() => this.escribirIframe(), 0);
+      if (this.imprimirAutomatico) {
+        setTimeout(() => {
+          if (this.htmlFicha) this.imprimir();
+        }, 500);
+      }
     } catch {
       this.error = 'No se pudo cargar la ficha de admisión.';
       this.cargando = false;
