@@ -86,6 +86,27 @@ function campoNum(
   return Number(raw) || 0;
 }
 
+// valorFila devuelve el valor de la primera clave que exista en la fila
+// comparando sin distinguir mayúsculas (las columnas del SP llegan con el
+// nombre exacto de SQL Server, que puede variar en mayúsculas/guiones).
+function valorFila(
+  item: IFilaBackend | null | undefined,
+  nombre: string,
+): string {
+  if (!item) return '';
+  const objetivo = nombre.toLowerCase();
+  const claves = Object.keys(item);
+  let clave =
+    claves.find((k) => k.toLowerCase() === objetivo) ??
+    claves.find((k) => k.toLowerCase().replace(/_/g, '') === objetivo);
+  if (!clave) return '';
+  const v = item[clave];
+  if (v === undefined || v === null || v === '') return '';
+  return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'
+    ? String(v)
+    : '';
+}
+
 @Component({
   selector: 'app-admisiones',
   standalone: true,
@@ -146,6 +167,9 @@ export class AdmisionesComponent implements OnInit {
   errorAdmision = '';
 
   medicosDisponibles: IFilaBackend[] = [];
+  medicosFiltrados: IFilaBackend[] = [];
+  medicoBusqueda = '';
+  mostrarSugerenciasMedico = false;
   cargandoMedicos = false;
   errorMedicos = '';
 
@@ -223,16 +247,23 @@ export class AdmisionesComponent implements OnInit {
       idMedico: '',
     };
     this.errorAdmision = '';
+    this.medicoBusqueda = '';
+    this.medicosFiltrados = [];
+    this.mostrarSugerenciasMedico = false;
     this.cargarMedicos(item);
   }
 
   async cargarMedicos(item: IFilaBackend) {
-    let IdEspecialidad = campoNum(item, [
-      'IdEspecialidad',
-      'IdEspecialidad',
-      'Especialidad',
-    ]);
-    if (!IdEspecialidad) IdEspecialidad = Number(this.IdEspecialidad) || 0;
+    const IdEspecialidad = this.resolverIdEspecialidad(item);
+
+    if (!IdEspecialidad) {
+      this.medicosDisponibles = [];
+      this.medicosFiltrados = [];
+      this.mostrarSugerenciasMedico = false;
+      this.errorMedicos =
+        'No se pudo determinar la especialidad del triaje. Seleccione la especialidad en el filtro de la bandeja para listar los médicos.';
+      return;
+    }
 
     this.cargandoMedicos = true;
     this.errorMedicos = '';
@@ -262,9 +293,85 @@ export class AdmisionesComponent implements OnInit {
     }
   }
 
+  private resolverIdEspecialidad(item: IFilaBackend): number {
+    const numId = valorFila(item, 'IdEspecialidad');
+    if (numId && Number(numId) > 0) return Number(numId);
+
+    const numIdIngreso = valorFila(item, 'IdEspecialidadIngreso');
+    if (numIdIngreso && Number(numIdIngreso) > 0) return Number(numIdIngreso);
+
+    const nombreEspecialidad = (() => {
+      for (const preferido of [
+        'Especialidad',
+        'EspecialidadDescripcion',
+        'DescripcionEspecialidad',
+        'descripcion',
+      ]) {
+        const texto = valorFila(item, preferido);
+        if (texto) return texto;
+      }
+      return '';
+    })();
+
+    if (nombreEspecialidad) {
+      const objetivo = this.normalizarEspecialidad(nombreEspecialidad);
+      const coincidente = this.especialidades.find(
+        (e) =>
+          this.normalizarEspecialidad(String(e.nombre ?? e.id)) === objetivo,
+      );
+      if (coincidente) return coincidente.id;
+    }
+
+    return this.IdEspecialidad !== '0' ? Number(this.IdEspecialidad) || 0 : 0;
+  }
+
+  private normalizarEspecialidad(texto: string): string {
+    return texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
   cerrarModalAdmision() {
     this.modalAdmision = null;
     this.medicosDisponibles = [];
+    this.medicosFiltrados = [];
+    this.mostrarSugerenciasMedico = false;
+  }
+
+  filtrarMedicos(valor: string) {
+    const texto = valor.trim().toLowerCase();
+    if (texto.length < 2) {
+      this.medicosFiltrados = [];
+      this.mostrarSugerenciasMedico = false;
+      return;
+    }
+    this.medicosFiltrados = this.medicosDisponibles.filter((m) =>
+      String(m['nombreCompleto'] ?? '')
+        .toLowerCase()
+        .includes(texto),
+    );
+    this.mostrarSugerenciasMedico = this.medicosFiltrados.length > 0;
+  }
+
+  seleccionarMedico(medico: IFilaBackend) {
+    this.formAdmision.idMedico = Number(medico['idMedico']) || '';
+    this.medicoBusqueda = String(medico['nombreCompleto'] ?? '');
+    this.mostrarSugerenciasMedico = false;
+    this.medicosFiltrados = [];
+  }
+
+  onMedicoInput(valor: string) {
+    this.formAdmision.idMedico = '';
+    this.filtrarMedicos(valor);
+  }
+
+  cerrarSugerenciasMedico() {
+    setTimeout(() => {
+      this.mostrarSugerenciasMedico = false;
+    }, 200);
   }
 
   handleAdmisionExitosa(mensaje: string) {

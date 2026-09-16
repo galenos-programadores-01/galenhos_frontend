@@ -182,7 +182,7 @@
             </div>
             <div style="grid-column: span 2;">
               <label for="direccion" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Dirección</label>
-        <input autocomplete="off" id="direccion" type="text" placeholder="Dirección completa" [(ngModel)]="srv.formulario.direccionDomicilio"
+        <input autocomplete="off" id="direccion" type="text" placeholder="Dirección completa" maxlength="70" [(ngModel)]="srv.formulario.direccionDomicilio"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             </div>
           </div>

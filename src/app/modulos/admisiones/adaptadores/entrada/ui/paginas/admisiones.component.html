@@ -190,16 +190,21 @@
         <app-error-mensaje [control]="dirPacCtrl"></app-error-mensaje>
       </div>
 
-      <div style="margin-top: 14px;">
+      <div style="margin-top: 14px; position: relative;">
         <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Médico *</label>
-        <select id="medico" name="medico" #medicoCtrl="ngModel" required [(ngModel)]="formAdmision.idMedico"
-                style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-          <option value="">— Seleccionar médico —</option>
-          @for (med of medicosDisponibles; track med['idMedico']) {
-            <option [ngValue]="med['idMedico']">{{ med['nombreCompleto'] }}</option>
-          }
-        </select>
-        <app-error-mensaje [control]="medicoCtrl"></app-error-mensaje>
+        <input id="medico" name="medico" autocomplete="off" [ngModel]="medicoBusqueda" (ngModelChange)="onMedicoInput($event)"
+               (blur)="cerrarSugerenciasMedico()" placeholder="Escriba el nombre del médico..." [disabled]="cargandoMedicos"
+               style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        @if (mostrarSugerenciasMedico && medicosFiltrados.length > 0) {
+          <div style="position: absolute; z-index: 100; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d5dceb; border-radius: 11px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            @for (med of medicosFiltrados; track med['idMedico']) {
+              <div (mousedown)="seleccionarMedico(med)"
+                   style="padding: 9px 12px; cursor: pointer; font-size: 13px; color: #07153a; border-bottom: 1px solid #f1f5f9;">
+                {{ med['nombreCompleto'] }}
+              </div>
+            }
+          </div>
+        }
         @if (cargandoMedicos) {
           <div style="font-size: 11px; color: #7a86a1; margin-top: 4px;">Cargando médicos...</div>
         }

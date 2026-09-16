@@ -10,6 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
+import { generarBarcodeHtml } from '../../../../../../../compartido/utilidades/barcode.util';
 import { imprimirHtml } from '../../../../../../../compartido/utilidades/print.util';
 import { TriajeApiService } from '../../../../../../triaje/adaptadores/salida/http/triaje.api.service';
 
@@ -164,19 +165,6 @@ export class FichaAdmisionComponent implements OnInit {
     const casillaLetra = (letra: string) =>
       `<span style="display:inline-block;width:15px;height:15px;border:1px solid #000;text-align:center;font-size:9px;line-height:15px;margin-right:2px;vertical-align:middle">${letra}</span>`;
 
-    function generarBarras(valor: string, alto = 32): string {
-      let barras = '';
-      let x = 0;
-      const seed = valor.split('').map((c) => c.charCodeAt(0));
-      for (let i = 0; i < 46; i++) {
-        const w = (seed[i % seed.length] % 3) + 1;
-        if (i % 2 === 0)
-          barras += `<rect x="${x}" y="0" width="${w}" height="${alto}" fill="#000"/>`;
-        x += w + 1;
-      }
-      return `<svg width="${x}" height="${alto}" viewBox="0 0 ${x} ${alto}" xmlns="http://www.w3.org/2000/svg">${barras}</svg>`;
-    }
-
     const label = (t: string) =>
       `<span style="font-size:9.5px;color:#000">${t}</span>`;
     const filaCampos = (
@@ -239,6 +227,9 @@ export class FichaAdmisionComponent implements OnInit {
         table { border-collapse: collapse; width: 100%; }
         .seccion { border:1px solid #000; padding:3px 6px; margin-top:5px; }
         .titulo-seccion { font-size:11px; font-weight:bold; margin-top:4px; }
+        @media print {
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+        }
       </style></head><body>
 
       <table>
@@ -254,19 +245,33 @@ export class FichaAdmisionComponent implements OnInit {
           <td style="width:32%;text-align:center;vertical-align:middle">
             <b style="font-size:16px;letter-spacing:.03em">REGISTRO DE EMERGENCIA</b>
           </td>
-          <td style="width:34%;text-align:right;vertical-align:top">${generarBarras(String(ficha?.IdCuentaAtencion ?? this.idCuentaAtencion))}</td>
+          <td style="width:34%;text-align:right;vertical-align:top">${generarBarcodeHtml(String(ficha?.IdCuentaAtencion ?? this.idCuentaAtencion))}</td>
         </tr>
       </table>
 
       <table style="margin-top:4px;table-layout:fixed">
         <colgroup><col style="width:16%"><col style="width:12%"><col style="width:16%"><col style="width:10%"><col style="width:46%"></colgroup>
-        <tr>
-          <td style="padding:1.5px 4px;white-space:nowrap">${label('N° Historia clínica:')}</td>
-          <td style="padding:1.5px 4px;font-size:12px;font-weight:bold">${v(ficha?.NroHistoriaClinica)}</td>
-          <td style="padding:1.5px 4px;white-space:nowrap">${label('N° Cuenta:')}</td>
-          <td style="padding:1.5px 4px;font-size:12px;font-weight:bold">${v(ficha?.IdCuentaAtencion)}</td>
-          <td style="padding:1.5px 4px;white-space:nowrap"><b style="font-size:23px">${v(ficha?.IAFA)}</b></td>
-        </tr>
+            <tr>
+              <td style="padding:1.5px 2px 1.5px 4px;white-space:nowrap">
+                ${label('N° Historia clínica:')}
+              </td>
+
+              <td style="padding:1.5px 12px 1.5px 2px;font-size:12px;font-weight:bold">
+                ${v(ficha?.NroHistoriaClinica)}
+              </td>
+
+              <td style="padding:1.5px 2px 1.5px 4px;white-space:nowrap">
+                ${label('N° Cuenta:')}
+              </td>
+
+              <td style="padding:1.5px 30px 1.5px 2px;font-size:18px;font-weight:bold">
+                ${v(ficha?.IdCuentaAtencion)}
+              </td>
+
+              <td style="padding:4.5px 8px 4.5px 35px;white-space:nowrap">
+                <b style="font-size:23px">${v(ficha?.IAFA)}</b>
+              </td>
+            </tr>
       </table>
       <table style="margin-top:1px;table-layout:fixed">
         <colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup>

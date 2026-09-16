@@ -366,6 +366,9 @@ export class RegistroTriajeObstetricoService {
         );
 
         Object.assign(this.formulario, mapeado.form);
+        this.formulario.direccionDomicilio = (
+          this.formulario.direccionDomicilio || ''
+        ).slice(0, 70);
 
         if (this.formulario.idDepartamentoDomicilio)
           await this.cargarProvincias();
@@ -545,7 +548,7 @@ export class RegistroTriajeObstetricoService {
       this.formulario.idTipoSexo = esGeneroValido ? sis.genero : '';
     }
     if (!this.formulario.direccionDomicilio && sis.direccion) {
-      this.formulario.direccionDomicilio = sis.direccion;
+      this.formulario.direccionDomicilio = sis.direccion.slice(0, 70);
     }
 
     this.mapearUbigeoSis(sis.idUbigeo);

@@ -126,8 +126,8 @@ export class TriajeComponent implements OnInit {
   mensajeExito = '';
 
   filtro = '';
-  fechaInicio = `${new Date().toISOString().slice(0, 10)}T00:00`;
-  fechaFin = new Date().toISOString().slice(0, 16);
+  fechaInicio = `${new Date().toISOString().slice(0, 10)}T08:00`;
+  fechaFin = `${new Date().toISOString().slice(0, 10)}T20:00`;
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
