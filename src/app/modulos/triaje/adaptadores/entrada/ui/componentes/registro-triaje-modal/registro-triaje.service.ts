@@ -236,10 +236,18 @@ export class RegistroTriajeService {
     try {
       await this.cargarParametrosIntegracion();
 
+      // El tipo SD (Sin Documento, valor 0) solo se busca en la base de
+      // datos local; no se consulta RENIEC ni SIS.
+      const esSinDocumento = this.esTipoDocumentoSinDocumento;
+
       const paciente = await this.buscarEnBaseDatosLocal();
 
       if (!paciente) {
-        const reniecOk = await this.consultarReniec();
+        // SD solo se busca en la base de datos; RENIEC además únicamente
+        // soporta DNI.
+        const reniecOk = esSinDocumento
+          ? false
+          : await this.consultarReniec();
         if (reniecOk) {
           this.pacienteEncontrado = true;
           this.pasoActual = 2;
@@ -250,7 +258,7 @@ export class RegistroTriajeService {
         this.pasoActual = 2;
       }
 
-      if (this.sisIntegrado) {
+      if (!esSinDocumento && this.sisIntegrado) {
         await this.consultarSis();
       }
 
@@ -259,6 +267,11 @@ export class RegistroTriajeService {
       if (!this.pacienteEncontrado) {
         this.pacienteEncontrado = true;
         this.pasoActual = 2;
+        // Con tipo de documento SD (sin documento) la IAFA por defecto es
+        // PARTICULAR.
+        if (esSinDocumento) {
+          this.fijarFuenteParticular();
+        }
         this.mensajeInfo =
           'El paciente no fue encontrado. Ingrese los datos manualmente.';
       }
@@ -595,19 +608,13 @@ export class RegistroTriajeService {
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
 
-    // Si se buscó por afiliación (sin documento), el SIS puede devolver el
-    // tipo y número de documento real del paciente, o un recién nacido sin
-    // documento. Con número se usa tal cual; sin número se trata como
-    // "Sin Documento" (SD), igual que el modo NN, para poder grabar el triaje.
+    // Al buscar por afiliación (sin documento), el número de contrato
+    // ingresado se coloca como número de documento y el tipo se fija en
+    // "Sin Documento" (SD) para grabar el triaje con los datos de SIS.
     if (this.esFiliacion) {
-      if (sis.nroDocumento) {
-        this.formulario.nroDocumento = sis.nroDocumento;
-        if (sis.tipoDocumento && sis.tipoDocumento !== '99') {
-          this.formulario.idDocIdentidad = sis.tipoDocumento;
-        }
-      } else {
-        this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
-      }
+      this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
+      const nroContrato = this.formulario.afiliacionNroContrato.trim();
+      this.formulario.nroDocumento = nroContrato || sis.nroDocumento || '';
     }
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
@@ -762,6 +769,24 @@ export class RegistroTriajeService {
       (t) => (t.descripcion || '').toUpperCase() === 'SD',
     );
     return sd ? String(sd.id) : '';
+  }
+
+  // Identifica si el tipo de documento seleccionado es "SD" (Sin Documento,
+  // valor 0). En ese caso la búsqueda solo consulta la base de datos local.
+  private get esTipoDocumentoSinDocumento(): boolean {
+    const id = this.formulario.idDocIdentidad;
+    if (id === '0') return true;
+    const sd = this.idTipoDocumentoSinDocumento();
+    return !!sd && id === sd;
+  }
+
+  // Convierte el tipo de documento a número conservando el valor 0 (SD -
+  // Sin Documento). Si viene vacío o no es numérico usa 1 (DNI).
+  private idDocIdentidadNumero(): number {
+    const v = this.formulario.idDocIdentidad?.trim();
+    if (!v) return 1;
+    const n = Number(v);
+    return Number.isNaN(n) ? 1 : n;
   }
 
   get esCadaver(): boolean {
@@ -926,7 +951,7 @@ export class RegistroTriajeService {
 
       const payloadPaciente = {
         nroDocumento: this.formulario.nroDocumento,
-        idDocIdentidad: Number(this.formulario.idDocIdentidad) || 1,
+        idDocIdentidad: this.idDocIdentidadNumero(),
         apellidoPaterno: this.formulario.apellidoPaterno,
         apellidoMaterno: this.formulario.apellidoMaterno,
         primerNombre: this.formulario.primerNombre,
@@ -962,7 +987,7 @@ export class RegistroTriajeService {
       // }
 
       const payloadTriaje: RegistroTriajePayload = {
-        idDocIdentidad: Number(this.formulario.idDocIdentidad) || 1,
+        idDocIdentidad: this.idDocIdentidadNumero(),
         nroDocumento: this.formulario.nroDocumento,
         apellidoPaterno: this.formulario.apellidoPaterno,
         apellidoMaterno: this.formulario.apellidoMaterno,

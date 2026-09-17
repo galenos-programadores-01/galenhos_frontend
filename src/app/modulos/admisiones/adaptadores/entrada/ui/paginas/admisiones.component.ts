@@ -15,6 +15,7 @@ import {
   TablaComponent,
 } from '../../../../../../compartido/componentes/tabla/tabla.component';
 import type {
+  ICatalogoDescripcion,
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../compartido/tipos/api-tipos';
@@ -143,6 +144,7 @@ export class AdmisionesComponent implements OnInit {
   departamentos: ICatalogoNombre[] = [];
   especialidades: ICatalogoNombre[] = [];
   servicios: ICatalogoNombre[] = [];
+  tiposDocumentos: ICatalogoDescripcion[] = [];
 
   items: IFilaBackend[] = [];
   cargando = false;
@@ -197,14 +199,16 @@ export class AdmisionesComponent implements OnInit {
 
   async cargarCatalogos() {
     try {
-      const [d, e, s] = await Promise.all([
+      const [d, e, s, t] = await Promise.all([
         this.maestrosApi.getDepartamentos(),
         this.maestrosApi.getEspecialidades(),
         this.maestrosApi.getServicios(2),
+        this.maestrosApi.getTiposDocumentos(),
       ]);
       if (Array.isArray(d)) this.departamentos = d;
       if (Array.isArray(e)) this.especialidades = e;
       if (Array.isArray(s)) this.servicios = s;
+      if (Array.isArray(t)) this.tiposDocumentos = t;
     } catch (error) {
       console.error('Error cargando catálogos:', error);
     }
@@ -576,6 +580,21 @@ export class AdmisionesComponent implements OnInit {
       'Documento',
       'documento',
     ]);
+  }
+
+  // Tipo de documento traído del endpoint de la bandeja (campo TipoDoc).
+  // Se mapea con el catálogo de tipos de documento; si el valor ya es una
+  // descripción se muestra tal cual, y si no llega data se asume DNI.
+  tipoDocumento(item: IFilaBackend): string {
+    const codigo =
+      valorFila(item, 'TipoDoc') ||
+      valorFila(item, 'TipoDocumento') ||
+      valorFila(item, 'IdTipoDocumento');
+    if (!codigo) return 'DNI';
+    const tipo = this.tiposDocumentos.find(
+      (t) => String(t.id) === String(codigo),
+    );
+    return tipo?.descripcion || codigo;
   }
 
   servicio(item: IFilaBackend): string {
