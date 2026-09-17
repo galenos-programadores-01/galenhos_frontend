@@ -216,7 +216,7 @@ export class RegistroTriajeModal implements OnInit {
   async seleccionarPrioridad(value: string): Promise<void> {
     this.srv.formulario.idTipoPrioridad = value;
     this.srv.formulario.idServicio = '';
-    if (value === '6') {
+    if (value === this.srv.prioridadCadaver) {
       this.srv.formulario.frecCardiaca = '';
       this.srv.formulario.temperatura = '';
       this.srv.formulario.presionArterial = '';

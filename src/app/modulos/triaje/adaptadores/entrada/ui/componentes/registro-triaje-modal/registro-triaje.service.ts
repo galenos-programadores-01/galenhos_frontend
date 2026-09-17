@@ -25,6 +25,9 @@ import type { FormRegistroTriaje } from './registro-triaje.interfaces';
 const PARAMETRO_SIS_ID = 322;
 const PARAMETRO_RENIEC_ID = 296;
 
+// Valor de la prioridad "Llegó Cadáver".
+const PRIORIDAD_CADAVER = '5';
+
 @Injectable()
 export class RegistroTriajeService {
   private readonly maestrosApi = inject(MaestrosApiService);
@@ -68,8 +71,10 @@ export class RegistroTriajeService {
     { value: '2', label: 'II. Urgencia Mayor', color: '#22c55e' },
     { value: '3', label: 'III. Urgencia Menor', color: '#eab308' },
     { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
-    { value: '6', label: 'Llegó Cadáver', color: '#ef4444' },
+    { value: PRIORIDAD_CADAVER, label: 'Llegó Cadáver', color: '#ef4444' },
   ];
+
+  readonly prioridadCadaver = PRIORIDAD_CADAVER;
 
   unidadesTiempo = [
     { value: 'Años', label: 'Años' },
@@ -156,10 +161,9 @@ export class RegistroTriajeService {
     const solicitud = ++this.serviciosSolicitud;
     this.servicios = [];
     try {
-      const lista =
-        prioridad && fechaNac
-          ? await this.maestrosApi.getServiciosPorPrioridad(prioridad, fechaNac)
-          : await this.maestrosApi.getServicios(2);
+      const lista = prioridad
+        ? await this.maestrosApi.getServiciosPorPrioridad(prioridad, fechaNac)
+        : await this.maestrosApi.getServicios(2);
       if (solicitud !== this.serviciosSolicitud) return;
       this.servicios = lista;
     } catch {
@@ -761,7 +765,7 @@ export class RegistroTriajeService {
   }
 
   get esCadaver(): boolean {
-    return this.formulario.idTipoPrioridad === '6';
+    return this.formulario.idTipoPrioridad === PRIORIDAD_CADAVER;
   }
 
   get tiene15OMas(): boolean {
