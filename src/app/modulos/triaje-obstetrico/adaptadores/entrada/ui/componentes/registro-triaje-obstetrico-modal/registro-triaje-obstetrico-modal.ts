@@ -24,7 +24,7 @@ import { ReporteTriajeObstetricoComponent } from '../reporte-triaje-obstetrico/r
 import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.service';
 
 // Prioridad fija para listar los servicios derivados en triaje obstétrico.
-const PRIORIDAD_SERVICIOS_DEFECTO = '5';
+const PRIORIDAD_SERVICIOS_DEFECTO = '6';
 
 @Component({
   selector: 'app-registro-triaje-obstetrico-modal',
