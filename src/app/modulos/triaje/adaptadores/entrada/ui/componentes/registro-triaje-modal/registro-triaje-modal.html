@@ -140,7 +140,7 @@
             </div>
             <div>
               <label for="fecha-de-nacimiento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha de nacimiento</label>
-        <input autocomplete="off" id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" name="fechaNac" #fNacCtrl="ngModel" required
+        <input autocomplete="off" id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" (ngModelChange)="onFechaNacimientoChange()" name="fechaNac" #fNacCtrl="ngModel" required
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="fNacCtrl"></app-error-mensaje>
             </div>

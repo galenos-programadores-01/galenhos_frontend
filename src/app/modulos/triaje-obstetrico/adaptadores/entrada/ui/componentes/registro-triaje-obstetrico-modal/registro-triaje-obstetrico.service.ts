@@ -49,6 +49,7 @@ export class RegistroTriajeObstetricoService {
   reniecIntegrado = false;
 
   ultimoTriajeId: number | null = null;
+  private serviciosSolicitud = 0;
 
   tiposDocumentos: ICatalogoDescripcion[] = [];
   tiposSexo: ICatalogoDescripcion[] = [];
@@ -169,7 +170,6 @@ export class RegistroTriajeObstetricoService {
         this.departamentos,
         this.fuentesFinanciamiento,
         this.estadosLlegoPaciente,
-        this.servicios,
       ] = await Promise.all([
         this.maestrosApi.getTiposDocumentos(),
         this.maestrosApi.getTiposSexo(),
@@ -179,10 +179,29 @@ export class RegistroTriajeObstetricoService {
           Record<string, unknown>[]
         >,
         this.maestrosApi.getEstadosLlegoPaciente(),
-        this.maestrosApi.getServicios(2),
       ]);
     } catch {
       this.mensajeError = 'Error al cargar catálogos iniciales.';
+    }
+  }
+
+  async cargarServiciosPorPrioridad(
+    prioridad: string,
+    fechaNac: string,
+  ): Promise<void> {
+    const solicitud = ++this.serviciosSolicitud;
+    this.servicios = [];
+    try {
+      const lista = await this.maestrosApi.getServiciosPorPrioridad(
+        prioridad,
+        fechaNac,
+      );
+      if (solicitud !== this.serviciosSolicitud) return;
+      this.servicios = lista;
+    } catch {
+      if (solicitud === this.serviciosSolicitud) {
+        this.mensajeError = 'Error al cargar los servicios del triaje.';
+      }
     }
   }
 
@@ -210,6 +229,7 @@ export class RegistroTriajeObstetricoService {
     this.sisIntegrado = false;
     this.reniecIntegrado = false;
     this.ultimoTriajeId = null;
+    this.servicios = [];
   }
 
   async buscarPaciente(): Promise<void> {

@@ -5,8 +5,10 @@ import {
   EventEmitter,
   Input,
   inject,
+  type OnChanges,
   type OnInit,
   Output,
+  type SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
@@ -20,6 +22,9 @@ import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/v
 import { BuscarPacienteObstetricoModal } from '../buscar-paciente-modal/buscar-paciente-modal';
 import { ReporteTriajeObstetricoComponent } from '../reporte-triaje-obstetrico/reporte-triaje-obstetrico.component';
 import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.service';
+
+// Prioridad fija para listar los servicios derivados en triaje obstétrico.
+const PRIORIDAD_SERVICIOS_DEFECTO = '5';
 
 @Component({
   selector: 'app-registro-triaje-obstetrico-modal',
@@ -39,7 +44,7 @@ import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.se
   templateUrl: './registro-triaje-obstetrico-modal.html',
   styles: [`@keyframes spin { to { transform: rotate(360deg); } }`],
 })
-export class RegistroTriajeObstetricoModal implements OnInit {
+export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
   @Input() abierto = false;
   @Output() alCerrar = new EventEmitter<void>();
   @Output() triajeIniciado = new EventEmitter<void>();
@@ -55,6 +60,22 @@ export class RegistroTriajeObstetricoModal implements OnInit {
 
   ngOnInit(): void {
     void this.srv.cargarCatalogosIniciales();
+  }
+
+  ngOnChanges(cambios: SimpleChanges): void {
+    if (cambios['abierto']?.currentValue === true) {
+      void this.cargarServiciosPorDefecto();
+    }
+  }
+
+  // Al abrir el modal se listan los servicios con la prioridad fija (5)
+  // y sin fecha de nacimiento, para que el combo no aparezca vacío.
+  private async cargarServiciosPorDefecto(): Promise<void> {
+    await this.srv.cargarServiciosPorPrioridad(
+      PRIORIDAD_SERVICIOS_DEFECTO,
+      '',
+    );
+    this.cdr.detectChanges();
   }
 
   cerrar(): void {
@@ -203,8 +224,9 @@ export class RegistroTriajeObstetricoModal implements OnInit {
     this.cdr.detectChanges();
   }
 
-  seleccionarPrioridad(value: string): void {
+  async seleccionarPrioridad(value: string): Promise<void> {
     this.srv.formulario.idTipoPrioridad = value;
+    this.srv.formulario.idServicio = '';
     if (value === '6') {
       this.srv.formulario.frecCardiaca = '';
       this.srv.formulario.temperatura = '';
@@ -216,6 +238,19 @@ export class RegistroTriajeObstetricoModal implements OnInit {
       this.srv.formulario.talla = '';
       this.imc = '';
     }
+    await this.srv.cargarServiciosPorPrioridad(
+      PRIORIDAD_SERVICIOS_DEFECTO,
+      this.srv.formulario.fechaNacimiento,
+    );
+    this.cdr.detectChanges();
+  }
+
+  async onFechaNacimientoChange(): Promise<void> {
+    this.srv.formulario.idServicio = '';
+    await this.srv.cargarServiciosPorPrioridad(
+      PRIORIDAD_SERVICIOS_DEFECTO,
+      this.srv.formulario.fechaNacimiento,
+    );
     this.cdr.detectChanges();
   }
 

@@ -103,6 +103,22 @@ export class MaestrosApiService {
       `/api/v1/servicios/${idArea}`,
     );
   }
+  getServiciosPorPrioridad(
+    idPrioridad: number | string,
+    fechaNac: string,
+  ): Promise<ICatalogoNombre[]> {
+    const path = fechaNac
+      ? `/api/v1/servicios-prioridad/${idPrioridad}/${fechaNac}`
+      : `/api/v1/servicios-prioridad/${idPrioridad}`;
+    return this.apiClient
+      .request<{ idServicio: number; nombre: string }[]>(path)
+      .then((items) =>
+        (items || []).map((s) => ({
+          id: s.idServicio,
+          nombre: s.nombre,
+        })),
+      );
+  }
   getDatosInstitucion(): Promise<IFilaBackend> {
     return this.apiClient.request<IFilaBackend>('/api/v1/datos-institucion');
   }

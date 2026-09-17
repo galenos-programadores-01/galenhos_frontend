@@ -105,7 +105,7 @@
             </div>
             <div>
               <label for="fecha-de-nacimiento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha de nacimiento</label>
-        <input autocomplete="off" id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" name="fechaNac" #fNacCtrl="ngModel" required
+        <input autocomplete="off" id="fecha-de-nacimiento" type="date" [(ngModel)]="srv.formulario.fechaNacimiento" (ngModelChange)="onFechaNacimientoChange()" name="fechaNac" #fNacCtrl="ngModel" required
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
               <app-error-mensaje [control]="fNacCtrl"></app-error-mensaje>
             </div>
@@ -346,7 +346,7 @@
           <div style="padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
             <div>
               <label for="edad-gestacional" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Edad Gestacional</label>
-              <input autocomplete="off" id="edad-gestacional" type="number" placeholder="Ej: 12" [(ngModel)]="srv.formulario.edadGestacional"
+              <input autocomplete="off" id="edad-gestacional" type="text" placeholder="Ej: 12" appSoloNumerico inputmode="numeric" maxlength="3" [(ngModel)]="srv.formulario.edadGestacional"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             </div>
             <div>
@@ -356,7 +356,7 @@
             </div>
             <div>
               <label for="nro-controles" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Nro. Controles</label>
-              <input autocomplete="off" id="nro-controles" type="number" placeholder="Ej: 4" [(ngModel)]="srv.formulario.nroControles"
+              <input autocomplete="off" id="nro-controles" type="text" placeholder="Ej: 4" appSoloNumerico inputmode="numeric" maxlength="3" [(ngModel)]="srv.formulario.nroControles"
                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
             </div>
             <div>

@@ -50,6 +50,7 @@ export class RegistroTriajeService {
   reniecIntegrado = false;
 
   ultimoTriajeId: number | null = null;
+  private serviciosSolicitud = 0;
 
   tiposDocumentos: ICatalogoDescripcion[] = [];
   tiposSexo: ICatalogoDescripcion[] = [];
@@ -134,7 +135,6 @@ export class RegistroTriajeService {
         this.departamentos,
         this.fuentesFinanciamiento,
         this.estadosLlegoPaciente,
-        this.servicios,
       ] = await Promise.all([
         this.maestrosApi.getTiposDocumentos(),
         this.maestrosApi.getTiposSexo(),
@@ -144,10 +144,28 @@ export class RegistroTriajeService {
           Record<string, unknown>[]
         >,
         this.maestrosApi.getEstadosLlegoPaciente(),
-        this.maestrosApi.getServicios(2),
       ]);
     } catch {
       this.mensajeError = 'Error al cargar catálogos iniciales.';
+    }
+  }
+
+  async cargarServiciosPorPrioridad(): Promise<void> {
+    const prioridad = this.formulario.idTipoPrioridad;
+    const fechaNac = this.formulario.fechaNacimiento;
+    const solicitud = ++this.serviciosSolicitud;
+    this.servicios = [];
+    try {
+      const lista =
+        prioridad && fechaNac
+          ? await this.maestrosApi.getServiciosPorPrioridad(prioridad, fechaNac)
+          : await this.maestrosApi.getServicios(2);
+      if (solicitud !== this.serviciosSolicitud) return;
+      this.servicios = lista;
+    } catch {
+      if (solicitud === this.serviciosSolicitud) {
+        this.mensajeError = 'Error al cargar los servicios del triaje.';
+      }
     }
   }
 
@@ -176,6 +194,7 @@ export class RegistroTriajeService {
     this.sisIntegrado = false;
     this.reniecIntegrado = false;
     this.ultimoTriajeId = null;
+    this.servicios = [];
   }
 
   async buscarPaciente(): Promise<void> {

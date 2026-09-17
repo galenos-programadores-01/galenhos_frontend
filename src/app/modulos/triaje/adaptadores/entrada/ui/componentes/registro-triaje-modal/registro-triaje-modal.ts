@@ -213,8 +213,9 @@ export class RegistroTriajeModal implements OnInit {
     this.cdr.detectChanges();
   }
 
-  seleccionarPrioridad(value: string): void {
+  async seleccionarPrioridad(value: string): Promise<void> {
     this.srv.formulario.idTipoPrioridad = value;
+    this.srv.formulario.idServicio = '';
     if (value === '6') {
       this.srv.formulario.frecCardiaca = '';
       this.srv.formulario.temperatura = '';
@@ -226,6 +227,13 @@ export class RegistroTriajeModal implements OnInit {
       this.srv.formulario.talla = '';
       this.imc = '';
     }
+    await this.srv.cargarServiciosPorPrioridad();
+    this.cdr.detectChanges();
+  }
+
+  async onFechaNacimientoChange(): Promise<void> {
+    this.srv.formulario.idServicio = '';
+    await this.srv.cargarServiciosPorPrioridad();
     this.cdr.detectChanges();
   }
 
