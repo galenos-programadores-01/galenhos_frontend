@@ -126,14 +126,8 @@ export class TriajeObstetricoComponent implements OnInit {
   mensajeExito = '';
 
   filtro = '';
-  fechaInicio = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
-  fechaFin = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
+  fechaInicio = `${new Date().toISOString().slice(0, 10)}T08:00`;
+  fechaFin = `${new Date().toISOString().slice(0, 10)}T20:00`;
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
