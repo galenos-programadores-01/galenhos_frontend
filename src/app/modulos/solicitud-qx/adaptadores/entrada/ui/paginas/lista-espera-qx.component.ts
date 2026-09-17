@@ -526,6 +526,7 @@ export class ListaEsperaQxComponent implements OnInit {
         fechaICNeumo: this.form.fechaICNeumo,
         fechaICAnestesio: this.form.fechaICAnestesio,
         observacion: this.form.observacion.trim(),
+        telefono: this.form.telefono,
       };
       if (this.editingId) {
         await this.apiService.modificar(this.editingId, payload);

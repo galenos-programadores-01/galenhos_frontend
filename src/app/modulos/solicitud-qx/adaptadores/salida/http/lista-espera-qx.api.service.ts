@@ -28,6 +28,7 @@ export interface ListaEsperaQxCrearPayload {
   fechaICNeumo: string;
   fechaICAnestesio: string;
   observacion: string;
+  telefono: string;
 }
 
 export interface DiagnosticoItem {
