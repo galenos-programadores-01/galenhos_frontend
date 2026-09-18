@@ -120,14 +120,10 @@
           </span>
         </ng-template>
 
-        <ng-template appColumnaTemplate="sexoCustom" let-p>
-          @if (sexo(p) === '1' || sexo(p)?.toUpperCase() === 'MASCULINO' || sexo(p)?.toUpperCase() === 'VARÓN' || sexo(p)?.toUpperCase() === 'VARON' || sexo(p)?.toUpperCase() === 'M' || sexo(p)?.toUpperCase() === 'V') {
-            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Varón" style="margin: 0 auto;"><circle cx="10" cy="14" r="5"></circle><path d="M13.5 10.5 21 3"></path><path d="M16 3h5v5"></path></svg>
-          } @else if (sexo(p) === '2' || sexo(p)?.toUpperCase() === 'FEMENINO' || sexo(p)?.toUpperCase() === 'MUJER' || sexo(p)?.toUpperCase() === 'F') {
-            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Mujer" style="margin: 0 auto;"><circle cx="12" cy="10" r="5"></circle><path d="M12 15v7"></path><path d="M9 19h6"></path></svg>
-          } @else {
-            <span style="color: #94a0bd; font-weight: bold; font-size: 16px;">—</span>
-          }
+        <ng-template appColumnaTemplate="observacionCustom" let-p>
+          <span [title]="observacion(p) || '—'" style="display: block; max-width: 200px; color: #334155; font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ observacion(p) || '—' }}
+          </span>
         </ng-template>
 
         <ng-template appColumnaTemplate="accionCustom" let-p>

@@ -19,7 +19,7 @@
       @for (item of datos; track $index; let indiceFila = $index) {
         <tr style="border-top: 1px solid #eef1f6;">
           @for (col of columnas; track col.campo) {
-            <td [style.text-align]="col.alineacion || 'left'" style="padding: 12px 10px; vertical-align: middle;">
+            <td [style.text-align]="col.alineacion || 'left'" [style.width]="col.ancho || 'auto'" style="padding: 12px 10px; vertical-align: middle;">
               @if (getTemplate(col.campo)) {
                 <ng-container *ngTemplateOutlet="getTemplate(col.campo)!; context: { $implicit: item, index: indiceFila, indice: indiceFila }"></ng-container>
               } @else {

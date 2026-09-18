@@ -182,7 +182,7 @@ export class AdmisionesComponent implements OnInit {
     { campo: 'tipoIngresoCustom', cabecera: 'Tipo ingreso' },
     { campo: 'fechaTriajeCustom', cabecera: 'Fecha triaje' },
     { campo: 'iafaCustom', cabecera: 'IAFA' },
-    { campo: 'sexoCustom', cabecera: 'Sexo', alineacion: 'center' },
+    { campo: 'observacionCustom', cabecera: 'Observación', ancho: '200px' },
     { campo: 'accionCustom', cabecera: 'Acción', alineacion: 'right' },
   ];
 
@@ -609,27 +609,15 @@ export class AdmisionesComponent implements OnInit {
     return campo(item, ['IAFA', 'iafa', 'FuenteFinanciamiento']);
   }
 
-  sexo(item: IFilaBackend): string {
-    return (
-      campo(item, [
-        'Sexo',
-        'sexo',
-        'TipoSexo',
-        'tipoSexo',
-        'IdTipoSexo',
-        'idTipoSexo',
-        'SexTypeID',
-        'sexTypeId',
-        'Genero',
-        'genero',
-        'IdGenero',
-        'idGenero',
-        'Sex',
-        'sex',
-        'SEXO',
-        'GENERO',
-      ])?.toString() || ''
-    );
+  observacion(item: IFilaBackend): string {
+    return campo(item, [
+      'Observacion',
+      'observacion',
+      'Observación',
+      'observación',
+      'Observaciones',
+      'observaciones',
+    ]);
   }
 
   esSis(item: IFilaBackend): boolean {

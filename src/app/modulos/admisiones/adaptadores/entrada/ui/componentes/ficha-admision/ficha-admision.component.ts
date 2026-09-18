@@ -118,14 +118,6 @@ export class FichaAdmisionComponent implements OnInit {
         instPromise,
       ]);
       this.ficha = fichaRaw as unknown as FichaData;
-      // TODO: quitar diagnóstico temporal
-      console.debug('[ficha-admision] raw:', fichaRaw);
-      console.debug(
-        '[ficha-admision] IdTipoGravedad =',
-        (fichaRaw as Record<string, unknown> | null)?.['IdTipoGravedad'],
-        '| claves:',
-        Object.keys((fichaRaw as Record<string, unknown>) ?? {}),
-      );
       this.institucion = instRaw || null;
       this.htmlFicha = this.generarHtmlFicha();
       this.cargando = false;
