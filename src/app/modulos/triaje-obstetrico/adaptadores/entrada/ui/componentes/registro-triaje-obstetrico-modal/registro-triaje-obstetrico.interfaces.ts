@@ -1,6 +1,9 @@
 ﻿export interface FormRegistroTriajeObstetrico {
   idDocIdentidad: string;
   nroDocumento: string;
+  afiliacionDisa: string;
+  afiliacionTipoFormato: string;
+  afiliacionNroContrato: string;
   pacienteNn: boolean;
   apellidoPaterno: string;
   apellidoMaterno: string;

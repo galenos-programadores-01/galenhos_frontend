@@ -98,6 +98,16 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
     }
   }
 
+  onTipoDocumentoChange(valor: string): void {
+    if (valor === '99') {
+      this.srv.formulario.nroDocumento = '';
+      this.srv.pacienteEncontrado = false;
+      this.srv.mensajeError = '';
+      this.srv.sisConsultado = false;
+      this.srv.sisActivo = false;
+    }
+  }
+
   abrirBuscador(): void {
     this.buscarAbierto = true;
     this.cdr.detectChanges();

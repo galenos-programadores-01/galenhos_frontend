@@ -899,8 +899,7 @@ export class SisFuaReportComponent implements OnInit {
         <tr>
           <td colspan="8" valign="top" style="text-align:center;font-size:6.5px">
             FIRMA Y SELLO DEL RESPONSABLE DE LA ATENCIÓN<br>
-            <b>${v(g('M_Nombres'))}</b><br>
-            <b>DNI:</b> ${v(g('M_NumDocumento'))} - <b>COLEGIATURA:</b> ${v(g('M_Colegiatura'))}
+          
           </td>
           <td colspan="2" style="text-align:left;font-size:6.5px">DNI O CE DEL APODERADO</td>
           <td colspan="7" style="text-align:center;font-size:6.5px">____________________________________________________________</td>

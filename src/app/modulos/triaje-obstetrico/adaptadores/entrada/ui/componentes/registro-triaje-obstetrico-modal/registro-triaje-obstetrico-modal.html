@@ -9,12 +9,13 @@
     <div>
       <label for="tipo-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de documento</label>
         <select autocomplete="off" id="tipo-de-documento" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
-              [(ngModel)]="srv.formulario.idDocIdentidad" [disabled]="srv.formulario.pacienteNn">
+              [(ngModel)]="srv.formulario.idDocIdentidad" (ngModelChange)="onTipoDocumentoChange($event)" [disabled]="srv.formulario.pacienteNn">
         @for (tipo of srv.tiposDocumentos; track tipo.id) {
           <option [value]="tipo.id">{{ tipo.descripcion }}</option>
         }
       </select>
     </div>
+    @if (!srv.esFiliacion) {
     <div>
       <label for="numero-de-documento" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Número de documento</label>
         <input autocomplete="off" id="numero-de-documento" type="text" style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;"
@@ -22,6 +23,28 @@
              [disabled]="srv.formulario.pacienteNn" (keydown.enter)="onEnterDocumento($event)">
       <app-error-mensaje [control]="nroDocCtrl"></app-error-mensaje>
     </div>
+    } @else {
+    <div style="display: flex; gap: 10px; align-items: end;">
+      <div>
+        <label for="afiliacion-disa" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">DISA</label>
+          <input autocomplete="off" id="afiliacion-disa" type="text" placeholder="Disa" [(ngModel)]="srv.formulario.afiliacionDisa" name="afiliacionDisa" value="035"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 120px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+      <div>
+        <label for="afiliacion-tipo-formato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tipo de formato</label>
+          <input autocomplete="off" id="afiliacion-tipo-formato" type="text" placeholder="Tipo de formato" [(ngModel)]="srv.formulario.afiliacionTipoFormato" name="afiliacionTipoFormato" value="E"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 140px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+      <div>
+        <label for="afiliacion-nro-contrato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">N° de contrato</label>
+          <input autocomplete="off" id="afiliacion-nro-contrato" type="text" placeholder="N° de contrato" [(ngModel)]="srv.formulario.afiliacionNroContrato" name="afiliacionNroContrato"
+                 [disabled]="srv.formulario.pacienteNn" (keydown.enter)="buscarPaciente()"
+                 style="width: 100%; max-width: 160px; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+      </div>
+    </div>
+    }
     <div style="display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border: 1px solid #d5dceb; border-radius: 11px; background: #f8fafc;">
       <span style="font-size: 13px; font-weight: 600; color: #263c7a; white-space: nowrap;">Paciente NN</span>
       <button type="button" (click)="toggleNN(!srv.formulario.pacienteNn)" [attr.aria-pressed]="srv.formulario.pacienteNn"

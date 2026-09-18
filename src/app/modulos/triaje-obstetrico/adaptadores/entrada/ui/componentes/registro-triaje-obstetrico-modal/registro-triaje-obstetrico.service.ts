@@ -121,6 +121,9 @@ export class RegistroTriajeObstetricoService {
     return {
       idDocIdentidad: '1',
       nroDocumento: '',
+      afiliacionDisa: '035',
+      afiliacionTipoFormato: 'E',
+      afiliacionNroContrato: '',
       pacienteNn: false,
       apellidoPaterno: '',
       apellidoMaterno: '',
@@ -240,6 +243,11 @@ export class RegistroTriajeObstetricoService {
       return;
     }
 
+    if (this.esFiliacion) {
+      await this.buscarPorAfiliacion();
+      return;
+    }
+
     if (!this.formulario.nroDocumento) {
       this.mensajeError = 'Ingrese un número de documento';
       return;
@@ -315,6 +323,50 @@ export class RegistroTriajeObstetricoService {
     }
   }
 
+  // Busca por afiliación SIS (intOpcion=2): requiere DISA, tipo de formato y
+  // número de contrato, sin número de documento.
+  private async buscarPorAfiliacion(): Promise<void> {
+    const disa = this.formulario.afiliacionDisa.trim();
+    const tipoFormato = this.formulario.afiliacionTipoFormato.trim();
+    const nroContrato = this.formulario.afiliacionNroContrato.trim();
+
+    if (!disa || !tipoFormato || !nroContrato) {
+      this.mensajeError =
+        'Ingrese DISA, tipo de formato y número de contrato de la afiliación.';
+      return;
+    }
+
+    this.formulario.nroDocumento = '';
+    this.buscando = true;
+    this.mensajeError = '';
+    this.pacienteEncontrado = false;
+    this.sisConsultado = false;
+    this.sisActivo = false;
+
+    try {
+      await this.cargarParametrosIntegracion();
+
+      if (this.sisIntegrado) {
+        this.formulario.afiliacionDisa = disa;
+        this.formulario.afiliacionTipoFormato = tipoFormato;
+        this.formulario.afiliacionNroContrato = nroContrato;
+        await this.consultarSis();
+      }
+
+      if (!this.pacienteEncontrado && !this.mensajeError) {
+        this.mensajeError =
+          'No se encontró la afiliación en SIS. Complete los datos manualmente o active el modo Paciente NN.';
+      }
+    } catch (error: unknown) {
+      this.mensajeError =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'Error inesperado al buscar la afiliación.';
+    } finally {
+      this.buscando = false;
+    }
+  }
+
   // Consulta los parámetros que activan las integraciones con SIS y RENIEC.
   // valorTexto === 'S' habilita la integración; cualquier otro valor la apaga.
   // Ante un error del endpoint se asume integración desactivada (fail-closed).
@@ -366,6 +418,17 @@ export class RegistroTriajeObstetricoService {
       (t) => (t.descripcion || '').toUpperCase() === 'SD',
     );
     return sd ? id === String(sd.id) : false;
+  }
+
+  get esFiliacion(): boolean {
+    return this.formulario.idDocIdentidad === '99';
+  }
+
+  private idTipoDocumentoSinDocumento(): string {
+    const sd = this.tiposDocumentos.find(
+      (t) => (t.descripcion || '').toUpperCase() === 'SD',
+    );
+    return sd ? String(sd.id) : '';
   }
 
   // Convierte el tipo de documento a número conservando el valor 0 (SD -
@@ -458,11 +521,20 @@ export class RegistroTriajeObstetricoService {
 
   private async consultarSis(): Promise<void> {
     try {
-      const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
-      const sisResponse = await this.sisApi.consultarAfiliado(
-        this.formulario.nroDocumento,
-        tipoDoc,
-      );
+      let sisResponse: SisAfiliado;
+      if (this.esFiliacion) {
+        sisResponse = await this.sisApi.consultarAfiliado('', 0, {
+          disa: this.formulario.afiliacionDisa,
+          tipoFormato: this.formulario.afiliacionTipoFormato,
+          nroContrato: this.formulario.afiliacionNroContrato,
+        });
+      } else {
+        const tipoDoc = this.formulario.idDocIdentidad === '1' ? 1 : 3;
+        sisResponse = await this.sisApi.consultarAfiliado(
+          this.formulario.nroDocumento,
+          tipoDoc,
+        );
+      }
 
       this.sisConsultado = true;
 
@@ -601,6 +673,15 @@ export class RegistroTriajeObstetricoService {
 
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
+
+    // Al buscar por afiliación (sin documento), el número de contrato
+    // ingresado se coloca como número de documento y el tipo se fija en
+    // "Sin Documento" (SD) para grabar el triaje con los datos de SIS.
+    if (this.esFiliacion) {
+      this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
+      const nroContrato = this.formulario.afiliacionNroContrato.trim();
+      this.formulario.nroDocumento = nroContrato || sis.nroDocumento || '';
+    }
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
       this.formulario.fechaNacimiento = `${sis.fecNacimiento.slice(0, 4)}-${sis.fecNacimiento.slice(4, 6)}-${sis.fecNacimiento.slice(6, 8)}`;
