@@ -1031,11 +1031,6 @@ export class RegistroTriajeObstetricoService {
         await this.pacientesApi.registrar(
           payloadPaciente as unknown as RegistroPacientePayload,
         );
-      } else if (idPacienteFinal) {
-        await this.pacientesApi.actualizar(
-          idPacienteFinal,
-          payloadPaciente as unknown as RegistroPacientePayload,
-        );
       }
 
       const payloadTriaje: RegistroTriajeObstetricoPayload = {

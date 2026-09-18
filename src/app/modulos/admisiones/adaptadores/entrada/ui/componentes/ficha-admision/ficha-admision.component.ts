@@ -40,6 +40,7 @@ interface FichaData {
   Consultorio?: string | null;
   EspecialidadMedico?: string | null;
   TipoPrioridad?: string | null;
+  Motivo?: string | null;
   TipoEdad?: string | null;
   Telefono_Acompaniante?: string | null;
   NombresMedico?: string | null;
@@ -117,6 +118,14 @@ export class FichaAdmisionComponent implements OnInit {
         instPromise,
       ]);
       this.ficha = fichaRaw as unknown as FichaData;
+      // TODO: quitar diagnóstico temporal
+      console.debug('[ficha-admision] raw:', fichaRaw);
+      console.debug(
+        '[ficha-admision] IdTipoGravedad =',
+        (fichaRaw as Record<string, unknown> | null)?.['IdTipoGravedad'],
+        '| claves:',
+        Object.keys((fichaRaw as Record<string, unknown>) ?? {}),
+      );
       this.institucion = instRaw || null;
       this.htmlFicha = this.generarHtmlFicha();
       this.cargando = false;
@@ -276,7 +285,9 @@ export class FichaAdmisionComponent implements OnInit {
 
               <td style="padding:4.5px 8px 4.5px 35px;white-space:nowrap">
                 <b style="font-size:23px">${v(ficha?.IAFA)}</b>
+                ${Number(ficha?.IdTipoGravedad) === 3 ? '<b style="font-size:23px">&nbsp;&nbsp;CAR</b>' : ''}
               </td>
+
             </tr>
       </table>
       <table style="margin-top:1px;table-layout:fixed">
@@ -314,6 +325,7 @@ export class FichaAdmisionComponent implements OnInit {
         ])}
       </table>
       <div style="font-size:11px;font-weight:bold;margin-top:3px">PRIORIDAD: <span style="text-transform:uppercase">${v(ficha?.TipoPrioridad)}</span></div>
+       <div style="font-size:11px;margin-top:3px">Motivo consulta: <span">${v(ficha?.Motivo)}</span></div>
 
       <div class="titulo-seccion">ANAMNESIS
         <span style="font-weight:normal;margin-left:10px">${casilla()} DIRECTA &nbsp;&nbsp; ${casilla()} INDIRECTA</span>
