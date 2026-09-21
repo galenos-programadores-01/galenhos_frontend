@@ -37,6 +37,7 @@ export interface FormRegistroTriaje {
   tiempoEvolucionCantidadUnidad: string;
   idServicio: string;
   idTipoPrioridad: string;
+  idCausaExternaMorbilidad: string;
   fechaUltimaRegla: string;
   esGestante: boolean;
 }

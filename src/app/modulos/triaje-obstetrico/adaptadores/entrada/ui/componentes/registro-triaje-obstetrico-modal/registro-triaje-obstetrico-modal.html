@@ -342,16 +342,16 @@
           </div>
           <div>
             <label for="imc" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">IMC</label>
-        <input autocomplete="off" id="imc" type="text" disabled [value]="imc || '—'"
+            <input autocomplete="off" id="imc" type="text" disabled [value]="imc || '—'"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f3f5fb; color: #07153a;">
           </div>
           @if (esMujer) {
           <div>
             <label for="fur" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">FUR</label>
-        <input autocomplete="off" id="fur" type="date" [(ngModel)]="srv.formulario.fechaUltimaRegla" [attr.max]="hoy"
+            <input autocomplete="off" id="fur" type="date" [(ngModel)]="srv.formulario.fechaUltimaRegla" [attr.max]="hoy"
                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
           </div>
-          <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+          <div>
             <span style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Gestante</span>
             <div style="display: flex; align-items: center; gap: 10px; height: 42px;">
               <button type="button" aria-label="Gestante" (click)="srv.formulario.esGestante = !srv.formulario.esGestante"
@@ -365,6 +365,19 @@
             </div>
           </div>
           }
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 14px;">
+          <div style="grid-column: span 3;">
+            <label for="causa-externa" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Causa externa <span style="color: #ef4444;">*</span></label>
+            <select autocomplete="off" id="causa-externa" name="causaExternaMorbilidad" [(ngModel)]="srv.formulario.idCausaExternaMorbilidad" #causaExternaCtrl="ngModel" required
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+              <option value="">Seleccione...</option>
+              @for (c of srv.causasExternas; track c.idCausaExternaMorbilidad) {
+                <option [value]="c.idCausaExternaMorbilidad">{{ c.descripcion }}</option>
+              }
+            </select>
+            <app-error-mensaje [control]="causaExternaCtrl"></app-error-mensaje>
+          </div>
         </div>
 
         @if (srv.formulario.esGestante) {

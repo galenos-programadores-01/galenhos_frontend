@@ -56,6 +56,7 @@ export interface RegistroTriajeObstetricoPayload {
   nroControlesPrenatales?: number | null;
   movimientosFetales?: number | null;
   idEmpleado?: number;
+  idCausaExternaMorbilidad?: number;
 }
 
 export interface PendientesAdmisionObstetricoParams {
@@ -154,6 +155,12 @@ export class TriajeObstetricoApiService {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  listarCausasExternasMorbilidad(): Promise<IFilaBackend[]> {
+    return this.apiClient.request<IFilaBackend[]>(
+      '/api/v1/triaje/causas-externas-morbilidad',
+    );
   }
 
   listar(

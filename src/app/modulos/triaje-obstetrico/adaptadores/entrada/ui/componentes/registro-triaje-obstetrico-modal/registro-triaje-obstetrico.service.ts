@@ -62,6 +62,7 @@ export class RegistroTriajeObstetricoService {
   fuentesFinanciamiento: Record<string, unknown>[] = [];
   estadosLlegoPaciente: ICatalogoDescripcion[] = [];
   servicios: ICatalogoNombre[] = [];
+  causasExternas: IFilaBackend[] = [];
 
   prioridades = [
     {
@@ -156,6 +157,7 @@ export class RegistroTriajeObstetricoService {
       tiempoEvolucionCantidadUnidad: '',
       idServicio: '',
       idTipoPrioridad: '',
+      idCausaExternaMorbilidad: '',
       fechaUltimaRegla: '',
       esGestante: false,
       edadGestacional: '',
@@ -186,6 +188,16 @@ export class RegistroTriajeObstetricoService {
       ]);
     } catch {
       this.mensajeError = 'Error al cargar catálogos iniciales.';
+    }
+    await this.cargarCausasExternas();
+  }
+
+  async cargarCausasExternas(): Promise<void> {
+    try {
+      this.causasExternas =
+        await this.triajeApi.listarCausasExternasMorbilidad();
+    } catch {
+      this.causasExternas = [];
     }
   }
 
@@ -901,6 +913,11 @@ export class RegistroTriajeObstetricoService {
       return;
     }
 
+    if (!this.formulario.idCausaExternaMorbilidad) {
+      this.mensajeError = 'Seleccione la causa externa de morbilidad.';
+      return;
+    }
+
     if (!this.esCadaver) {
       if (!this.formulario.motivo) {
         this.mensajeError = 'Ingrese los síntomas principales.';
@@ -1027,11 +1044,14 @@ export class RegistroTriajeObstetricoService {
           Number(this.formulario.idCentroPobladoDomicilio) || undefined,
       };
 
-      if (!idPacienteFinal && !this.formulario.pacienteNn) {
-        await this.pacientesApi.registrar(
-          payloadPaciente as unknown as RegistroPacientePayload,
-        );
-      }
+      // if (
+      //   !idPacienteFinal &&
+      //   !this.formulario.pacienteNn
+      // ) {
+      //   await this.pacientesApi.registrar(
+      //     payloadPaciente as unknown as RegistroPacientePayload,
+      //   );
+      // }
 
       const payloadTriaje: RegistroTriajeObstetricoPayload = {
         idDocIdentidad: this.idDocIdentidadNumero(),
@@ -1074,6 +1094,8 @@ export class RegistroTriajeObstetricoService {
           this.formulario.tiempoEvolucionCantidadUnidad,
         idServicio: Number(this.formulario.idServicio) || undefined,
         idTipoPrioridad: Number(this.formulario.idTipoPrioridad) || undefined,
+        idCausaExternaMorbilidad:
+          Number(this.formulario.idCausaExternaMorbilidad) || undefined,
         gestante: this.formulario.esGestante ? 1 : 0,
         fechaUltimaRegla: this.formulario.fechaUltimaRegla || undefined,
         fur: this.formulario.fechaUltimaRegla || null,

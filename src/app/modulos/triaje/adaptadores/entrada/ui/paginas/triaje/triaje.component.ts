@@ -145,6 +145,7 @@ export class TriajeComponent implements OnInit {
 
   modalRegistro = false;
   reporteTriajeId: number | null = null;
+  triajeEditarId: number | null = null;
 
   columnasTabla: ColumnaTabla[] = [
     {
@@ -161,7 +162,7 @@ export class TriajeComponent implements OnInit {
     { campo: 'servicioCustom', cabecera: 'Servicio' },
     { campo: 'gravedadCustom', cabecera: 'Tipo gravedad' },
     { campo: 'estadoCustom', cabecera: 'Estado' },
-    { campo: 'accionCustom', cabecera: 'Reporte', alineacion: 'right' },
+    { campo: 'accionCustom', cabecera: 'Acciones', alineacion: 'right' },
   ];
 
   modalFirma = false;
@@ -322,6 +323,12 @@ export class TriajeComponent implements OnInit {
     }
   }
 
+  abrirEditarTriaje(idTriaje?: number) {
+    if (!idTriaje) return;
+    this.triajeEditarId = idTriaje;
+    this.modalRegistro = true;
+  }
+
   async generarReporte() {
     this.cargandoReporte = true;
     this.errorReporte = '';
@@ -413,11 +420,13 @@ export class TriajeComponent implements OnInit {
   }
 
   abrirModalRegistro() {
+    this.triajeEditarId = null;
     this.modalRegistro = true;
   }
 
   cerrarModalRegistro() {
     this.modalRegistro = false;
+    this.triajeEditarId = null;
   }
 
   onPacienteRegistrado() {

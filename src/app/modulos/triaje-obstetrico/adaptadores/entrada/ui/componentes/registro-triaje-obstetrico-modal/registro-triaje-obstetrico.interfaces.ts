@@ -37,6 +37,7 @@
   tiempoEvolucionCantidadUnidad: string;
   idServicio: string;
   idTipoPrioridad: string;
+  idCausaExternaMorbilidad: string;
   fechaUltimaRegla: string;
   esGestante: boolean;
   edadGestacional: string;

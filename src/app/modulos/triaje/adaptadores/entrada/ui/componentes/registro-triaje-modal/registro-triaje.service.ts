@@ -65,12 +65,13 @@ export class RegistroTriajeService {
   fuentesFinanciamiento: Record<string, unknown>[] = [];
   estadosLlegoPaciente: ICatalogoDescripcion[] = [];
   servicios: ICatalogoNombre[] = [];
+  causasExternas: IFilaBackend[] = [];
 
   prioridades = [
     { value: '1', label: 'I. Emerg. o Gravedad', color: '#3b82f6' },
     { value: '2', label: 'II. Urgencia Mayor', color: '#22c55e' },
     { value: '3', label: 'III. Urgencia Menor', color: '#eab308' },
-    { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
+   // { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
     { value: PRIORIDAD_CADAVER, label: 'Llegó Cadáver', color: '#ef4444' },
   ];
 
@@ -126,6 +127,7 @@ export class RegistroTriajeService {
       tiempoEvolucionCantidadUnidad: '',
       idServicio: '',
       idTipoPrioridad: '',
+      idCausaExternaMorbilidad: '',
       fechaUltimaRegla: '',
       esGestante: false,
     };
@@ -152,6 +154,16 @@ export class RegistroTriajeService {
       ]);
     } catch {
       this.mensajeError = 'Error al cargar catálogos iniciales.';
+    }
+    await this.cargarCausasExternas();
+  }
+
+  async cargarCausasExternas(): Promise<void> {
+    try {
+      this.causasExternas =
+        await this.triajeApi.listarCausasExternasMorbilidad();
+    } catch {
+      this.causasExternas = [];
     }
   }
 
@@ -807,7 +819,7 @@ export class RegistroTriajeService {
     return edad >= 15;
   }
 
-  async guardarYContinuar(): Promise<void> {
+  async guardarYContinuar(idTriaje?: number): Promise<void> {
     this.mensajeError = '';
 
     if (!this.pacienteEncontrado) {
@@ -842,6 +854,11 @@ export class RegistroTriajeService {
 
     if (!this.formulario.idServicio) {
       this.mensajeError = 'Seleccione el servicio derivado.';
+      return;
+    }
+
+    if (!this.formulario.idCausaExternaMorbilidad) {
+      this.mensajeError = 'Seleccione la causa externa de morbilidad.';
       return;
     }
 
@@ -987,6 +1004,7 @@ export class RegistroTriajeService {
       // }
 
       const payloadTriaje: RegistroTriajePayload = {
+        idTriaje,
         idDocIdentidad: this.idDocIdentidadNumero(),
         nroDocumento: this.formulario.nroDocumento,
         apellidoPaterno: this.formulario.apellidoPaterno,
@@ -1027,7 +1045,11 @@ export class RegistroTriajeService {
           this.formulario.tiempoEvolucionCantidadUnidad,
         idServicio: Number(this.formulario.idServicio) || undefined,
         idTipoPrioridad: Number(this.formulario.idTipoPrioridad) || undefined,
+        idCausaExternaMorbilidad:
+          Number(this.formulario.idCausaExternaMorbilidad) || undefined,
         gestante: this.formulario.esGestante ? 1 : 0,
+        esGestante: this.formulario.esGestante ?? false,
+        imc: this.calcularImcPayload(),
         fechaUltimaRegla: this.formulario.fechaUltimaRegla || undefined,
         fur: this.formulario.fechaUltimaRegla || null,
         edadGestacional: null,
@@ -1040,14 +1062,18 @@ export class RegistroTriajeService {
             : 1,
       };
 
-      const resp = await this.triajeApi.registrar(payloadTriaje);
+      const resp = idTriaje
+        ? await this.triajeApi.modificarTriaje(idTriaje, payloadTriaje)
+        : await this.triajeApi.registrar(payloadTriaje);
 
-      if (resp?.resultado?.startsWith('Error')) {
-        this.mensajeError = resp.resultado.replace(/^Error;\s*/, '');
+      if (resp?.resultado?.toUpperCase().startsWith('ERROR')) {
+        this.mensajeError = resp.resultado.replace(/^(ERROR|Error);\s*/i, '');
         return;
       }
 
-      this.ultimoTriajeId = await this.obtenerUltimoTriajeId();
+      this.ultimoTriajeId = idTriaje
+        ? idTriaje
+        : await this.obtenerUltimoTriajeId();
     } catch (error: unknown) {
       this.mensajeError =
         error instanceof ApiRequestError
@@ -1056,6 +1082,13 @@ export class RegistroTriajeService {
     } finally {
       this.guardando = false;
     }
+  }
+
+  private calcularImcPayload(): number | undefined {
+    const p = parseFloat(this.formulario.peso);
+    const t = parseFloat(this.formulario.talla);
+    if (!p || !t || p <= 0 || t <= 0) return undefined;
+    return Number((p / (t / 100) ** 2).toFixed(1));
   }
 
   private async obtenerUltimoTriajeId(): Promise<number | null> {

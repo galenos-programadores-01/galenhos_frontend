@@ -56,6 +56,7 @@ export interface RegistroTriajePayload {
   nroControlesPrenatales?: number | null;
   movimientosFetales?: number | null;
   idEmpleado?: number;
+  idCausaExternaMorbilidad?: number;
 }
 
 export interface PendientesAdmisionParams {
@@ -157,6 +158,22 @@ export class TriajeApiService {
     });
   }
 
+  modificarTriaje(
+    idTriaje: number,
+    payload: RegistroTriajePayload,
+  ): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  listarCausasExternasMorbilidad(): Promise<IFilaBackend[]> {
+    return this.apiClient.request<IFilaBackend[]>(
+      '/api/v1/triaje/causas-externas-morbilidad',
+    );
+  }
+
   listar(
     fini: string,
     ffin: string,
@@ -229,6 +246,12 @@ export class TriajeApiService {
   obtenerFichaAdmision(idCuentaAtencion: number): Promise<IFilaBackend> {
     return this.apiClient.request<IFilaBackend>(
       `/api/v1/triaje/ficha-admision?idCuentaAtencion=${idCuentaAtencion}`,
+    );
+  }
+
+  obtenerTriajePorId(idTriaje: number): Promise<IFilaBackend | null> {
+    return this.apiClient.request<IFilaBackend | null>(
+      `/api/v1/triaje/${idTriaje}`,
     );
   }
 
