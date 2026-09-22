@@ -71,10 +71,7 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
   // Al abrir el modal se listan los servicios con la prioridad fija (6)
   // y sin fecha de nacimiento, para que el combo no aparezca vacío.
   private async cargarServiciosPorDefecto(): Promise<void> {
-    await this.srv.cargarServiciosPorPrioridad(
-      PRIORIDAD_SERVICIOS_DEFECTO,
-      '',
-    );
+    await this.srv.cargarServiciosPorPrioridad(PRIORIDAD_SERVICIOS_DEFECTO, '');
     this.cdr.detectChanges();
   }
 

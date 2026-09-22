@@ -7,11 +7,14 @@ import {
   inject,
   type OnChanges,
   type OnInit,
-  type SimpleChanges,
   Output,
+  type SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { IFilaBackend, IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
+import type {
+  IFilaBackend,
+  IPaciente,
+} from '../../../../../../../compartido/tipos/api-tipos';
 import {
   PresionArterialDirective,
   SoloDecimalDirective,
@@ -158,9 +161,11 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
     f.idDepartamentoDomicilio = this.texto(fila.IdDepartamentoDomicilio);
     f.idProvinciaDomicilio = this.texto(fila.IdProvinciaDomicilio);
     f.idDistritoDomicilio =
-      this.texto(fila.idDistritoDomicilio) || this.texto(fila.IdDistritoDomicilio);
+      this.texto(fila.idDistritoDomicilio) ||
+      this.texto(fila.IdDistritoDomicilio);
     f.idCentroPobladoDomicilio =
-      this.texto(fila.idComunidadDomicilio) || this.texto(fila.IdComunidadDomicilio);
+      this.texto(fila.idComunidadDomicilio) ||
+      this.texto(fila.IdComunidadDomicilio);
     f.direccionDomicilio = this.texto(fila.Direccion);
     f.esAccidenteTransito = this.texto(fila.EsAccidenteTransito) === '1';
     f.idFuenteFinanciamiento = this.texto(fila.IdFuenteFinanciamiento);
@@ -176,15 +181,12 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
     f.escalaDolor = this.texto(fila.escala_dolor);
     f.escalaGlasgow = this.texto(fila.escala_glasgow);
     f.tiempoEvolucionCantidad = this.texto(fila.tiempo_evolucion_cantidad);
-    f.tiempoEvolucionCantidadUnidad = this.texto(
-      fila.tiempo_evolucion_unidad,
-    );
+    f.tiempoEvolucionCantidadUnidad = this.texto(fila.tiempo_evolucion_unidad);
     f.idServicio = this.texto(fila.IdServicio);
     f.idTipoPrioridad = this.texto(fila.IdTipoPrioridad);
     f.idCausaExternaMorbilidad = this.texto(fila.IdCausaExternaMorbilidad);
     f.fechaUltimaRegla =
-      this.texto(fila.FUR).slice(0, 10) ||
-      this.texto(fila.fur).slice(0, 10);
+      this.texto(fila.FUR).slice(0, 10) || this.texto(fila.fur).slice(0, 10);
     f.esGestante = this.texto(fila.EsGestante) === '1';
     f.pacienteNn = false;
   }
@@ -371,7 +373,7 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
 
   async registrar(): Promise<void> {
     await this.srv.guardarYContinuar(
-      this.modoEdicion ? this.idTriajeEditar ?? undefined : undefined,
+      this.modoEdicion ? (this.idTriajeEditar ?? undefined) : undefined,
     );
     this.cdr.detectChanges();
     if (!this.srv.mensajeError) {

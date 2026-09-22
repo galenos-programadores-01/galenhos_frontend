@@ -165,7 +165,8 @@ export class ListaEsperaQxApiService {
     idEspecialidad?: number,
   ): Promise<ListaEsperaQxReporteItem[]> {
     const query = new URLSearchParams({ fecha, fechaFin });
-    if (idEspecialidad) query.append('idEspecialidad', String(idEspecialidad));
+    if (idEspecialidad !== undefined)
+      query.append('idEspecialidad', String(idEspecialidad));
     return this.apiClient.request<ListaEsperaQxReporteItem[]>(
       `/api/v1/lista-espera-qx/reporte?${query.toString()}`,
     );

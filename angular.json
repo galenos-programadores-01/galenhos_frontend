@@ -55,10 +55,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "allowedHosts": [
-              "galenpro.hnseb.gob.pe"
-            ]
-          },          
+            "allowedHosts": ["galenpro.hnseb.gob.pe"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "front_galenos:build:production"

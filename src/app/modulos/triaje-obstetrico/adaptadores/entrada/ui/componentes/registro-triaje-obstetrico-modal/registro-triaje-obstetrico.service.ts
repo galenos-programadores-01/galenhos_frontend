@@ -293,9 +293,7 @@ export class RegistroTriajeObstetricoService {
       if (!paciente) {
         // SD solo se busca en la base de datos; RENIEC además únicamente
         // soporta DNI.
-        const reniecOk = esSinDocumento
-          ? false
-          : await this.consultarReniec();
+        const reniecOk = esSinDocumento ? false : await this.consultarReniec();
         if (reniecOk) {
           this.pacienteEncontrado = true;
           this.pasoActual = 2;

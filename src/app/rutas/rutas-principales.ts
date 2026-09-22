@@ -103,6 +103,14 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Lista de Espera QX' },
       },
       {
+        path: 'BandejaRef',
+        loadComponent: () =>
+          import(
+            '../modulos/bandeja-ref/adaptadores/entrada/ui/paginas/bandeja-ref.component'
+          ).then((m) => m.BandejaRefComponent),
+        data: { title: 'Bandeja de Referencias' },
+      },
+      {
         path: '**',
         component: PaginaConstruccionComponent,
         data: { title: 'Módulo en desarrollo' },

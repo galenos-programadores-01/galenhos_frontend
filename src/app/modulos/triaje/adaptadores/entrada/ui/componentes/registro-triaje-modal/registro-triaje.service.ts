@@ -71,7 +71,7 @@ export class RegistroTriajeService {
     { value: '1', label: 'I. Emerg. o Gravedad', color: '#3b82f6' },
     { value: '2', label: 'II. Urgencia Mayor', color: '#22c55e' },
     { value: '3', label: 'III. Urgencia Menor', color: '#eab308' },
-   // { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
+    // { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
     { value: PRIORIDAD_CADAVER, label: 'Llegó Cadáver', color: '#ef4444' },
   ];
 
@@ -257,9 +257,7 @@ export class RegistroTriajeService {
       if (!paciente) {
         // SD solo se busca en la base de datos; RENIEC además únicamente
         // soporta DNI.
-        const reniecOk = esSinDocumento
-          ? false
-          : await this.consultarReniec();
+        const reniecOk = esSinDocumento ? false : await this.consultarReniec();
         if (reniecOk) {
           this.pacienteEncontrado = true;
           this.pasoActual = 2;

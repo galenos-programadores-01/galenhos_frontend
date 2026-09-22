@@ -1,0 +1,187 @@
+<div class="flex flex-col gap-6">
+
+  <app-filtros-global titulo="Bandeja de Referencias - Consulta Externa">
+    <div acciones>
+      <span class="text-xs text-slate-500 font-medium">
+        Las referencias se listan según el rango de fechas de ingreso.
+      </span>
+    </div>
+
+    <buscador-rango-fechas
+      placeholder="Buscar por nombre o n.º de cuenta..."
+      [cargando]="cargando"
+      (buscar)="buscar($event)"
+    />
+
+    @if (error) {
+      <div class="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg">
+        {{ error }}
+      </div>
+    }
+  </app-filtros-global>
+
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <app-tabla [columnas]="columnasTabla" [datos]="referencias" [cargando]="cargando" mensajeCargando="Buscando referencias..."
+                 [mostrarFiltroRequerido]="!buscado" mensajeFiltroRequerido="Indique las fechas y presione Buscar para ver las referencias."
+                 mensajeVacio="No se encontraron referencias para los filtros indicados.">
+
+        <ng-template appColumnaTemplate="pacienteCustom" let-p>
+          <span style="font-weight: 600; color: #07153a;">{{ texto(p, ['Paciente', 'paciente']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="docCustom" let-p>
+          <span style="color: #54617f;">{{ texto(p, ['NroDocumento', 'nroDocumento']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="cuentaCustom" let-p>
+          <span style="color: #54617f;">{{ texto(p, ['idcuentaatencion', 'IdCuentaAtencion']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="fechaCustom" let-p>
+          <span style="color: #54617f;">{{ fechaTexto(p, ['Fecha', 'fecha']) }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="servicioCustom" let-p>
+          <span style="color: #54617f;">{{ texto(p, ['Servicio', 'servicio']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="establecimientoCustom" let-p>
+          <span style="color: #54617f;">{{ texto(p, ['Establecimiento', 'establecimiento']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="medicoCustom" let-p>
+          <span style="color: #54617f;">{{ texto(p, ['Medico', 'medico']) || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="estadoCustom" let-p>
+          <span [style]="estiloEstado(texto(p, ['Estado', 'Estado']))">
+            {{ texto(p, ['Estado', 'Estado']) || '—' }}
+          </span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="accionesCustom" let-p>
+          <button type="button" (click)="enviarReferencia(p)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#263c7a] hover:bg-[#1c2f63] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer">
+            <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Enviar
+          </button>
+        </ng-template>
+
+      </app-tabla>
+    </div>
+  </div>
+
+  @if (modalAbierto) {
+    <ventana-modal titulo="Enviar Referencia"
+                   [subtitulo]="'Atención N.º ' + idAtencionModal"
+                   [ancho]="560"
+                   (alCerrar)="cerrarModal()">
+      @if (cargandoDetalle) {
+        <div class="py-10 text-center text-slate-400 text-sm flex items-center justify-center gap-2">
+          <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+          Consultando datos de la referencia...
+        </div>
+      } @else if (datosReferencia) {
+        <div class="space-y-4">
+          <div>
+            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Establecimiento</span>
+            <div class="relative">
+              <input
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                [(ngModel)]="buscarEstablecimiento"
+                (input)="onBuscarEstablecimiento()"
+                (blur)="cerrarSugerencias()"
+                class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                placeholder="Escriba el establecimiento de destino..."
+              >
+              <div class="relative mt-1.5 text-xs text-slate-500 px-1">
+                @if (establecimientoSeleccionado) {
+                  <span class="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
+                    <svg aria-hidden="true" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Después: {{ establecimientoSeleccionado.nombreLargo }}
+                  </span>
+                }
+              </div>
+              @if (buscandoEstablecimiento) {
+                <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                  <svg aria-hidden="true" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                  </svg>
+                  Buscando establecimientos...
+                </div>
+              } @else if (establecimientosSugeridos.length > 0) {
+                <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto">
+                  <ul class="py-1 divide-y divide-slate-100">
+                    @for (est of establecimientosSugeridos; track est.idEstablecimiento) {
+                      <li
+                        class="px-3 py-2 hover:bg-[#263c7a]/5 cursor-pointer transition-colors"
+                        (mousedown)="seleccionarEstablecimiento(est); $event.preventDefault()"
+                      >
+                        <span class="text-xs text-slate-700 font-medium">{{ est.nombreLargo }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Servicio</span>
+            <div class="relative">
+              @if (cargandoServicios) {
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-500 text-sm flex items-center gap-2">
+                  <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                  </svg>
+                  Cargando servicios del establecimiento...
+                </div>
+              } @else if (errorServicios) {
+                <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-red-700 text-sm font-medium">
+                  {{ errorServicios }}
+                </div>
+              } @else if (listaServicios.length > 0) {
+                <select
+                  [(ngModel)]="servicioSeleccionado"
+                  class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium bg-white focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] outline-none transition-all"
+                >
+                  <option value="">Seleccione un servicio...</option>
+                  @for (ups of listaServicios; track ups.codUps) {
+                    <option [value]="ups.codUps">{{ ups.descripcion }}</option>
+                  }
+                </select>
+              } @else {
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-500 text-sm">
+                  Seleccione el establecimiento para listar sus servicios.
+                </div>
+              }
+            </div>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Especialidad</span>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium">
+              {{ texto(datosReferencia, ['DestinoDescripcionEspecialidad', 'destinodescripcionespecialidad']) || '—' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
+          <button type="button" (click)="cerrarModal()"
+                  class="px-4 py-2 bg-[#263c7a] hover:bg-[#1c2f63] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer">
+            Cerrar
+          </button>
+        </div>
+      }
+    </ventana-modal>
+  }
+
+</div>

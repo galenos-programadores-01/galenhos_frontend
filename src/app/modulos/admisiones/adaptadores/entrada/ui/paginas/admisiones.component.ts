@@ -97,13 +97,15 @@ function valorFila(
   if (!item) return '';
   const objetivo = nombre.toLowerCase();
   const claves = Object.keys(item);
-  let clave =
+  const clave =
     claves.find((k) => k.toLowerCase() === objetivo) ??
     claves.find((k) => k.toLowerCase().replace(/_/g, '') === objetivo);
   if (!clave) return '';
   const v = item[clave];
   if (v === undefined || v === null || v === '') return '';
-  return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'
+  return typeof v === 'string' ||
+    typeof v === 'number' ||
+    typeof v === 'boolean'
     ? String(v)
     : '';
 }
