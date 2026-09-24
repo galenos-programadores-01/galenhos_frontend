@@ -102,16 +102,6 @@
                 class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
                 placeholder="Escriba el establecimiento de destino..."
               >
-              <div class="relative mt-1.5 text-xs text-slate-500 px-1">
-                @if (establecimientoSeleccionado) {
-                  <span class="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
-                    <svg aria-hidden="true" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Después: {{ establecimientoSeleccionado.nombreLargo }}
-                  </span>
-                }
-              </div>
               @if (buscandoEstablecimiento) {
                 <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                   <svg aria-hidden="true" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -168,17 +158,73 @@
           </div>
           <div>
             <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Especialidad</span>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium">
-              {{ texto(datosReferencia, ['DestinoDescripcionEspecialidad', 'destinodescripcionespecialidad']) || '—' }}
+            <div class="relative">
+              @if (cargandoEspecialidades) {
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-500 text-sm flex items-center gap-2">
+                  <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                  </svg>
+                  Cargando especialidades...
+                </div>
+              } @else if (errorEspecialidades) {
+                <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-red-700 text-sm font-medium">
+                  {{ errorEspecialidades }}
+                </div>
+              } @else if (especialidades.length > 0) {
+                <select
+                  [(ngModel)]="especialidadSeleccionada"
+                  class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-slate-800 text-sm font-medium bg-white focus:ring-2 focus:ring-[#263c7a]/25 focus:border-[#263c7a] outline-none transition-all"
+                >
+                  <option value="">Seleccione una especialidad...</option>
+                  @for (esp of especialidades; track esp.codigo_especialidad) {
+                    <option [value]="esp.codigo_especialidad">{{ esp.especialidad }}</option>
+                  }
+                </select>
+              } @else {
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-500 text-sm">
+                  No se pudieron enumerar las especialidades.
+                </div>
+              }
             </div>
           </div>
         </div>
 
-        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
-          <button type="button" (click)="cerrarModal()"
-                  class="px-4 py-2 bg-[#263c7a] hover:bg-[#1c2f63] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer">
-            Cerrar
-          </button>
+        <div class="space-y-3 mt-6 pt-4 border-t border-slate-100">
+          @if (errorEnvio) {
+            <div class="bg-red-50 border border-red-200 text-red-700 text-sm font-medium px-4 py-3 rounded-lg">
+              {{ errorEnvio }}
+            </div>
+          }
+          @if (exitoEnvio) {
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium px-4 py-3 rounded-lg flex items-center gap-2">
+              <svg aria-hidden="true" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              {{ exitoEnvio }}
+            </div>
+          }
+          <div class="flex justify-end gap-2">
+            <button type="button" (click)="cerrarModal()"
+                    class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-lg transition-colors cursor-pointer">
+              Cerrar
+            </button>
+            <button type="button" (click)="enviarAhora()" [disabled]="enviando"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-[#263c7a] hover:bg-[#1c2f63] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer">
+              @if (enviando) {
+                <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                Enviando...
+              } @else {
+                <svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Enviar referencia
+              }
+            </button>
+          </div>
         </div>
       }
     </ventana-modal>

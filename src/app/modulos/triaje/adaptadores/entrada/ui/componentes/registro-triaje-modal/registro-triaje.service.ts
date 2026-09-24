@@ -491,6 +491,10 @@ export class RegistroTriajeService {
 
         try {
           await this.sisApi.gestionarAfiliacion({
+            idSiasis: sisResponse.idNumReg
+              ? Number(sisResponse.idNumReg)
+              : undefined,
+            codigo: sisResponse.tabla || undefined,
             documentoTipo:
               sisResponse.tipoDocumento || this.formulario.idDocIdentidad,
             documentoNumero:
