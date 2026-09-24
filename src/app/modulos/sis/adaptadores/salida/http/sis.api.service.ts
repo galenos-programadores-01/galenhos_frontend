@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { AuditoriaApiService } from '../../../../../compartido/api/auditoria.api.service';
 import { ApiClientService } from '../../../../../compartido/api-client/api-client.service';
 import type { IFilaBackend } from '../../../../../compartido/tipos/api-tipos';
 
@@ -75,6 +76,7 @@ export interface SisAfiliacionPayload {
 })
 export class SisApiService {
   private apiClient = inject(ApiClientService);
+  private auditoriaApiService = inject(AuditoriaApiService);
 
   consultarAfiliado(
     nrodoc: string,
@@ -95,9 +97,38 @@ export class SisApiService {
       query.append('strNroContrato', afiliacion.nroContrato);
     }
     const docSegment = nrodoc.trim() || '0';
-    return this.apiClient.request<SisAfiliado>(
-      `/api/v1/sis/afiliado/${encodeURIComponent(docSegment)}?${query.toString()}`,
-    );
+    return this.apiClient
+      .request<SisAfiliado>(
+        `/api/v1/sis/afiliado/${encodeURIComponent(docSegment)}?${query.toString()}`,
+      )
+      .then((respuesta) => {
+        this.registrarAuditoriaSis(respuesta);
+        return respuesta;
+      });
+  }
+
+  private registrarAuditoriaSis(respuesta: SisAfiliado): void {
+    if (!respuesta.nroDocumento) {
+      return;
+    }
+    const observaciones = [
+      respuesta.nroDocumento,
+      respuesta.nombres,
+      respuesta.apePaterno,
+      respuesta.apeMaterno,
+    ]
+      .filter((parte) => !!parte)
+      .join(' ');
+    this.auditoriaApiService
+      .registrarAuditoria({
+        accion: 'A',
+        idRegistro: 0,
+        tabla: 'SIS',
+        idListItem: 999,
+        nombrePC: 'galenpro',
+        observaciones,
+      })
+      .catch(() => undefined);
   }
 
   gestionarAfiliacion(
