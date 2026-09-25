@@ -215,11 +215,11 @@ export class TriajeApiService {
     query.append('fecha', params.fecha);
     if (params.filtro) query.append('filtro', params.filtro);
     if (params.nroCta) query.append('nroCta', String(params.nroCta));
-    if (params.idDepartamento)
+    if (params.idDepartamento !== undefined)
       query.append('idDepartamento', String(params.idDepartamento));
-    if (params.IdEspecialidad)
+    if (params.IdEspecialidad !== undefined)
       query.append('IdEspecialidad', String(params.IdEspecialidad));
-    if (params.idServicio)
+    if (params.idServicio !== undefined)
       query.append('idServicio', String(params.idServicio));
     if (params.idTipoServicio)
       query.append('idTipoServicio', String(params.idTipoServicio));

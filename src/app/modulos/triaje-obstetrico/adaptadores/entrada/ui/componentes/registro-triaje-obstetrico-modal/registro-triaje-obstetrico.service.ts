@@ -457,25 +457,12 @@ export class RegistroTriajeObstetricoService {
         this.formulario.idDocIdentidad,
       );
     } catch (error: unknown) {
+      // No se hace fallback a /pacientes/buscar: si no existe un paciente
+      // con ese tipo y número de documento, se pasa a RENIEC y luego SIS.
       if (error instanceof ApiRequestError && error.status === 404) {
-        return await this.buscarPorDocumentoSinTipo();
+        return null;
       }
       throw error;
-    }
-  }
-
-  private async buscarPorDocumentoSinTipo(): Promise<unknown> {
-    try {
-      const query = new URLSearchParams();
-      query.append('documento', this.formulario.nroDocumento);
-      query.append('hc', '');
-      query.append('paterno', '');
-      query.append('materno', '');
-      query.append('nombres', '');
-      const resultados = await this.pacientesApi.buscar(query.toString());
-      return resultados.length > 0 ? resultados[0] : null;
-    } catch {
-      return null;
     }
   }
 

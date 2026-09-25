@@ -145,7 +145,6 @@ export class AdmisionesComponent implements OnInit {
   IdEspecialidad = '0';
   idServicio = '0';
 
-  departamentos: ICatalogoNombre[] = [];
   especialidades: ICatalogoNombre[] = [];
   servicios: ICatalogoNombre[] = [];
   tiposDocumentos: ICatalogoDescripcion[] = [];
@@ -208,13 +207,11 @@ export class AdmisionesComponent implements OnInit {
 
   async cargarCatalogos() {
     try {
-      const [d, e, s, t] = await Promise.all([
-        this.maestrosApi.getDepartamentos(),
+      const [e, s, t] = await Promise.all([
         this.maestrosApi.getEspecialidades(),
         this.maestrosApi.getServicios(2),
         this.maestrosApi.getTiposDocumentos(),
       ]);
-      if (Array.isArray(d)) this.departamentos = d;
       if (Array.isArray(e)) this.especialidades = e;
       if (Array.isArray(s)) this.servicios = s;
       if (Array.isArray(t)) this.tiposDocumentos = t;
@@ -231,12 +228,9 @@ export class AdmisionesComponent implements OnInit {
       const items = await this.triajeApi.listarPendientesAdmision({
         fecha: this.fecha,
         filtro: this.filtro || undefined,
-        idDepartamento:
-          this.idDepartamento !== '0' ? Number(this.idDepartamento) : undefined,
-        IdEspecialidad:
-          this.IdEspecialidad !== '0' ? Number(this.IdEspecialidad) : undefined,
-        idServicio:
-          this.idServicio !== '0' ? Number(this.idServicio) : undefined,
+        idDepartamento: Number(this.idDepartamento) || 0,
+        IdEspecialidad: Number(this.IdEspecialidad) || 0,
+        idServicio: Number(this.idServicio) || 0,
       });
       this.items = Array.isArray(items) ? items : [];
       this.totalRegistros = this.items.length;
