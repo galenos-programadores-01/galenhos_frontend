@@ -173,6 +173,22 @@
         @if (documento(modalAdmision)) {
           <div style="font-size: 12.5px; color: #7a86a1; margin-top: 4px;">{{ tipoDocumento(modalAdmision) }}: {{ documento(modalAdmision) }}</div>
         }
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 9h1M9 13h1M14 9h1M14 13h1" /></svg>
+            Servicio: {{ servicio(modalAdmision) || '—' }}
+          </span>
+          @if (prioridadTexto(modalAdmision)) {
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+              Prioridad: {{ prioridadTexto(modalAdmision) }}
+            </span>
+          }
+          @if (tipoIngreso(modalAdmision)) {
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+              Ingreso: {{ tipoIngreso(modalAdmision) }}
+            </span>
+          }
+        </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
