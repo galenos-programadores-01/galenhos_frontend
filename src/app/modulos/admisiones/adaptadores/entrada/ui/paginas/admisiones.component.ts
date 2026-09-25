@@ -21,11 +21,17 @@ import type {
 } from '../../../../../../compartido/tipos/api-tipos';
 import { BotonesFiltroComponent } from '../../../../../../compartido/ui/botones-filtro/botones-filtro';
 import { FiltrosGlobal } from '../../../../../../compartido/ui/filtros-global/filtros-global';
+import { ModalGlobalService } from '../../../../../../compartido/ui/modal-global/modal-global.service';
 import { PaginacionComponent } from '../../../../../../compartido/ui/paginacion/paginacion';
 import { SelectGlobalComponent } from '../../../../../../compartido/ui/select-global/select-global';
 import { ErrorMensajeComponent } from '../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { AuthService } from '../../../../../auth/aplicacion/auth.service';
+import {
+  type SisAfiliacionPayload,
+  type SisAfiliado,
+  SisApiService,
+} from '../../../../../sis/adaptadores/salida/http/sis.api.service';
 import {
   type CrearAdmisionPayload,
   TriajeApiService,
@@ -133,6 +139,8 @@ function valorFila(
 export class AdmisionesComponent implements OnInit {
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly triajeApi = inject(TriajeApiService);
+  private readonly sisApi = inject(SisApiService);
+  private readonly modalGlobal = inject(ModalGlobalService);
   private readonly cdr = inject(ChangeDetectorRef);
   public readonly authService = inject(AuthService);
 
@@ -645,6 +653,198 @@ export class AdmisionesComponent implements OnInit {
       campoNum(item, ['IdFuenteFinanciamiento', 'idFuenteFinanciamiento']) ===
         3 || this.iafa(item).toUpperCase().includes('SIS')
     );
+  }
+
+  // Paciente sin admisión (sin cuenta de atención) y sin afiliación SIS
+  // registrada: candidato a consultar al SIS por documento.
+  esParticularPorAdmisionar(item: IFilaBackend): boolean {
+    return this.idCuentaAtencion(item) === 0 && !this.esSis(item);
+  }
+
+  async consultarSisPaciente(item: IFilaBackend) {
+    const documento = this.documento(item) || '0';
+    if (documento === '0') {
+      this.error =
+        'El paciente no tiene número de documento para consultar al SIS.';
+      return;
+    }
+
+    const confirmar = await this.modalGlobal.confirmar(
+      `¿Desea consultar al SIS al paciente ${this.nombrePaciente(item)} (` +
+        `${this.tipoDocumento(item)} ${documento})? ` +
+        'La consulta quedará registrada en la auditoría y, si tiene ' +
+        'afiliación SIS activa, se grabará la afiliación del paciente.',
+      'Consultar al SIS',
+      'Sí, consultar',
+    );
+    if (!confirmar) return;
+
+    this.error = '';
+    try {
+      const sis = await this.sisApi.consultarAfiliado(
+        documento,
+        this.tipoDocSis(item),
+      );
+      if (sis && sis.estado === 'ACTIVO') {
+        const mensajeRegistro = await this.registrarAfiliacionSis(sis, item);
+        const iafa = await this.actualizarIafaTriaje(item);
+        this.modalGlobal.info(
+          `El paciente tiene afiliación SIS activa (${sis.descTipoSeguro || ''}). ` +
+            mensajeRegistro +
+            ' ' +
+            iafa.mensaje,
+          'Resultado SIS',
+        );
+        if (iafa.ok) await this.handleBuscar();
+      } else {
+        this.modalGlobal.info(
+          `No se encontró afiliación SIS activa${
+            sis?.estado ? ` (estado: ${sis.estado})` : ''
+          }.`,
+          'Resultado SIS',
+        );
+      }
+    } catch (error: unknown) {
+      this.modalGlobal.error(
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo consultar al SIS.',
+        'Error al consultar SIS',
+      );
+    }
+  }
+
+  // Graba la afiliación del paciente invocando la API que llama al SP
+  // usp_go_webSisFiliacionesGestionar (POST /api/v1/sis/filiaciones).
+  private async registrarAfiliacionSis(
+    sis: SisAfiliado,
+    item: IFilaBackend,
+  ): Promise<string> {
+    const payload = this.afiliacionDesdeConsulta(sis, item);
+    try {
+      await this.sisApi.gestionarAfiliacion(payload);
+      return 'La afiliación SIS del paciente fue registrada correctamente.';
+    } catch (error: unknown) {
+      const detalle =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo registrar la afiliación SIS del paciente.';
+      return detalle;
+    }
+  }
+
+  // Actualiza la IAFA del triaje (fuente de financiamiento = SIS) invocando
+  // la API que llama al SP usp_go_Triaje_EmergeciaActualizarIAFA, enviando
+  // como parámetro el IdTriaje que devuelve el listado de triajes sin admisión.
+  private async actualizarIafaTriaje(
+    item: IFilaBackend,
+  ): Promise<{ ok: boolean; mensaje: string }> {
+    const idTriaje = campoNum(item, ['IdTriaje', 'idTriaje', 'IDTriaje']);
+    if (!idTriaje) {
+      return {
+        ok: false,
+        mensaje: 'No se pudo actualizar la IAFA por falta de IdTriaje.',
+      };
+    }
+    try {
+      await this.triajeApi.actualizarIafa(idTriaje);
+      return { ok: true, mensaje: 'La IAFA del triaje fue actualizada a SIS.' };
+    } catch (error: unknown) {
+      return error instanceof ApiRequestError
+        ? {
+            ok: false,
+            mensaje: `No se pudo actualizar la IAFA: ${error.message}`,
+          }
+        : { ok: false, mensaje: 'No se pudo actualizar la IAFA.' };
+    }
+  }
+
+  private afiliacionDesdeConsulta(
+    sis: SisAfiliado,
+    item: IFilaBackend,
+  ): SisAfiliacionPayload {
+    const payload: SisAfiliacionPayload = {
+      // idSiasis ← IdNumReg y codigo ← Tabla, igual que en el registro de triaje.
+      idSiasis: sis.idNumReg ? Number(sis.idNumReg) : undefined,
+      codigo: sis.tabla || undefined,
+      documentoTipo: sis.tipoDocumento || String(this.tipoDocSis(item)),
+      documentoNumero: sis.nroDocumento || this.documento(item) || '',
+    };
+
+    const nombres = (sis.nombres || '').trim().split(/\s+/);
+    const [pNombre = '', ...otrosNombres] = nombres;
+    if (pNombre) payload.pNombre = pNombre;
+    const oNombres = otrosNombres.join(' ');
+    if (oNombres) payload.oNombres = oNombres;
+    if (sis.apePaterno?.trim()) payload.paterno = sis.apePaterno.trim();
+    if (sis.apeMaterno?.trim()) payload.materno = sis.apeMaterno.trim();
+    if (sis.genero?.trim()) payload.genero = sis.genero.trim();
+
+    const fNacimiento = this.aFechaIsoSis(sis.fecNacimiento);
+    if (fNacimiento) payload.fNacimiento = fNacimiento;
+    const fAfiliacion = this.aFechaIsoSis(sis.fecAfiliacion);
+    if (fAfiliacion) payload.afiliacionFecha = fAfiliacion;
+
+    if (sis.disa) payload.afiliacionDisa = sis.disa;
+    if (sis.tipoFormato) payload.afiliacionTipoFormato = sis.tipoFormato;
+    if (sis.nroContrato) payload.afiliacionNroFormato = sis.nroContrato;
+    if (sis.eess) payload.codigoEstablAdscripcion = sis.eess;
+    if (sis.descEESS) payload.descEESS = sis.descEESS;
+    if (sis.descEessUbigeo) payload.descEessUbigeo = sis.descEessUbigeo;
+    if (sis.regimen) payload.regimen = sis.regimen;
+    if (sis.tipoSeguro) payload.tipoSeguro = sis.tipoSeguro;
+    if (sis.descTipoSeguro) payload.descTipoSeguro = sis.descTipoSeguro;
+    if (sis.contrato) payload.contrato = sis.contrato;
+    if (sis.idPlan) payload.idPlan = sis.idPlan;
+    if (sis.idGrupoPoblacional)
+      payload.idGrupoPoblacional = sis.idGrupoPoblacional;
+    if (sis.msgConfidencial) payload.msgConfidencial = sis.msgConfidencial;
+    payload.estado = sis.estado || 'ACTIVO';
+
+    const idEmpleado = this.authService.getIdEmpleado();
+    if (idEmpleado > 0) payload.idUsuarioAuditoria = idEmpleado;
+
+    return payload;
+  }
+
+  private aFechaIsoSis(valor?: string): string | undefined {
+    const texto = (valor || '').trim();
+    if (!texto) return undefined;
+    const yyyymmdd = texto.match(/^(\d{4})(\d{2})(\d{2})/);
+    if (yyyymmdd) {
+      return `${yyyymmdd[1]}-${yyyymmdd[2]}-${yyyymmdd[3]}T00:00:00Z`;
+    }
+    const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}T00:00:00Z`;
+    return undefined;
+  }
+
+  private tipoDocSis(item: IFilaBackend): number {
+    // Fuente primaria: IdDocIdentidad (columna que devuelve el listado de
+    // triajes; Id = 1 equivale a DNI, igual que en el registro de triaje).
+    const idDoc = (
+      valorFila(item, 'IdDocIdentidad') ||
+      valorFila(item, 'idDocIdentidad') ||
+      ''
+    )
+      .toString()
+      .trim()
+      .replace(/^0+/, '');
+    if (idDoc !== '') return idDoc === '1' ? 1 : 3;
+
+    // Respaldo: descripción ya mapeada (tipoDocumento()), porque el código
+    // crudo (TipoDoc) no siempre llega como '1' para DNI.
+    const descripcion = this.tipoDocumento(item).trim().toUpperCase();
+    const codigo = (
+      valorFila(item, 'TipoDoc') ||
+      valorFila(item, 'TipoDocumento') ||
+      valorFila(item, 'IdTipoDocumento') ||
+      ''
+    )
+      .toString()
+      .trim()
+      .replace(/^0+/, '');
+    return descripcion === 'DNI' || codigo === '1' ? 1 : 3;
   }
 
   formatFechaTriaje(item: IFilaBackend): string {

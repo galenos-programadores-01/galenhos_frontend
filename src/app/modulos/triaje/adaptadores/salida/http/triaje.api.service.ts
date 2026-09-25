@@ -168,6 +168,13 @@ export class TriajeApiService {
     });
   }
 
+  actualizarIafa(idTriaje: number): Promise<{ ok: boolean }> {
+    return this.apiClient.request<{ ok: boolean }>(
+      `/api/v1/triaje/${idTriaje}/iafa`,
+      { method: 'PUT' },
+    );
+  }
+
   listarCausasExternasMorbilidad(): Promise<IFilaBackend[]> {
     return this.apiClient.request<IFilaBackend[]>(
       '/api/v1/triaje/causas-externas-morbilidad',

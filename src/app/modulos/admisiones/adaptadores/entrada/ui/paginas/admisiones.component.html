@@ -127,11 +127,21 @@
               }
             </div>
           } @else {
-            <button type="button" (click)="abrirModalAdmision(p)"
-                    style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #263c7a; color: #fff; border: none; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              Para admisionar
-            </button>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              @if (esParticularPorAdmisionar(p)) {
+                <button type="button" (click)="consultarSisPaciente(p)"
+                        title="Consultar al SIS por tipo y número de documento"
+                        style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #fff; color: #075985; border: 1px solid #075985; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" /></svg>
+                  Consultar SIS
+                </button>
+              }
+              <button type="button" (click)="abrirModalAdmision(p)"
+                      style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #263c7a; color: #fff; border: none; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Para admisionar
+              </button>
+            </div>
           }
         </ng-template>
 
