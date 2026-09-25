@@ -72,7 +72,7 @@
     </div>
 
     <div style="overflow-x: auto;">
-      <app-tabla [columnas]="columnasTabla" [datos]="items" [cargando]="cargando" mensajeCargando="Consultando..."
+      <app-tabla [columnas]="columnasTabla" [datos]="itemsPagina" [cargando]="cargando" mensajeCargando="Consultando..."
                  [mostrarFiltroRequerido]="!buscar" mensajeFiltroRequerido="Realice una búsqueda para ver resultados."
                  mensajeVacio="No se encontraron pacientes para los filtros aplicados.">
 
@@ -152,6 +152,23 @@
         </ng-template>
 
       </app-tabla>
+
+      @if (totalRegistros > 0) {
+        <div
+          class="px-6 py-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 bg-white"
+        >
+          <span class="text-sm font-medium text-slate-600">
+            Mostrando {{ itemsPagina.length }} de {{ totalRegistros }}
+            registros
+          </span>
+          <app-paginacion
+            [page]="paginaActual"
+            [totalPages]="totalPaginas"
+            [totalItems]="totalRegistros"
+            (pageChange)="cambiarPagina($event)"
+          />
+        </div>
+      }
     </div>
   </div>
 

@@ -17,6 +17,7 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   type RegistroTriajePayload,
@@ -111,6 +112,7 @@ const SI_NO = [
     FirmaMasivaModal,
     TablaComponent,
     ColumnaTemplateDirective,
+    PaginacionComponent,
   ],
   templateUrl: './triaje.component.html',
 })
@@ -131,6 +133,11 @@ export class TriajeComponent implements OnInit {
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
+
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
 
   tablero: {
     Medico: string;
@@ -204,9 +211,16 @@ export class TriajeComponent implements OnInit {
       const items = await this.triajeApi.listar(
         this.fechaInicio,
         this.fechaFin,
+        this.filtro,
         derivado,
       );
       this.pacientes = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.pacientes.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
       this.cargarTablero();
     } catch (error: unknown) {
       this.error =
@@ -217,6 +231,17 @@ export class TriajeComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  get pacientesPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.pacientes.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
   }
 
   async cargarTablero() {
@@ -279,7 +304,7 @@ export class TriajeComponent implements OnInit {
   }
 
   seleccionarTodosVisibles() {
-    for (const p of this.pacientes) {
+    for (const p of this.pacientesPagina) {
       const id = this.idTriaje(p);
       if (id) this.seleccionFirma.add(id);
     }

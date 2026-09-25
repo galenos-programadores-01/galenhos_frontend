@@ -177,12 +177,14 @@ export class TriajeApiService {
   listar(
     fini: string,
     ffin: string,
+    filtro = '',
     derivadoAServicio = '-100',
     idEmpleado: number = this.authService.getIdEmpleado(),
   ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams({
       fini,
       ffin,
+      filtro,
       derivadoAServicio,
       idEmpleado: String(idEmpleado),
     });

@@ -14,7 +14,6 @@ import {
 } from '../../../../../../compartido/ui/buscador-rango-fechas/buscador-rango-fechas';
 import { FiltrosGlobal } from '../../../../../../compartido/ui/filtros-global/filtros-global';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
-import { AuthService } from '../../../../../../modulos/auth/aplicacion/auth.service';
 import {
   BandejaRefApiService,
   type BandejaReferenciaParams,
@@ -60,7 +59,6 @@ function campo(
 })
 export class BandejaRefComponent {
   private readonly apiService = inject(BandejaRefApiService);
-  private readonly authService = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   referencias: IFilaBackend[] = [];
@@ -78,6 +76,7 @@ export class BandejaRefComponent {
   enviando = false;
   errorEnvio = '';
   exitoEnvio = '';
+  temperaturaInput = '';
 
   columnasTabla: readonly ColumnaTabla[] = [
     { campo: 'pacienteCustom', cabecera: 'Paciente' },
@@ -170,6 +169,11 @@ export class BandejaRefComponent {
         campo(this.datosReferencia, ['Nombre', 'nombre']),
       );
       this.preseleccionarEspecialidad();
+      this.temperaturaInput = String(
+        campo(this.referenciaCab, ['Temperatura', 'temperatura']) ||
+          campo(this.datosReferencia, ['Temperatura', 'temperatura']) ||
+          '',
+      );
     } catch (error: unknown) {
       this.datosReferencia = null;
       this.referenciaCab = null;
@@ -430,6 +434,16 @@ export class BandejaRefComponent {
       this.errorEnvio = 'Seleccione una especialidad.';
       return;
     }
+    const temperatura = (this.temperaturaInput ?? '').trim();
+    if (!temperatura) {
+      this.errorEnvio = 'Registre la temperatura del paciente antes de enviar.';
+      return;
+    }
+    if (!/^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(temperatura)) {
+      this.errorEnvio =
+        'La temperatura debe ser numérica con decimales (ej: 39.5).';
+      return;
+    }
 
     this.errorEnvio = '';
     this.exitoEnvio = '';
@@ -482,7 +496,6 @@ export class BandejaRefComponent {
       valor.length === 9 && valor.startsWith('9') ? valor : '';
     const sinBarra = (valor: string): string => valor.replace(/\//g, '');
     const rellenar = (valor: string): string => valor.padEnd(40, '.');
-    const perfil = this.authService.userProfile();
 
     const cpt: SaveCpt = { cpt_1: '', cpt_2: '', cpt_3: '' };
     this.cpts.slice(0, 3).forEach((item, idx) => {
@@ -539,7 +552,7 @@ export class BandejaRefComponent {
         resumeanamnesis: rellenar(leer(['resumeanamnesis'])),
         resumeexfisico: rellenar(leer(['resumeexfisico'])),
         talla: leer(['Talla', 'talla']),
-        temperatura: leer(['Temperatura', 'temperatura']),
+        temperatura: (this.temperaturaInput ?? '').trim(),
       },
       cpt,
       paciente: {
@@ -605,15 +618,15 @@ export class BandejaRefComponent {
         numdoc: numdoc(leer(['numdocEst'])),
       },
       personal_registra: {
-        tipoDocumento: '1',
-        nroDocumento: perfil?.dni ?? '',
-        apellidoPaterno: perfil?.apellidoPaterno ?? '',
-        apellidoMaterno: perfil?.apellidoMaterno ?? '',
-        nombres: perfil?.nombres ?? '',
-        fechaNacimiento: '',
-        idcolegio: perfil?.colegiatura ?? '',
-        idprofesion: perfil?.especialidad ?? '',
-        sexo: '',
+        tipoDocumento: leer(['idtipodocref']),
+        nroDocumento: numdoc(leer(['numdocref'])),
+        apellidoPaterno: leer(['apelpatrefiere']),
+        apellidoMaterno: leer(['apelmatrefiere']),
+        nombres: leer(['nombperrefiere']),
+        fechaNacimiento: leer(['fechanacrefiere']),
+        idcolegio: leer(['idcolegioref']),
+        idprofesion: leer(['idprofesionref']),
+        sexo: leer(['idsexorefiere']),
       },
       responsable_referencia: {
         apelmatrefiere: leer(['apelmatrefiere']),

@@ -17,6 +17,7 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   type RegistroTriajeObstetricoPayload,
@@ -111,6 +112,7 @@ const SI_NO = [
     FirmaMasivaObstetricoModal,
     TablaComponent,
     ColumnaTemplateDirective,
+    PaginacionComponent,
   ],
   templateUrl: './triaje-obstetrico.component.html',
 })
@@ -131,6 +133,11 @@ export class TriajeObstetricoComponent implements OnInit {
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
+
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
 
   modalRegistro = false;
   reporteTriajeId: number | null = null;
@@ -192,9 +199,16 @@ export class TriajeObstetricoComponent implements OnInit {
       const items = await this.triajeApi.listar(
         this.fechaInicio,
         this.fechaFin,
+        this.filtro,
         derivado,
       );
       this.pacientes = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.pacientes.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError
@@ -204,6 +218,17 @@ export class TriajeObstetricoComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  get pacientesPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.pacientes.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
   }
 
   async cargarCatalogos() {
@@ -234,7 +259,7 @@ export class TriajeObstetricoComponent implements OnInit {
   }
 
   seleccionarTodosVisibles() {
-    for (const p of this.pacientes) {
+    for (const p of this.pacientesPagina) {
       const id = this.idTriaje(p);
       if (id) this.seleccionFirma.add(id);
     }

@@ -21,6 +21,7 @@ import type {
 } from '../../../../../../compartido/tipos/api-tipos';
 import { BotonesFiltroComponent } from '../../../../../../compartido/ui/botones-filtro/botones-filtro';
 import { FiltrosGlobal } from '../../../../../../compartido/ui/filtros-global/filtros-global';
+import { PaginacionComponent } from '../../../../../../compartido/ui/paginacion/paginacion';
 import { SelectGlobalComponent } from '../../../../../../compartido/ui/select-global/select-global';
 import { ErrorMensajeComponent } from '../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
@@ -125,6 +126,7 @@ function valorFila(
     FiltrosGlobal,
     SelectGlobalComponent,
     BotonesFiltroComponent,
+    PaginacionComponent,
   ],
   templateUrl: './admisiones.component.html',
 })
@@ -152,6 +154,11 @@ export class AdmisionesComponent implements OnInit {
   cargando = false;
   error = '';
   buscar = false;
+
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
 
   modalAdmision: IFilaBackend | null = null;
   formAdmision: {
@@ -232,6 +239,12 @@ export class AdmisionesComponent implements OnInit {
           this.idServicio !== '0' ? Number(this.idServicio) : undefined,
       });
       this.items = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.items.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
       this.buscar = true;
     } catch (err: unknown) {
       this.error =
@@ -242,6 +255,17 @@ export class AdmisionesComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  get itemsPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.items.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
   }
 
   abrirModalAdmision(item: IFilaBackend) {

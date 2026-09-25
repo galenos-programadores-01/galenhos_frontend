@@ -19,6 +19,7 @@ import type {
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { BotonesFiltroComponent } from '../../../../../../../compartido/ui/botones-filtro/botones-filtro';
 import { FiltrosGlobal } from '../../../../../../../compartido/ui/filtros-global/filtros-global';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { SelectGlobalComponent } from '../../../../../../../compartido/ui/select-global/select-global';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
@@ -103,6 +104,7 @@ function formVacio(): FormSignosVitales {
     FiltrosGlobal,
     SelectGlobalComponent,
     BotonesFiltroComponent,
+    PaginacionComponent,
   ],
   templateUrl: './triaje-consulta.component.html',
 })
@@ -117,6 +119,11 @@ export class TriajeConsultaComponent implements OnInit {
   error = '';
   mensajeExito = '';
   buscado = false;
+
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
 
   filtro = '';
   fechaInicio = ((d) =>
@@ -174,6 +181,12 @@ export class TriajeConsultaComponent implements OnInit {
         idServicio: Number(this.servicioFiltro) || undefined,
       });
       this.atenciones = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.atenciones.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError
@@ -187,6 +200,17 @@ export class TriajeConsultaComponent implements OnInit {
 
   campo(item: IFilaBackend | null, claves: string[]): string {
     return campo(item, claves);
+  }
+
+  get atencionesPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.atenciones.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
   }
 
   idAtencion(item: IFilaBackend): number {
