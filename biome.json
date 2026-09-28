@@ -36,5 +36,10 @@
     "parser": {
       "interpolation": true
     }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

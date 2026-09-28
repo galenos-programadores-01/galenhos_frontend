@@ -1,8 +1,8 @@
-<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+<table class="w-full border-collapse text-[13px]">
   <thead>
-    <tr style="text-align: left; color: #7a86a1; font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em;">
+    <tr class="text-left text-[#7a86a1] font-semibold text-[11.5px] uppercase tracking-[0.03em] dark:text-slate-400">
       @for (col of columnas; track col.campo) {
-        <th [style.text-align]="col.alineacion || 'left'" [style.width]="col.ancho || 'auto'" style="padding: 16px 12px 12px;">
+        <th [style.text-align]="col.alineacion || 'left'" [style.width]="col.ancho || 'auto'" class="px-3 pt-4 pb-3">
           {{ col.cabecera }}
         </th>
       }
@@ -10,20 +10,32 @@
   </thead>
   <tbody>
     @if (cargando) {
-      <tr><td [attr.colspan]="columnas.length" style="padding: 20px 10px; color: #94a0bd; text-align: center;">{{ mensajeCargando }}</td></tr>
+      <tr>
+        <td [attr.colspan]="columnas.length" class="py-5 px-2.5 text-[#94a0bd] text-center dark:text-slate-500">
+          {{ mensajeCargando }}
+        </td>
+      </tr>
     } @else if (mostrarFiltroRequerido) {
-      <tr><td [attr.colspan]="columnas.length" style="padding: 20px 10px; color: #94a0bd; text-align: center;">{{ mensajeFiltroRequerido }}</td></tr>
+      <tr>
+        <td [attr.colspan]="columnas.length" class="py-5 px-2.5 text-[#94a0bd] text-center dark:text-slate-500">
+          {{ mensajeFiltroRequerido }}
+        </td>
+      </tr>
     } @else if (datos.length === 0) {
-      <tr><td [attr.colspan]="columnas.length" style="padding: 20px 10px; color: #94a0bd; text-align: center;">{{ mensajeVacio }}</td></tr>
+      <tr>
+        <td [attr.colspan]="columnas.length" class="py-5 px-2.5 text-[#94a0bd] text-center dark:text-slate-500">
+          {{ mensajeVacio }}
+        </td>
+      </tr>
     } @else {
       @for (item of datos; track $index; let indiceFila = $index) {
-        <tr style="border-top: 1px solid #eef1f6;">
+        <tr class="border-t border-[#eef1f6] dark:border-slate-700/60">
           @for (col of columnas; track col.campo) {
-            <td [style.text-align]="col.alineacion || 'left'" [style.width]="col.ancho || 'auto'" style="padding: 12px 10px; vertical-align: middle;">
+            <td [style.text-align]="col.alineacion || 'left'" [style.width]="col.ancho || 'auto'" class="px-2.5 py-3 align-middle">
               @if (getTemplate(col.campo)) {
                 <ng-container *ngTemplateOutlet="getTemplate(col.campo)!; context: { $implicit: item, index: indiceFila, indice: indiceFila }"></ng-container>
               } @else {
-                <span style="color: #54617f;">{{ $any(item)[col.campo] || '—' }}</span>
+                <span class="text-[#54617f] dark:text-slate-300">{{ $any(item)[col.campo] || '—' }}</span>
               }
             </td>
           }

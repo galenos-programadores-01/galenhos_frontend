@@ -12,13 +12,14 @@ import {
 } from '@angular/core';
 import { AuthService } from '../../../modulos/auth/aplicacion/auth.service';
 import { HeaderActionsService } from '../../servicios/header-actions.service';
+import { BotonTemaComponent } from '../boton-tema/boton-tema';
 import { VentanaModal } from '../ventana-modal/ventana-modal';
 
 @Component({
   selector: 'barra-superior',
   standalone: true,
   templateUrl: './barra-superior.html',
-  imports: [NgTemplateOutlet, UpperCasePipe, VentanaModal],
+  imports: [NgTemplateOutlet, UpperCasePipe, BotonTemaComponent, VentanaModal],
 })
 export class BarraSuperior implements OnInit {
   headerActions = inject(HeaderActionsService);

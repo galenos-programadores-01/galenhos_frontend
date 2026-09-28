@@ -1,0 +1,40 @@
+<button
+  type="button"
+  (click)="alternar()"
+  [attr.aria-label]="etiqueta()"
+  [attr.title]="etiqueta()"
+  [attr.aria-pressed]="oscuro()"
+  class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors cursor-pointer hover:border-slate-300 hover:bg-slate-50 hover:text-[#07153a] dark:border-slate-700 dark:bg-slate-800/70 dark:text-amber-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-amber-200"
+>
+  <!-- Sol: se muestra en modo noche para volver al día -->
+  @if (oscuro()) {
+    <svg
+      aria-hidden="true"
+      class="h-[18px] w-[18px]"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="12" r="4"></circle>
+      <path
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+      ></path>
+    </svg>
+  } @else {
+    <!-- Luna: se muestra en modo día para pasar a la noche -->
+    <svg
+      aria-hidden="true"
+      class="h-[18px] w-[18px]"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  }
+</button>

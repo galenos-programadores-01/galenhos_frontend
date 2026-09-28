@@ -17,8 +17,8 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
-import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   type RegistroTriajeObstetricoPayload,

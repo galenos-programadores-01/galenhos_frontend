@@ -3,21 +3,23 @@
     class="fixed inset-0 bg-[#07153a]/45 flex items-center justify-center p-6 z-[120] animate-in fade-in duration-200"
   >
     <div
-      class="w-full max-w-sm bg-white rounded-2xl shadow-[0_20px_60px_rgba(7,21,58,0.3)] p-6 animate-in fade-in zoom-in-95 duration-150"
+      class="w-full max-w-sm bg-white rounded-2xl shadow-[0_20px_60px_rgba(7,21,58,0.3)] p-6 animate-in fade-in zoom-in-95 duration-150 dark:bg-[#1a2337] dark:shadow-[0_20px_60px_rgba(0,0,0,0.55)]"
     >
       <div class="flex flex-col items-center text-center">
         <div
           class="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-          [ngClass]="{
-            'bg-amber-100': modal.tipo() === 'confirmar' || modal.tipo() === 'info',
-            'bg-green-100': modal.tipo() === 'exito',
-            'bg-red-100': modal.tipo() === 'error',
-          }"
+          [ngClass]="
+            modal.tipo() === 'exito'
+              ? 'bg-green-100 dark:bg-green-500/15'
+              : modal.tipo() === 'error'
+                ? 'bg-red-100 dark:bg-red-500/15'
+                : 'bg-amber-100 dark:bg-amber-500/15'
+          "
         >
           @if (modal.tipo() === 'confirmar' || modal.tipo() === 'info') {
             <svg
               aria-hidden="true"
-              class="w-7 h-7 text-amber-600"
+              class="w-7 h-7 text-amber-600 dark:text-amber-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -32,7 +34,7 @@
           } @else if (modal.tipo() === 'exito') {
             <svg
               aria-hidden="true"
-              class="w-7 h-7 text-green-600"
+              class="w-7 h-7 text-green-600 dark:text-green-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -46,7 +48,7 @@
           } @else {
             <svg
               aria-hidden="true"
-              class="w-7 h-7 text-red-600"
+              class="w-7 h-7 text-red-600 dark:text-red-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -61,8 +63,8 @@
           }
         </div>
 
-        <h3 class="text-base font-bold text-[#07153a] mb-1.5">{{ modal.titulo() }}</h3>
-        <p class="text-[13px] text-[#54617f] leading-relaxed break-words">{{ modal.mensaje() }}</p>
+        <h3 class="text-base font-bold text-[#07153a] mb-1.5 dark:text-slate-100">{{ modal.titulo() }}</h3>
+        <p class="text-[13px] text-[#54617f] leading-relaxed break-words dark:text-slate-300">{{ modal.mensaje() }}</p>
       </div>
 
       <div class="flex gap-3 mt-6">
@@ -70,7 +72,7 @@
           <button
             type="button"
             (click)="modal.cancelar()"
-            class="flex-1 py-2.5 rounded-lg border border-[#e0e6f1] bg-white text-[13px] font-semibold text-[#54617f] cursor-pointer transition-colors hover:bg-slate-50"
+            class="flex-1 py-2.5 rounded-lg border border-[#e0e6f1] bg-white text-[13px] font-semibold text-[#54617f] cursor-pointer transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             Cancelar
           </button>

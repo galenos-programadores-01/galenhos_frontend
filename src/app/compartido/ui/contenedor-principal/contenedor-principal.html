@@ -1,4 +1,4 @@
-<div class="flex h-screen overflow-hidden bg-[#eef1f6] relative">
+<div class="flex h-screen overflow-hidden bg-[#eef1f6] relative dark:bg-[#0b1120]">
   @if (isMobileSidebarOpen()) {
     <div
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
@@ -28,7 +28,7 @@
       (toggleMobileMenuEvent)="toggleMobileSidebar()"
       (logoutEvent)="authService.logout()">
     </barra-superior>
-    <main class="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 bg-[#f4f7f9] custom-scrollbar">
+    <main class="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 lg:p-8 bg-[#f4f7f9] custom-scrollbar dark:bg-[#0f172a]">
       <router-outlet></router-outlet>
     </main>
   </div>

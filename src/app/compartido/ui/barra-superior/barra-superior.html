@@ -1,10 +1,10 @@
-<header class="h-[66px] shrink-0 bg-white border-b border-[#e3e8f2] flex items-center justify-between px-3 sm:px-6 lg:px-8 relative">
+<header class="h-[66px] shrink-0 bg-white border-b border-[#e3e8f2] flex items-center justify-between px-3 sm:px-6 lg:px-8 relative dark:bg-[#111a2e] dark:border-slate-700/60">
       <!-- Lado izquierdo: Botón menú móvil + espacio -->
       <div class="flex items-center gap-2 sm:gap-4 shrink-0">
         <button
           type="button"
           (click)="toggleMobileMenuEvent.emit()"
-          class="p-2 rounded-xl text-slate-600 hover:text-[#07153a] hover:bg-slate-100 lg:hidden transition-colors cursor-pointer"
+          class="p-2 rounded-xl text-slate-600 hover:text-[#07153a] hover:bg-slate-100 lg:hidden transition-colors cursor-pointer dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10"
           title="Abrir menú de navegación"
         >
           <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
@@ -17,17 +17,19 @@
 
       <!-- Título de la vista centrado y alineado -->
       <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center max-w-[calc(100%-200px)] pointer-events-none">
-        <span class="text-[9px] sm:text-[10px] text-[#94a0bd] font-bold uppercase tracking-[0.1em] leading-none mb-1 truncate">GALENOS PRO</span>
-        <h2 class="m-0 text-[14px] sm:text-[17px] md:text-[18px] font-extrabold text-[#07153a] leading-none tracking-tight truncate w-full">{{ title }}</h2>
+        <span class="text-[9px] sm:text-[10px] text-[#94a0bd] font-bold uppercase tracking-[0.1em] leading-none mb-1 truncate dark:text-slate-500">GALENOS PRO</span>
+        <h2 class="m-0 text-[14px] sm:text-[17px] md:text-[18px] font-extrabold text-[#07153a] leading-none tracking-tight truncate w-full dark:text-slate-50">{{ title }}</h2>
       </div>
 
-      <!-- Lado derecho: Acciones + Usuario -->
+      <!-- Lado derecho: Acciones + Tema + Usuario -->
       <div class="flex items-center gap-2 sm:gap-4 shrink-0 ml-auto">
         <ng-container *ngTemplateOutlet="headerActions.template()"></ng-container>
 
+        <app-boton-tema />
+
         <div class="relative">
           <!-- Trigger -->
-          <button type="button" (click)="toggleMenu()" class="group flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 sm:pr-4 rounded-full transition-all duration-200 cursor-pointer bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 hover:shadow-sm">
+          <button type="button" (click)="toggleMenu()" class="group flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 sm:pr-4 rounded-full transition-all duration-200 cursor-pointer bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 hover:shadow-sm dark:bg-slate-800/60 dark:hover:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#07153a] to-[#263c7a] text-white flex items-center justify-center font-bold text-[13px] sm:text-[14px] shadow-inner shrink-0 relative overflow-hidden">
               @if (authService.fotoUrl()) {
                 <img [src]="authService.fotoUrl()!" alt="Foto de perfil" class="w-full h-full object-cover rounded-full">
@@ -36,37 +38,37 @@
               }
             </div>
             <div class="flex flex-col items-start hidden md:flex max-w-[150px] lg:max-w-[200px]">
-              <span class="text-[13px] font-bold text-[#07153a] leading-tight truncate w-full" [title]="authService.userProfile()?.nombreCompleto || username || 'Operador'">
+              <span class="text-[13px] font-bold text-[#07153a] leading-tight truncate w-full dark:text-slate-100" [title]="authService.userProfile()?.nombreCompleto || username || 'Operador'">
                 {{ authService.userProfile()?.nombreCompleto || username || 'Operador' }}
               </span>
-              <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5 truncate w-full">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
+              <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5 truncate w-full dark:text-slate-400">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
             </div>
-            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-              <svg aria-hidden="true" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600 transition-transform duration-300" [class.rotate-180]="isMenuOpen()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors dark:bg-slate-700/60 dark:group-hover:bg-slate-600/60">
+              <svg aria-hidden="true" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600 transition-transform duration-300 dark:text-slate-300" [class.rotate-180]="isMenuOpen()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
               </svg>
             </div>
           </button>
           
           <!-- Dropdown Menu -->
-          <div class="absolute right-0 top-[calc(100%+8px)] w-64 bg-white border border-[#e3e8f2] rounded-xl shadow-[0_10px_30px_rgba(7,21,58,0.08)] transition-all duration-200 origin-top-right z-50 overflow-hidden"
+          <div class="absolute right-0 top-[calc(100%+8px)] w-64 bg-white border border-[#e3e8f2] rounded-xl shadow-[0_10px_30px_rgba(7,21,58,0.08)] transition-all duration-200 origin-top-right z-50 overflow-hidden dark:bg-[#1a2337] dark:border-slate-700 dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
                [class.opacity-100]="isMenuOpen()" [class.visible]="isMenuOpen()" [class.opacity-0]="!isMenuOpen()" [class.invisible]="!isMenuOpen()"
                [class.scale-100]="isMenuOpen()" [class.scale-95]="!isMenuOpen()">
-            <div class="px-4 py-3 border-b border-[#e3e8f2] bg-[#f8fafc]">
-              <p class="text-[11px] font-semibold text-[#94a0bd] uppercase tracking-wider mb-0.5">Operador clínico</p>
-              <p class="text-[13px] font-bold text-[#07153a] break-words">{{ authService.userProfile()?.nombreCompleto || username || 'Sesión Activa' }}</p>
-              <span class="inline-block mt-1 text-[10px] font-semibold text-[#263c7a] bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
+            <div class="px-4 py-3 border-b border-[#e3e8f2] bg-[#f8fafc] dark:border-slate-700 dark:bg-slate-800/60">
+              <p class="text-[11px] font-semibold text-[#94a0bd] uppercase tracking-wider mb-0.5 dark:text-slate-500">Operador clínico</p>
+              <p class="text-[13px] font-bold text-[#07153a] break-words dark:text-slate-100">{{ authService.userProfile()?.nombreCompleto || username || 'Sesión Activa' }}</p>
+              <span class="inline-block mt-1 text-[10px] font-semibold text-[#263c7a] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 dark:text-teal-300 dark:bg-teal-500/10 dark:border-teal-500/30">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
             </div>
             <div class="p-1.5 flex flex-col gap-0.5">
-              <button type="button" (click)="abrirPerfilModal(); isMenuOpen.set(false)" class="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#07153a] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-left">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500">
+              <button type="button" (click)="abrirPerfilModal(); isMenuOpen.set(false)" class="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#07153a] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-left dark:text-slate-200 dark:hover:bg-white/5">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500 dark:text-slate-400">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
                 Mi Perfil
               </button>
 
-              <button type="button" (click)="logoutEvent.emit(); isMenuOpen.set(false)" class="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#ef4444] hover:bg-[#fef2f2] rounded-lg transition-colors cursor-pointer text-left">
+              <button type="button" (click)="logoutEvent.emit(); isMenuOpen.set(false)" class="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#ef4444] hover:bg-[#fef2f2] rounded-lg transition-colors cursor-pointer text-left dark:hover:bg-red-500/10">
                 <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                   <polyline points="16 17 21 12 16 7"></polyline>
@@ -83,7 +85,7 @@
     @if (isProfileModalOpen()) {
       <ventana-modal titulo="Perfil del Operador" subtitulo="Información de la cuenta activa en Galenos Pro" [ancho]="480" (alCerrar)="cerrarPerfilModal()">
         <div class="flex flex-col items-center text-center p-2">
-          <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#07153a] to-[#263c7a] text-white flex items-center justify-center font-extrabold text-3xl shadow-md relative overflow-hidden mb-4 border-4 border-slate-100">
+          <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#07153a] to-[#263c7a] text-white flex items-center justify-center font-extrabold text-3xl shadow-md relative overflow-hidden mb-4 border-4 border-slate-100 dark:border-slate-700">
             @if (authService.fotoUrl()) {
               <img [src]="authService.fotoUrl()!" alt="Foto de perfil" class="w-full h-full object-cover">
             } @else {
@@ -91,55 +93,55 @@
             }
           </div>
           
-          <h3 class="text-base font-bold text-[#07153a] mb-1">
+          <h3 class="text-base font-bold text-[#07153a] mb-1 dark:text-slate-100">
             {{ authService.userProfile()?.nombreCompleto || username || 'Operador Clínico' }}
           </h3>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#263c7a] border border-blue-100 mb-6">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#263c7a] border border-blue-100 mb-6 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30">
             {{ authService.userProfile()?.rol || 'Médico Tratante' }}
           </span>
 
-          <div class="w-full grid grid-cols-1 gap-2.5 text-left bg-slate-50 p-4 rounded-xl border border-slate-200 text-[12.5px]">
-            <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-              <span class="font-medium text-slate-500">Rol / Cargo:</span>
-              <span class="font-bold text-[#263c7a]">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
+          <div class="w-full grid grid-cols-1 gap-2.5 text-left bg-slate-50 p-4 rounded-xl border border-slate-200 text-[12.5px] dark:bg-slate-800/50 dark:border-slate-700">
+            <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+              <span class="font-medium text-slate-500 dark:text-slate-400">Rol / Cargo:</span>
+              <span class="font-bold text-[#263c7a] dark:text-teal-300">{{ authService.userProfile()?.rol || 'Médico Tratante' }}</span>
             </div>
             @if (authService.userProfile()?.especialidad) {
-              <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-                <span class="font-medium text-slate-500">Especialidad:</span>
-                <span class="font-bold text-[#263c7a]">{{ authService.userProfile()?.especialidad }}</span>
+              <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+                <span class="font-medium text-slate-500 dark:text-slate-400">Especialidad:</span>
+                <span class="font-bold text-[#263c7a] dark:text-teal-300">{{ authService.userProfile()?.especialidad }}</span>
               </div>
             }
             @if (authService.userProfile()?.colegiatura) {
-              <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-                <span class="font-medium text-slate-500">CMP / Colegiatura:</span>
-                <span class="font-semibold text-slate-800">{{ authService.userProfile()?.colegiatura }}</span>
+              <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+                <span class="font-medium text-slate-500 dark:text-slate-400">CMP / Colegiatura:</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.colegiatura }}</span>
               </div>
             }
             @if (authService.userProfile()?.rne) {
-              <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-                <span class="font-medium text-slate-500">RNE:</span>
-                <span class="font-semibold text-slate-800">{{ authService.userProfile()?.rne }}</span>
+              <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+                <span class="font-medium text-slate-500 dark:text-slate-400">RNE:</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.rne }}</span>
               </div>
             }
-            <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-              <span class="font-medium text-slate-500">ID Empleado:</span>
-              <span class="font-bold text-slate-800">{{ authService.userProfile()?.idEmpleado || authService.getIdEmpleado() || 'N/A' }}</span>
+            <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+              <span class="font-medium text-slate-500 dark:text-slate-400">ID Empleado:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.idEmpleado || authService.getIdEmpleado() || 'N/A' }}</span>
             </div>
-            <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-              <span class="font-medium text-slate-500">Usuario de red:</span>
-              <span class="font-bold text-slate-800">{{ authService.userProfile()?.username || username || 'N/A' }}</span>
+            <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+              <span class="font-medium text-slate-500 dark:text-slate-400">Usuario de red:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.username || username || 'N/A' }}</span>
             </div>
-            <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-              <span class="font-medium text-slate-500">Nombres:</span>
-              <span class="font-semibold text-slate-800">{{ authService.userProfile()?.nombres || '-' }}</span>
+            <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+              <span class="font-medium text-slate-500 dark:text-slate-400">Nombres:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.nombres || '-' }}</span>
             </div>
-            <div class="flex justify-between py-1.5 border-b border-slate-200/60">
-              <span class="font-medium text-slate-500">Apellido Paterno:</span>
-              <span class="font-semibold text-slate-800">{{ authService.userProfile()?.apellidoPaterno || '-' }}</span>
+            <div class="flex justify-between py-1.5 border-b border-slate-200/60 dark:border-slate-700/70">
+              <span class="font-medium text-slate-500 dark:text-slate-400">Apellido Paterno:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.apellidoPaterno || '-' }}</span>
             </div>
             <div class="flex justify-between py-1.5">
-              <span class="font-medium text-slate-500">Apellido Materno:</span>
-              <span class="font-semibold text-slate-800">{{ authService.userProfile()?.apellidoMaterno || '-' }}</span>
+              <span class="font-medium text-slate-500 dark:text-slate-400">Apellido Materno:</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">{{ authService.userProfile()?.apellidoMaterno || '-' }}</span>
             </div>
           </div>
         </div>

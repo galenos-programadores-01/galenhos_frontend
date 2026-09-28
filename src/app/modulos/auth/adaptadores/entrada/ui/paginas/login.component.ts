@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
+import { BotonTemaComponent } from '../../../../../../compartido/ui/boton-tema/boton-tema';
 import { MonitorSignosVitalesComponent } from '../../../../../../compartido/ui/monitor-signos-vitales/monitor-signos-vitales.component';
 import { TypewriterTextComponent } from '../../../../../../compartido/ui/typewriter-text/typewriter-text.component';
 import { AuthService } from '../../../../aplicacion/auth.service';
@@ -12,6 +13,7 @@ import { AuthApiService } from '../../../salida/http/auth.api.service';
   standalone: true,
   imports: [
     FormsModule,
+    BotonTemaComponent,
     TypewriterTextComponent,
     MonitorSignosVitalesComponent,
   ],
