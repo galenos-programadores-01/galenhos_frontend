@@ -28,6 +28,16 @@ import { FirmaMasivaModal } from '../../componentes/firma-masiva/firma-masiva-mo
 import { RegistroTriajeModal } from '../../componentes/registro-triaje-modal/registro-triaje-modal';
 import { ReporteTriajeComponent } from '../../componentes/reporte-triaje/reporte-triaje.component';
 
+// Fila del tablero de triaje: un área con su total general y, si el SP lo
+// entrega, el sub-total pediátrico (null cuando el área no tiene variante
+// pediátrica).
+interface TableroArea {
+  titulo: string;
+  principal: number;
+  etiquetaPrincipal: string;
+  pediatrico: number | null;
+}
+
 interface FormEvaluacion {
   motivo: string;
   presionArterial: string;
@@ -144,10 +154,14 @@ export class TriajeComponent implements OnInit {
   tablero: {
     Medico: string;
     Topico_Medicina: number;
+    Topico_Pediatria: number;
     Topico_Cirugia: number;
+    Topico_Cirugia_Pediatrica: number;
     Topico_Trauma: number;
     TraumaShock: number;
+    TraumaShock_Pediatrico: number;
     Urgencias: number;
+    Urgencias_Pediatrica: number;
   } | null = null;
   cargandoTablero = false;
   errorTablero = '';
@@ -247,6 +261,75 @@ export class TriajeComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // Filas del tablero: una por área, con el total general y, cuando el SP lo
+  // entrega, el sub-total pediátrico. Tópico Trauma no tiene contraparte
+  // pediátrica en usp_go_ReporteTriaje, por eso va en null.
+  get tableroAreas(): TableroArea[] {
+    const t = this.tablero;
+    return [
+      {
+        titulo: 'Tópico medicina',
+        principal: t?.Topico_Medicina ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Topico_Pediatria ?? 0,
+      },
+      {
+        titulo: 'Tópico Cirugía',
+        principal: t?.Topico_Cirugia ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Topico_Cirugia_Pediatrica ?? 0,
+      },
+      {
+        titulo: 'Tópico Trauma',
+        principal: t?.Topico_Trauma ?? 0,
+        etiquetaPrincipal: 'General',
+        pediatrico: null,
+      },
+      {
+        titulo: 'Trauma Shock',
+        principal: t?.TraumaShock ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.TraumaShock_Pediatrico ?? 0,
+      },
+      {
+        titulo: 'Urgencias',
+        principal: t?.Urgencias ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Urgencias_Pediatrica ?? 0,
+      },
+    ];
+  }
+
+  // Total de triajes del usuario en el rango: el SP acumula cada triaje en una
+  // sola categoría (los IdServicio de los CASE son excluyentes), así que la
+  // suma de las 9 columnas es el total por empleado.
+  get totalTablero(): number {
+    const t = this.tablero;
+    if (!t) return 0;
+    return (
+      t.Topico_Medicina +
+      t.Topico_Pediatria +
+      t.Topico_Cirugia +
+      t.Topico_Cirugia_Pediatrica +
+      t.Topico_Trauma +
+      t.TraumaShock +
+      t.TraumaShock_Pediatrico +
+      t.Urgencias +
+      t.Urgencias_Pediatrica
+    );
+  }
+
+  get totalPediatrico(): number {
+    const t = this.tablero;
+    if (!t) return 0;
+    return (
+      t.Topico_Pediatria +
+      t.Topico_Cirugia_Pediatrica +
+      t.TraumaShock_Pediatrico +
+      t.Urgencias_Pediatrica
+    );
+  }
+
   async cargarTablero() {
     const idEmpleado = this.authService.getIdEmpleado();
     if (!idEmpleado) return;
@@ -262,10 +345,16 @@ export class TriajeComponent implements OnInit {
       this.tablero = {
         Medico: campo(row, ['Medico']),
         Topico_Medicina: Number(campo(row, ['Topico_Medicina'])) || 0,
+        Topico_Pediatria: Number(campo(row, ['Topico_Pediatria'])) || 0,
         Topico_Cirugia: Number(campo(row, ['Topico_Cirugia'])) || 0,
+        Topico_Cirugia_Pediatrica:
+          Number(campo(row, ['Topico_Cirugia_Pediatrica'])) || 0,
         Topico_Trauma: Number(campo(row, ['Topico_Trauma'])) || 0,
         TraumaShock: Number(campo(row, ['TraumaShock'])) || 0,
+        TraumaShock_Pediatrico:
+          Number(campo(row, ['TraumaShock_Pediatrico'])) || 0,
         Urgencias: Number(campo(row, ['Urgencias'])) || 0,
+        Urgencias_Pediatrica: Number(campo(row, ['Urgencias_Pediatrica'])) || 0,
       };
     } catch (error: unknown) {
       this.tablero = null;

@@ -182,46 +182,57 @@
         </div>
       }
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div class="rounded-xl border border-[#e6eaf2] bg-slate-50 px-4 py-3.5">
-          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
-            Tópico Medicina
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        @for (area of tableroAreas; track area.titulo) {
+          <div class="min-w-0 rounded-xl border border-[#e6eaf2] bg-slate-50 px-3 py-3.5">
+            <p class="m-0 truncate text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
+              {{ area.titulo }}
+            </p>
+            <div class="mt-1.5 flex items-end gap-3">
+              <div class="min-w-0">
+                <p class="m-0 text-[22px] font-extrabold leading-none text-[#263c7a]">
+                  {{ area.principal }}
+                </p>
+                <p class="m-0 mt-1 truncate text-[9px] font-semibold uppercase tracking-wide text-[#8a94ad]">
+                  {{ area.etiquetaPrincipal }}
+                </p>
+              </div>
+              @if (area.pediatrico !== null) {
+                <div class="min-w-0 border-l border-[#dde3ef] pl-3">
+                  <p class="m-0 text-[22px] font-extrabold leading-none text-teal-700">
+                    {{ area.pediatrico }}
+                  </p>
+                  <p class="m-0 mt-1 truncate text-[9px] font-semibold uppercase tracking-wide text-teal-600">
+                    Pediátrico
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="min-w-0 rounded-xl border border-[#c9d4ee] bg-[#eef2fb] px-3 py-3.5">
+          <p class="m-0 truncate text-[11px] font-semibold uppercase tracking-wide text-[#07153a]">
+            Total
           </p>
-          <p class="m-0 mt-1.5 text-[26px] font-extrabold leading-none text-[#263c7a]">
-            {{ tablero?.Topico_Medicina ?? 0 }}
-          </p>
-        </div>
-        <div class="rounded-xl border border-[#e6eaf2] bg-slate-50 px-4 py-3.5">
-          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
-            Tópico Cirugía
-          </p>
-          <p class="m-0 mt-1.5 text-[26px] font-extrabold leading-none text-[#263c7a]">
-            {{ tablero?.Topico_Cirugia ?? 0 }}
-          </p>
-        </div>
-        <div class="rounded-xl border border-[#e6eaf2] bg-slate-50 px-4 py-3.5">
-          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
-            Tópico Trauma
-          </p>
-          <p class="m-0 mt-1.5 text-[26px] font-extrabold leading-none text-[#263c7a]">
-            {{ tablero?.Topico_Trauma ?? 0 }}
-          </p>
-        </div>
-        <div class="rounded-xl border border-[#e6eaf2] bg-slate-50 px-4 py-3.5">
-          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
-            Trauma Shock
-          </p>
-          <p class="m-0 mt-1.5 text-[26px] font-extrabold leading-none text-[#263c7a]">
-            {{ tablero?.TraumaShock ?? 0 }}
-          </p>
-        </div>
-        <div class="rounded-xl border border-[#e6eaf2] bg-slate-50 px-4 py-3.5">
-          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#54617f]">
-            Urgencias
-          </p>
-          <p class="m-0 mt-1.5 text-[26px] font-extrabold leading-none text-[#263c7a]">
-            {{ tablero?.Urgencias ?? 0 }}
-          </p>
+          <div class="mt-1.5 flex items-end gap-3">
+            <div class="min-w-0">
+              <p class="m-0 text-[22px] font-extrabold leading-none text-[#07153a]">
+                {{ totalTablero }}
+              </p>
+              <p class="m-0 mt-1 truncate text-[9px] font-semibold uppercase tracking-wide text-[#54617f]">
+                Adulto
+              </p>
+            </div>
+            <div class="min-w-0 border-l border-[#c9d4ee] pl-3">
+              <p class="m-0 text-[22px] font-extrabold leading-none text-teal-700">
+                {{ totalPediatrico }}
+              </p>
+              <p class="m-0 mt-1 truncate text-[9px] font-semibold uppercase tracking-wide text-teal-600">
+                Pediátrico
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
