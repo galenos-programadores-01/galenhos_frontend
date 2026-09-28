@@ -655,10 +655,28 @@ export class AdmisionesComponent implements OnInit {
     );
   }
 
-  // Paciente sin admisión (sin cuenta de atención) y sin afiliación SIS
-  // registrada: candidato a consultar al SIS por documento.
+  // El SP puede devolver el flag como número (0/1) o como booleano.
+  esAccidenteTransito(item: IFilaBackend): boolean {
+    const bruto =
+      valorFila(item, 'EsAccidenteTransito') ||
+      valorFila(item, 'Es_Accidente_Transito') ||
+      valorFila(item, 'idEsAccidenteTransito') ||
+      valorFila(item, 'IdEsAccidenteTransito') ||
+      campo(item, ['EsAccidenteTransito', 'esAccidenteTransito']);
+    if (!bruto) return false;
+    const normalizado = bruto.trim().toUpperCase();
+    return normalizado === '1' || normalizado === 'TRUE';
+  }
+
+  // Paciente sin admisión (sin cuenta de atención), sin afiliación SIS
+  // registrada y sin condicionante de accidente de tránsito: candidato a
+  // consultar al SIS por documento.
   esParticularPorAdmisionar(item: IFilaBackend): boolean {
-    return this.idCuentaAtencion(item) === 0 && !this.esSis(item);
+    return (
+      this.idCuentaAtencion(item) === 0 &&
+      !this.esSis(item) &&
+      !this.esAccidenteTransito(item)
+    );
   }
 
   async consultarSisPaciente(item: IFilaBackend) {

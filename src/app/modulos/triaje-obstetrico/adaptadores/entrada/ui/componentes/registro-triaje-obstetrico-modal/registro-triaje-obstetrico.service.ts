@@ -864,7 +864,9 @@ export class RegistroTriajeObstetricoService {
     }
   }
 
-  async guardarYContinuar(): Promise<void> {
+  // idTriaje informado: el triaje ya existe y se modifica (modo edición);
+  // si no se informa se registra uno nuevo.
+  async guardarYContinuar(idTriaje?: number): Promise<void> {
     this.mensajeError = '';
 
     if (!this.pacienteEncontrado) {
@@ -1043,6 +1045,7 @@ export class RegistroTriajeObstetricoService {
       // }
 
       const payloadTriaje: RegistroTriajeObstetricoPayload = {
+        idTriaje,
         idDocIdentidad: this.idDocIdentidadNumero(),
         nroDocumento: this.formulario.nroDocumento,
         apellidoPaterno: this.formulario.apellidoPaterno,
@@ -1099,14 +1102,18 @@ export class RegistroTriajeObstetricoService {
             : 1,
       };
 
-      const resp = await this.triajeApi.registrar(payloadTriaje);
+      const resp = idTriaje
+        ? await this.triajeApi.modificarTriaje(idTriaje, payloadTriaje)
+        : await this.triajeApi.registrar(payloadTriaje);
 
-      if (resp?.resultado?.startsWith('Error')) {
-        this.mensajeError = resp.resultado.replace(/^Error;\s*/, '');
+      if (resp?.resultado?.toUpperCase().startsWith('ERROR')) {
+        this.mensajeError = resp.resultado.replace(/^(ERROR|Error);\s*/i, '');
         return;
       }
 
-      this.ultimoTriajeId = await this.obtenerUltimoTriajeId();
+      this.ultimoTriajeId = idTriaje
+        ? idTriaje
+        : await this.obtenerUltimoTriajeId();
     } catch (error: unknown) {
       this.mensajeError =
         error instanceof ApiRequestError

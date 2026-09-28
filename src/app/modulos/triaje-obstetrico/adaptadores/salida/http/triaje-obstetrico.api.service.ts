@@ -157,6 +157,35 @@ export class TriajeObstetricoApiService {
     });
   }
 
+  // Modifica un triaje existente (modo edición del modal de registro).
+  modificarTriaje(
+    idTriaje: number,
+    payload: RegistroTriajeObstetricoPayload,
+  ): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // Devuelve los datos del paciente y del triaje de emergencia indicado, para
+  // precargar el formulario en modo edición. Devuelve null si no existe.
+  obtenerTriajePorId(idTriaje: number): Promise<IFilaBackend | null> {
+    return this.apiClient.request<IFilaBackend | null>(
+      `/api/v1/triaje/${idTriaje}`,
+    );
+  }
+
+  // Elimina (baja lógica) un triaje de emergencia. El backend devuelve el
+  // @Resultado del SP: "OK; ..." si se eliminó o "ERROR; ..." si el triaje
+  // ya cuenta con ficha de admisión.
+  eliminarTriaje(idTriaje: number, idEmpleado: number): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ idEmpleado }),
+    });
+  }
+
   listarCausasExternasMorbilidad(): Promise<IFilaBackend[]> {
     return this.apiClient.request<IFilaBackend[]>(
       '/api/v1/triaje/causas-externas-morbilidad',

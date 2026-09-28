@@ -11,7 +11,10 @@ import {
   type SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { IPaciente } from '../../../../../../../compartido/tipos/api-tipos';
+import type {
+  IFilaBackend,
+  IPaciente,
+} from '../../../../../../../compartido/tipos/api-tipos';
 import {
   PresionArterialDirective,
   SoloDecimalDirective,
@@ -19,6 +22,7 @@ import {
 } from '../../../../../../../compartido/ui/validacion/entrada-numerica.directive';
 import { ErrorMensajeComponent } from '../../../../../../../compartido/ui/validacion/error-mensaje.component';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
+import { TriajeObstetricoApiService } from '../../../../salida/http/triaje-obstetrico.api.service';
 import { BuscarPacienteObstetricoModal } from '../buscar-paciente-modal/buscar-paciente-modal';
 import { ReporteTriajeObstetricoComponent } from '../reporte-triaje-obstetrico/reporte-triaje-obstetrico.component';
 import { RegistroTriajeObstetricoService } from './registro-triaje-obstetrico.service';
@@ -46,10 +50,12 @@ const PRIORIDAD_SERVICIOS_DEFECTO = '6';
 })
 export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
   @Input() abierto = false;
+  @Input() idTriajeEditar: number | null = null;
   @Output() alCerrar = new EventEmitter<void>();
   @Output() triajeIniciado = new EventEmitter<void>();
 
   public readonly srv = inject(RegistroTriajeObstetricoService);
+  private readonly triajeApi = inject(TriajeObstetricoApiService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   reporteId: number | null = null;
@@ -63,9 +69,136 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
   }
 
   ngOnChanges(cambios: SimpleChanges): void {
-    if (cambios['abierto']?.currentValue === true) {
-      void this.cargarServiciosPorDefecto();
+    if (cambios['abierto']?.currentValue !== true) return;
+    if (this.idTriajeEditar) {
+      void this.precargarTriaje(this.idTriajeEditar);
+      return;
     }
+    void this.cargarServiciosPorDefecto();
+  }
+
+  get modoEdicion(): boolean {
+    return !!this.idTriajeEditar;
+  }
+
+  get tituloModal(): string {
+    return this.modoEdicion ? 'Editar Triaje' : 'Registrar Triaje';
+  }
+
+  get subtituloModal(): string {
+    return this.modoEdicion
+      ? 'Datos del triaje obstétrico seleccionado. Puede editar los valores y guardar los cambios.'
+      : 'Identificación por documento para la bandeja de triaje.';
+  }
+
+  // Precarga el formulario con el triaje indicado y salta directo al paso de
+  // la evaluación clínica (paso 3).
+  private async precargarTriaje(idTriaje: number): Promise<void> {
+    this.srv.mensajeError = '';
+    try {
+      await this.srv.cargarCatalogosIniciales();
+      const fila = await this.triajeApi.obtenerTriajePorId(idTriaje);
+      if (!fila) {
+        this.srv.mensajeError = 'No se encontró el triaje seleccionado.';
+        return;
+      }
+      this.cargarFormularioDesdeFila(fila);
+      this.mostrarPaciente = true;
+      this.srv.pacienteEncontrado = true;
+      this.srv.pasoActual = 3;
+      await Promise.all([
+        this.srv.cargarServiciosPorPrioridad(
+          PRIORIDAD_SERVICIOS_DEFECTO,
+          this.srv.formulario.fechaNacimiento,
+        ),
+        this.idDepartamentoSeleccionado()
+          ? this.srv.cargarProvincias()
+          : Promise.resolve(),
+      ]);
+      if (this.idProvinciaSeleccionada()) {
+        await this.srv.cargarDistritos();
+      }
+      if (this.idDistritoSeleccionado()) {
+        await this.srv.cargarCentrosPoblados();
+      }
+      this.calcularImc();
+    } catch {
+      this.srv.mensajeError = 'No se pudo cargar el triaje seleccionado.';
+    } finally {
+      this.cdr.detectChanges();
+    }
+  }
+
+  private idDepartamentoSeleccionado(): boolean {
+    const id = this.srv.formulario.idDepartamentoDomicilio;
+    return id !== undefined && id !== null && id !== '';
+  }
+
+  private idProvinciaSeleccionada(): boolean {
+    const id = this.srv.formulario.idProvinciaDomicilio;
+    return id !== undefined && id !== null && id !== '';
+  }
+
+  private idDistritoSeleccionado(): boolean {
+    const id = this.srv.formulario.idDistritoDomicilio;
+    return id !== undefined && id !== null && id !== '';
+  }
+
+  private texto(valor: unknown): string {
+    if (valor === null || valor === undefined) return '';
+    return String(valor).trim();
+  }
+
+  private textoEntero(valor: unknown): string {
+    const texto = this.texto(valor);
+    if (!texto) return '';
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? String(Math.trunc(numero)) : texto;
+  }
+
+  private cargarFormularioDesdeFila(fila: IFilaBackend): void {
+    const f = this.srv.formulario;
+    f.idDocIdentidad = this.texto(fila.IdDocIdentidad) || '1';
+    f.nroDocumento = this.texto(fila.NroDocumento);
+    f.apellidoPaterno = this.texto(fila.ApellidoPaterno);
+    f.apellidoMaterno = this.texto(fila.ApellidoMaterno);
+    f.primerNombre = this.texto(fila.PrimerNombre);
+    f.segundoNombre = this.texto(fila.SegundoNombre);
+    f.fechaNacimiento = this.texto(fila.FechaNacimiento).slice(0, 10);
+    f.idTipoSexo = this.texto(fila.IdTipoSexo);
+    f.idEstadoCivil = this.texto(fila.IdEstadoCivil);
+    f.telefono = this.texto(fila.Telefono);
+    f.idDepartamentoDomicilio = this.texto(fila.IdDepartamentoDomicilio);
+    f.idProvinciaDomicilio = this.texto(fila.IdProvinciaDomicilio);
+    f.idDistritoDomicilio =
+      this.texto(fila.idDistritoDomicilio) ||
+      this.texto(fila.IdDistritoDomicilio);
+    f.idCentroPobladoDomicilio =
+      this.texto(fila.idComunidadDomicilio) ||
+      this.texto(fila.IdComunidadDomicilio);
+    f.direccionDomicilio = this.texto(fila.Direccion);
+    f.esAccidenteTransito = this.texto(fila.EsAccidenteTransito) === '1';
+    f.idFuenteFinanciamiento = this.texto(fila.IdFuenteFinanciamiento);
+    f.idEstadoLlego = this.texto(fila.IdEstadollego);
+    f.motivo = this.texto(fila.Motivo);
+    f.presionArterial = this.texto(fila.presion_arterial);
+    f.frecCardiaca = this.texto(fila.frecuencia_cardiaca);
+    f.frecRespiratoria = this.texto(fila.frecuencia_respiratoria);
+    f.temperatura = this.texto(fila.temperatura);
+    f.saturacion = this.textoEntero(fila.saturacion_oxigeno);
+    f.peso = this.texto(fila.peso);
+    f.talla = this.texto(fila.talla);
+    f.escalaDolor = this.texto(fila.escala_dolor);
+    f.escalaGlasgow = this.texto(fila.escala_glasgow);
+    f.tiempoEvolucionCantidad = this.texto(fila.tiempo_evolucion_cantidad);
+    f.tiempoEvolucionCantidadUnidad = this.texto(fila.tiempo_evolucion_unidad);
+    f.idServicio = this.texto(fila.IdServicio);
+    f.idTipoPrioridad = this.texto(fila.IdTipoPrioridad);
+    f.idCausaExternaMorbilidad = this.texto(fila.IdCausaExternaMorbilidad);
+    f.fechaUltimaRegla =
+      this.texto(fila.FUR).slice(0, 10) || this.texto(fila.fur).slice(0, 10);
+    f.esGestante = this.texto(fila.EsGestante) === '1';
+    f.pacienteNn = false;
   }
 
   // Al abrir el modal se listan los servicios con la prioridad fija (6)
@@ -262,10 +395,15 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
   }
 
   async registrar(): Promise<void> {
-    await this.srv.guardarYContinuar();
+    await this.srv.guardarYContinuar(
+      this.modoEdicion ? (this.idTriajeEditar ?? undefined) : undefined,
+    );
     this.cdr.detectChanges();
     if (!this.srv.mensajeError) {
-      if (this.srv.ultimoTriajeId) {
+      if (this.modoEdicion) {
+        this.triajeIniciado.emit();
+        this.cerrar();
+      } else if (this.srv.ultimoTriajeId) {
         this.reporteId = this.srv.ultimoTriajeId;
         this.cdr.detectChanges();
       } else {

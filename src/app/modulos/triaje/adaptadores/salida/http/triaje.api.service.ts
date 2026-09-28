@@ -242,6 +242,16 @@ export class TriajeApiService {
     });
   }
 
+  // Elimina (baja lógica) un triaje de emergencia. El backend devuelve el
+  // @Resultado del SP: "OK; ..." si se eliminó o "ERROR; ..." si el triaje
+  // ya cuenta con ficha de admisión.
+  eliminarTriaje(idTriaje: number, idEmpleado: number): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ idEmpleado }),
+    });
+  }
+
   obtenerReporte(params: ReporteTriajeParams): Promise<IFilaBackend[]> {
     const query = new URLSearchParams();
     if (params.id) query.append('id', String(params.id));

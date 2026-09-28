@@ -17,6 +17,7 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
+import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
 import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
@@ -120,6 +121,7 @@ export class TriajeComponent implements OnInit {
   private readonly triajeApi = inject(TriajeApiService);
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly modalGlobal = inject(ModalGlobalService);
   public readonly authService = inject(AuthService);
 
   pacientes: IFilaBackend[] = [];
@@ -153,6 +155,7 @@ export class TriajeComponent implements OnInit {
   modalRegistro = false;
   reporteTriajeId: number | null = null;
   triajeEditarId: number | null = null;
+  eliminandoId: number | null = null;
 
   columnasTabla: ColumnaTabla[] = [
     {
@@ -352,6 +355,57 @@ export class TriajeComponent implements OnInit {
     if (!idTriaje) return;
     this.triajeEditarId = idTriaje;
     this.modalRegistro = true;
+  }
+
+  // Pide confirmación y elimina (baja lógica) el triaje. El @Resultado del
+  // SP decide: si empieza con "ERROR" el mensaje se muestra en el modal
+  // global y el triaje se mantiene; si empieza con "OK" el modal de
+  // confirmación ya se cerró, se informa el éxito y se refresca la bandeja.
+  async eliminarTriaje(item: IFilaBackend) {
+    const idTriaje = this.idTriaje(item);
+    if (!idTriaje) {
+      this.error = 'El registro no tiene un id de triaje válido.';
+      return;
+    }
+
+    const confirmado = await this.modalGlobal.confirmar(
+      `¿Desea eliminar el triaje N.º ${idTriaje} del paciente ` +
+        `${this.nombrePaciente(item)}?  ` +
+        'no se podrá volver a mostrar en la bandeja de triaje.',
+      'Eliminar triaje',
+      'Sí, eliminar',
+    );
+    if (!confirmado) return;
+
+    this.eliminandoId = idTriaje;
+    try {
+      const resp = await this.triajeApi.eliminarTriaje(
+        idTriaje,
+        this.authService.getIdEmpleado(),
+      );
+      const resultado = (resp?.resultado || '').trim();
+      const mensaje = resultado.replace(/^(OK|ERROR)\s*;\s*/i, '');
+
+      if (/^ERROR/i.test(resultado)) {
+        this.modalGlobal.error(mensaje || 'No se pudo eliminar el triaje.');
+        return;
+      }
+
+      this.modalGlobal.exito(
+        mensaje || 'El triaje fue eliminado correctamente.',
+        'Triaje eliminado',
+      );
+      await this.cargarLista();
+    } catch (err: unknown) {
+      this.modalGlobal.error(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'No se pudo eliminar el triaje.',
+      );
+    } finally {
+      this.eliminandoId = null;
+      this.cdr.detectChanges();
+    }
   }
 
   async generarReporte() {
