@@ -11,8 +11,10 @@ import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { PacientesApiService } from '../../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
+  leerCampoFiliacion,
   type SisAfiliado,
   SisApiService,
+  type SisFiliacionRegistrada,
 } from '../../../../../../sis/adaptadores/salida/http/sis.api.service';
 import {
   type RegistroTriajePayload,
@@ -50,6 +52,10 @@ export class RegistroTriajeService {
   sisDescripcion = '';
   sisGuardado = false;
   sisIntegrado = false;
+  // Distingue "no hay afiliación" de "la afiliación existe pero está cancelada
+  // por Fbaja pasada", porque el aviso al usuario es distinto en cada caso.
+  sisCancelado = false;
+  sisFechaBaja = '';
   reniecIntegrado = false;
 
   ultimoTriajeId: number | null = null;
@@ -207,6 +213,8 @@ export class RegistroTriajeService {
     this.sisActivo = false;
     this.sisDescripcion = '';
     this.sisGuardado = false;
+    this.sisCancelado = false;
+    this.sisFechaBaja = '';
     this.sisIntegrado = false;
     this.reniecIntegrado = false;
     this.ultimoTriajeId = null;
@@ -244,6 +252,12 @@ export class RegistroTriajeService {
     this.pacienteEncontrado = false;
     this.sisConsultado = false;
     this.sisActivo = false;
+    this.sisCancelado = false;
+    this.sisFechaBaja = '';
+    // Se limpia el IAFA de la búsqueda anterior: si el paciente nuevo tiene la
+    // afiliación cancelada (Fbaja pasada), el combo no debe seguir mostrando el
+    // SIS que quedó del paciente previo.
+    this.formulario.idFuenteFinanciamiento = '';
 
     try {
       await this.cargarParametrosIntegracion();
@@ -270,6 +284,11 @@ export class RegistroTriajeService {
 
       if (!esSinDocumento && this.sisIntegrado) {
         await this.consultarSis();
+      } else if (!esSinDocumento && !this.sisIntegrado) {
+        // Con la integración SIS desactivada (parámetro 322 en 'N') no se puede
+        // consultar al SIS por SOAP, pero la afiliación ya registrada en la base
+        // de datos local sigue siendo válida como fuente de la cobertura.
+        await this.consultarFiliacionLocal();
       }
 
       // Si el paciente no se encontró en BD, RENIEC ni SIS, se habilitan
@@ -354,6 +373,29 @@ export class RegistroTriajeService {
     } catch {
       this.sisIntegrado = false;
       this.reniecIntegrado = false;
+    }
+  }
+
+  // Detecta el idError 6 de SIS ("USUARIO FUERA DEL LIMITE DE CONSULTAS POR
+  // DIA"). Se compara por idError y, como red de seguridad, por el texto del
+  // resultado, porque el SISReport a veces devuelve el mensaje sin el id.
+  private esLimiteConsultasSis(sis: SisAfiliado | undefined): boolean {
+    if (!sis) return false;
+    if (String(sis.idError ?? '').trim() === '6') return true;
+    return (sis.resultado || '').toUpperCase().includes('LIMITE DE CONSULTAS');
+  }
+
+  // Deja la integración SIS desactivada en memoria para el resto de la sesión
+  // del modal: si no, el siguiente buscarPaciente() volvería a activarla desde
+  // el parámetro 322 que todavía no refleja el cambio.
+  private async desactivarIntegracionSis(): Promise<void> {
+    this.sisIntegrado = false;
+    try {
+      await this.maestrosApi.desactivarParametro(PARAMETRO_SIS_ID);
+    } catch {
+      // Si el PATCH falla, el estado local ya quedó en false, así que el
+      // flujo continúa sin integración SIS. El backend se sincronizará en el
+      // siguiente arranque cuando se vuelva a leer el parámetro.
     }
   }
 
@@ -516,6 +558,21 @@ export class RegistroTriajeService {
         this.sisActivo = false;
       }
 
+      // SIS responder con idError 6 significa que se agotó la cuota diaria de
+      // consultas del usuario. Es un fallo de la cuenta, no del paciente, así
+      // que se desactiva la integración SIS (parámetro 322) para no seguir
+      // golpeando el endpoint. El mensaje de SIS se muestra igual al usuario.
+      if (this.esLimiteConsultasSis(sisResponse)) {
+        this.sisActivo = false;
+        this.mensajeError =
+          sisResponse.resultado?.trim() ||
+          'Se alcanzó el límite de consultas diarias de SIS.';
+        await this.desactivarIntegracionSis();
+        // Aun sin cuota para consultar al SIS, la afiliación guardada en la base
+        // de datos local puede vigente, así que se usa como respaldo.
+        await this.consultarFiliacionLocal();
+      }
+
       this.actualizarIafaAutomatico();
     } catch (error: unknown) {
       this.sisConsultado = true;
@@ -527,6 +584,172 @@ export class RegistroTriajeService {
     }
   }
 
+  // Respaldo local de la integración SIS: consulta la afiliación ya registrada
+  // en la base de datos (SP usp_go_SisFiliacionesConsultar) cuando no se puede
+  // llamar al SIS por SOAP, ya sea porque el parámetro 322 está en 'N' o porque
+  // se agotó la cuota diaria de consultas.
+  //
+  // Solo se toma en cuenta cuando el SP devuelve exactamente un registro: con
+  // varios, no hay forma de saber cuál es la vigente, así que se deja al
+  // usuario resolverlo. La vigencia la define Fbaja: vacía o futura mantiene
+  // la cobertura; una fecha ya pasada la cancela.
+  private async consultarFiliacionLocal(): Promise<void> {
+    const nroDocumento = (this.formulario.nroDocumento || '').trim();
+    if (!nroDocumento) return;
+
+    const idTipoDoc = this.tipoDocumentoParaSis();
+    if (!idTipoDoc) return;
+
+    try {
+      const registros = await this.sisApi.listarFiliacionesRegistradas(
+        nroDocumento,
+        idTipoDoc,
+      );
+
+      if (registros?.length !== 1) {
+        return;
+      }
+
+      const afiliacion = registros[0];
+      if (!this.afiliacionSigueVigente(afiliacion)) {
+        this.sisActivo = false;
+        this.sisConsultado = true;
+        this.sisDescripcion = '';
+        // Fbaja pasada: la afiliación existe pero está cancelada. Se informa
+        // como "SIS Cancelado" en vez de "SIS activo", y el combo de IAFA no
+        // puede quedar en SIS. Se deja en PARTÍCULAR, que es lo que
+        // corresponde a un paciente sin cobertura vigente.
+        this.sisCancelado = true;
+        this.sisFechaBaja = leerCampoFiliacion(afiliacion, 'fbaja');
+        this.fijarFuenteParticular();
+        return;
+      }
+
+      this.sisConsultado = true;
+      this.sisActivo = true;
+      this.sisDescripcion = this.descripcionFiliacionLocal(afiliacion);
+      this.mapearFiliacionLocalAlFormulario(afiliacion);
+    } catch {
+      // Si la consulta local falla, el triaje sigue sin cobertura SIS y el
+      // usuario completa los datos a mano. No se sobrescribe mensajeError
+      // porque suele haber un aviso más relevante de RENIEC o SIS.
+      this.sisActivo = false;
+    }
+
+    this.actualizarIafaAutomatico();
+  }
+
+  // Traduce el tipo de documento del formulario al valor que espera el SP:
+  // 1 para DNI y 3 para Carnet de Extranjería. Otros tipos (SD, afiliación,
+  // pasaporte) no tienen equivalencia en SisFiliaciones, así que no se consulta.
+  private tipoDocumentoParaSis(): number | null {
+    if (this.formulario.idDocIdentidad === '1') return 1;
+    if (this.formulario.idDocIdentidad === '3') return 3;
+    return null;
+  }
+
+  // Fbaja es la fecha en que terminó la afiliación. Vacía o nula significa que
+  // sigue vigente. Viene como dd/mm/aaaa (ej. 17/10/2030) y se acepta también
+  // el formato ISO que puede devolver el driver.
+  private afiliacionSigueVigente(afiliacion: SisFiliacionRegistrada): boolean {
+    const fbaja = leerCampoFiliacion(afiliacion, 'fbaja');
+    if (!fbaja) return true;
+
+    const baja = this.parsearFechaFiliacion(fbaja);
+    if (!baja) {
+      // Una Fbaja con formato desconocido no se puede comparar con la fecha
+      // actual; se asume vigente para no quitarle la cobertura al paciente.
+      return true;
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return baja >= hoy;
+  }
+
+  private parsearFechaFiliacion(valor: string): Date | null {
+    const texto = valor.trim();
+
+    // dd/mm/aaaa, con o sin separadores, tal como lo muestra SIS.
+    const dmy = /^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})/.exec(texto);
+    if (dmy) {
+      return this.construirFecha(
+        Number(dmy[3]),
+        Number(dmy[2]),
+        Number(dmy[1]),
+      );
+    }
+
+    // aaaa-mm-dd, con o sin hora.
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(texto);
+    if (ymd) {
+      return this.construirFecha(
+        Number(ymd[1]),
+        Number(ymd[2]),
+        Number(ymd[3]),
+      );
+    }
+
+    return null;
+  }
+
+  // Construye la fecha validando el rango: new Date(2030, 12, 1) desborda a
+  // enero del año siguiente en vez de fallar, y eso ocultaría un Fbaja inválido.
+  private construirFecha(anio: number, mes: number, dia: number): Date | null {
+    const fecha = new Date(anio, mes, dia);
+    if (Number.isNaN(fecha.getTime())) return null;
+    if (
+      fecha.getFullYear() !== anio ||
+      fecha.getMonth() !== mes ||
+      fecha.getDate() !== dia
+    ) {
+      return null;
+    }
+    return fecha;
+  }
+
+  private descripcionFiliacionLocal(
+    afiliacion: SisFiliacionRegistrada,
+  ): string {
+    const seguro =
+      leerCampoFiliacion(afiliacion, 'descTipoSeguro') ||
+      leerCampoFiliacion(afiliacion, 'tipoSeguro');
+    const regimen = leerCampoFiliacion(afiliacion, 'regimen');
+    return [seguro, regimen].filter((p) => !!p).join(' - ');
+  }
+
+  // Copia los datos de la afiliación local al formulario. Solo rellena campos
+  // vacíos, para no pisar lo que el usuario ya escribió o lo que vino de BD.
+  private mapearFiliacionLocalAlFormulario(
+    afiliacion: SisFiliacionRegistrada,
+  ): void {
+    type CampoNombre =
+      | 'apellidoPaterno'
+      | 'apellidoMaterno'
+      | 'primerNombre'
+      | 'segundoNombre';
+
+    const campos: (readonly [CampoNombre, string])[] = [
+      ['apellidoPaterno', leerCampoFiliacion(afiliacion, 'paterno')],
+      ['apellidoMaterno', leerCampoFiliacion(afiliacion, 'materno')],
+      ['primerNombre', leerCampoFiliacion(afiliacion, 'pnombre')],
+      ['segundoNombre', leerCampoFiliacion(afiliacion, 'onombres')],
+    ];
+
+    for (const [campo, valor] of campos) {
+      if (valor && !String(this.formulario[campo] || '').trim()) {
+        this.formulario[campo] = valor;
+      }
+    }
+
+    const fNacimientoIso = this.formatearFechaSis(
+      leerCampoFiliacion(afiliacion, 'fnacimiento'),
+    );
+    if (fNacimientoIso && !this.formulario.fechaNacimiento) {
+      this.formulario.fechaNacimiento = fNacimientoIso;
+    }
+  }
+
   private formatearFechaSis(fecha: string | undefined): string {
     if (!fecha) return '';
     if (fecha.length === 8) {
@@ -535,8 +758,13 @@ export class RegistroTriajeService {
     return fecha;
   }
 
+  // El IAFA se deriva de la cobertura efectiva del paciente, no de si la
+  // integración con el SIS está prendida. Con el parámetro 322 en 'N' la
+  // integración no se consulta, pero una afiliación local vigente igual cubre
+  // al paciente y debe reflejarse como SIS en el combo. Por eso el corte se
+  // hace sobre sisConsultado/sisActivo y no sobre sisIntegrado.
   actualizarIafaAutomatico(): void {
-    if (!this.sisIntegrado) return;
+    if (!this.sisIntegrado && !this.sisActivo) return;
 
     const buscarIAFA = (termino: string) =>
       this.fuentesFinanciamiento.find((f) =>

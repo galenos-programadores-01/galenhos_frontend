@@ -128,6 +128,16 @@ export class MaestrosApiService {
     );
   }
 
+  // Marca el parámetro con ValorTexto = 'N' (SP
+  // usp_go_ActualizarParametroValorTextoPorId). El backend invalida la cache
+  // de parámetros clínicos, así que el siguiente getParametro ya ve el 'N'.
+  desactivarParametro(id: number | string): Promise<{ message: string }> {
+    return this.apiClient.request<{ message: string }>(
+      `/api/v1/catalogos/parametros/${id}/valor-texto`,
+      { method: 'PATCH' },
+    );
+  }
+
   // RENIEC puede devolver el objeto de datos con campos ausentes.
   consultarReniec(nroDocumento: string): Promise<IReniecResultado> {
     return this.apiClient.request<IReniecResultado>(

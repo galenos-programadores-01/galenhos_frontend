@@ -36,6 +36,9 @@ interface TableroArea {
   principal: number;
   etiquetaPrincipal: string;
   pediatrico: number | null;
+  // Contador NEO: solo Tópico medicina lo tiene en usp_go_ReporteTriaje, por
+  // eso null en el resto (igual que pediatrico en Trauma).
+  neo: number | null;
 }
 
 interface FormEvaluacion {
@@ -154,6 +157,7 @@ export class TriajeComponent implements OnInit {
   tablero: {
     Medico: string;
     Topico_Medicina: number;
+    Topico_Neo: number;
     Topico_Pediatria: number;
     Topico_Cirugia: number;
     Topico_Cirugia_Pediatrica: number;
@@ -272,37 +276,43 @@ export class TriajeComponent implements OnInit {
         principal: t?.Topico_Medicina ?? 0,
         etiquetaPrincipal: 'ADULTO',
         pediatrico: t?.Topico_Pediatria ?? 0,
+        neo: t?.Topico_Neo ?? 0,
       },
       {
         titulo: 'Tópico Cirugía',
         principal: t?.Topico_Cirugia ?? 0,
         etiquetaPrincipal: 'ADULTO',
         pediatrico: t?.Topico_Cirugia_Pediatrica ?? 0,
+        neo: null,
       },
       {
         titulo: 'Tópico Trauma',
         principal: t?.Topico_Trauma ?? 0,
         etiquetaPrincipal: 'General',
         pediatrico: null,
+        neo: null,
       },
       {
         titulo: 'Trauma Shock',
         principal: t?.TraumaShock ?? 0,
         etiquetaPrincipal: 'ADULTO',
         pediatrico: t?.TraumaShock_Pediatrico ?? 0,
+        neo: null,
       },
       {
         titulo: 'Urgencias',
         principal: t?.Urgencias ?? 0,
         etiquetaPrincipal: 'ADULTO',
         pediatrico: t?.Urgencias_Pediatrica ?? 0,
+        neo: null,
       },
     ];
   }
 
   // Total de triajes del usuario en el rango: el SP acumula cada triaje en una
   // sola categoría (los IdServicio de los CASE son excluyentes), así que la
-  // suma de las 9 columnas es el total por empleado.
+  // suma de las 9 columnas es el total por empleado. Topico_Neo queda fuera
+  // de este total y solo suma en el sub-total pediátrico.
   get totalTablero(): number {
     const t = this.tablero;
     if (!t) return 0;
@@ -319,6 +329,8 @@ export class TriajeComponent implements OnInit {
     );
   }
 
+  // Sub-total pediátrico: los 4 sub-totales pediátricos de los temas más NEO,
+  // que solo Tópico medicina reporta. Topico_Neo no entra en totalTablero.
   get totalPediatrico(): number {
     const t = this.tablero;
     if (!t) return 0;
@@ -326,7 +338,8 @@ export class TriajeComponent implements OnInit {
       t.Topico_Pediatria +
       t.Topico_Cirugia_Pediatrica +
       t.TraumaShock_Pediatrico +
-      t.Urgencias_Pediatrica
+      t.Urgencias_Pediatrica +
+      t.Topico_Neo
     );
   }
 
@@ -345,6 +358,7 @@ export class TriajeComponent implements OnInit {
       this.tablero = {
         Medico: campo(row, ['Medico']),
         Topico_Medicina: Number(campo(row, ['Topico_Medicina'])) || 0,
+        Topico_Neo: Number(campo(row, ['Topico_Neo'])) || 0,
         Topico_Pediatria: Number(campo(row, ['Topico_Pediatria'])) || 0,
         Topico_Cirugia: Number(campo(row, ['Topico_Cirugia'])) || 0,
         Topico_Cirugia_Pediatrica:

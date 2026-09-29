@@ -197,6 +197,16 @@
                   {{ area.etiquetaPrincipal }}
                 </p>
               </div>
+              @if (area.neo !== null) {
+                <div class="min-w-0 border-l border-[#dde3ef] pl-3">
+                  <p class="m-0 text-[18px] font-extrabold leading-none text-[#263c7a]">
+                    {{ area.neo }}
+                  </p>
+                  <p class="m-0 mt-1 truncate text-[9px] font-semibold uppercase tracking-wide text-[#8a94ad]">
+                    NEO
+                  </p>
+                </div>
+              }
               @if (area.pediatrico !== null) {
                 <div class="min-w-0 border-l border-[#dde3ef] pl-3">
                   <p class="m-0 text-[22px] font-extrabold leading-none text-teal-700">

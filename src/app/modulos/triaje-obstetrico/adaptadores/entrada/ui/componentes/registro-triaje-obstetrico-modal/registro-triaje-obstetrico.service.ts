@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { MaestrosApiService } from '../../../../../../../compartido/api/maestros.api.service';
 import { ApiRequestError } from '../../../../../../../compartido/api-client/api-client.service';
 import type {
@@ -11,8 +11,10 @@ import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { PacientesApiService } from '../../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
+  leerCampoFiliacion,
   type SisAfiliado,
   SisApiService,
+  type SisFiliacionRegistrada,
 } from '../../../../../../sis/adaptadores/salida/http/sis.api.service';
 import {
   type RegistroTriajeObstetricoPayload,
@@ -20,7 +22,7 @@ import {
 } from '../../../../salida/http/triaje-obstetrico.api.service';
 import type { FormRegistroTriajeObstetrico } from './registro-triaje-obstetrico.interfaces';
 
-// Parámetros que habilitan/deshabilitan la integración con webservices
+// Par�metros que habilitan/deshabilitan la integraci�n con webservices
 // externos: 'S' habilita la consulta, 'N' la deshabilita.
 const PARAMETRO_SIS_ID = 322;
 const PARAMETRO_RENIEC_ID = 296;
@@ -46,6 +48,10 @@ export class RegistroTriajeObstetricoService {
   sisActivo = false;
   sisDescripcion = '';
   sisGuardado = false;
+  // Distingue "no hay afiliaci�n" de "la afiliaci�n existe pero est� cancelada
+  // por Fbaja pasada", porque el aviso al usuario es distinto en cada caso.
+  sisCancelado = false;
+  sisFechaBaja = '';
   sisIntegrado = false;
   reniecIntegrado = false;
 
@@ -68,12 +74,12 @@ export class RegistroTriajeObstetricoService {
     {
       value: '1',
       label: 'Prioridad I',
-      subtitulo: 'Riesgo de muerte inminente (atención inmediata)',
+      subtitulo: 'Riesgo de muerte inminente (atenci�n inmediata)',
       color: '#ef4444',
       opciones: [
-        'Sangrado vaginal masivo o signos de shock hipovolémico (palidez, hipotensión, taquicardia)',
-        'Dolor abdominal severo con signos de abdomen agudo (sospecha embarazo ectópico complicado)',
-        'Convulsiones o pérdida de conciencia (sospecha de eclampsia)',
+        'Sangrado vaginal masivo o signos de shock hipovol�mico (palidez, hipotensi�n, taquicardia)',
+        'Dolor abdominal severo con signos de abdomen agudo (sospecha embarazo ect�pico complicado)',
+        'Convulsiones o p�rdida de conciencia (sospecha de eclampsia)',
         'Ausencia de movimientos fetales referida por la gestante',
         'Trabajo de parto en periodo expulsivo o parto inminente',
       ],
@@ -81,25 +87,25 @@ export class RegistroTriajeObstetricoService {
     {
       value: '2',
       label: 'Prioridad II',
-      subtitulo: 'Urgencia mayor (espera máx. 10 minutos)',
+      subtitulo: 'Urgencia mayor (espera m�x. 10 minutos)',
       color: '#f97316',
       opciones: [
-        'Presión arterial ≥ 140/90 con cefalea o visión borrosa (sospecha de preeclampsia)',
-        'Contracciones uterinas regulares en gestante pretérmino (<37 semanas)',
-        'Pérdida de líquido por vía vaginal (sospecha de rotura prematura de membranas)',
+        'Presi�n arterial = 140/90 con cefalea o visi�n borrosa (sospecha de preeclampsia)',
+        'Contracciones uterinas regulares en gestante pret�rmino (<37 semanas)',
+        'P�rdida de l�quido por v�a vaginal (sospecha de rotura prematura de membranas)',
         'Sangrado vaginal moderado en gestante, con funciones vitales estables',
-        'Fiebre ≥ 38°C asociada a dolor pélvico (sospecha de proceso infeccioso)',
+        'Fiebre = 38�C asociada a dolor p�lvico (sospecha de proceso infeccioso)',
       ],
     },
     {
       value: '3',
       label: 'Prioridad III',
-      subtitulo: 'Urgencia menor (sin riesgo vital, espera ≥ 20 minutos)',
+      subtitulo: 'Urgencia menor (sin riesgo vital, espera = 20 minutos)',
       color: '#eab308',
       opciones: [
         'Sangrado vaginal leve en no gestante, con funciones vitales estables',
-        'Secreción vaginal anormal sin fiebre asociada',
-        'Dolor pélvico leve, con funciones vitales estables',
+        'Secreci�n vaginal anormal sin fiebre asociada',
+        'Dolor p�lvico leve, con funciones vitales estables',
         'Control prenatal de rutina, sin signos de alarma',
       ],
     },
@@ -108,10 +114,10 @@ export class RegistroTriajeObstetricoService {
   opcionesSeleccionadas: Record<string, string[]> = {};
 
   unidadesTiempo = [
-    { value: 'Años', label: 'Años' },
+    { value: 'A�os', label: 'A�os' },
     { value: 'Meses', label: 'Meses' },
     { value: 'Semanas', label: 'Semanas' },
-    { value: 'Días', label: 'Días' },
+    { value: 'D�as', label: 'D�as' },
     { value: 'Horas', label: 'Horas' },
     { value: 'Minutos', label: 'Minutos' },
   ];
@@ -187,7 +193,7 @@ export class RegistroTriajeObstetricoService {
         this.maestrosApi.getEstadosLlegoPaciente(),
       ]);
     } catch {
-      this.mensajeError = 'Error al cargar catálogos iniciales.';
+      this.mensajeError = 'Error al cargar cat�logos iniciales.';
     }
     await this.cargarCausasExternas();
   }
@@ -243,6 +249,8 @@ export class RegistroTriajeObstetricoService {
     this.sisActivo = false;
     this.sisDescripcion = '';
     this.sisGuardado = false;
+    this.sisCancelado = false;
+    this.sisFechaBaja = '';
     this.sisIntegrado = false;
     this.reniecIntegrado = false;
     this.ultimoTriajeId = null;
@@ -261,7 +269,7 @@ export class RegistroTriajeObstetricoService {
     }
 
     if (!this.formulario.nroDocumento) {
-      this.mensajeError = 'Ingrese un número de documento';
+      this.mensajeError = 'Ingrese un n�mero de documento';
       return;
     }
 
@@ -271,7 +279,7 @@ export class RegistroTriajeObstetricoService {
       this.formulario.idDocIdentidad === '1' &&
       this.formulario.nroDocumento.length !== 8
     ) {
-      this.mensajeError = 'DNI incorrecto, debe tener 8 dígitos.';
+      this.mensajeError = 'DNI incorrecto, debe tener 8 d�gitos.';
       return;
     }
     this.buscando = true;
@@ -280,6 +288,12 @@ export class RegistroTriajeObstetricoService {
     this.pacienteEncontrado = false;
     this.sisConsultado = false;
     this.sisActivo = false;
+    this.sisCancelado = false;
+    this.sisFechaBaja = '';
+    // Se limpia el IAFA de la b�squeda anterior: si el paciente nuevo tiene la
+    // afiliaci�n cancelada (Fbaja pasada), el combo no debe seguir mostrando el
+    // SIS que qued� del paciente previo.
+    this.formulario.idFuenteFinanciamiento = '';
 
     try {
       await this.cargarParametrosIntegracion();
@@ -291,7 +305,7 @@ export class RegistroTriajeObstetricoService {
       const paciente = await this.buscarEnBaseDatosLocal();
 
       if (!paciente) {
-        // SD solo se busca en la base de datos; RENIEC además únicamente
+        // SD solo se busca en la base de datos; RENIEC adem�s �nicamente
         // soporta DNI.
         const reniecOk = esSinDocumento ? false : await this.consultarReniec();
         if (reniecOk) {
@@ -306,6 +320,11 @@ export class RegistroTriajeObstetricoService {
 
       if (!esSinDocumento && this.sisIntegrado) {
         await this.consultarSis();
+      } else if (!esSinDocumento && !this.sisIntegrado) {
+        // Con la integraci�n SIS desactivada (par�metro 322 en 'N') no se puede
+        // consultar al SIS por SOAP, pero la afiliaci�n ya registrada en la base
+        // de datos local sigue siendo v�lida como fuente de la cobertura.
+        await this.consultarFiliacionLocal();
       }
 
       if (!this.pacienteEncontrado) {
@@ -320,7 +339,7 @@ export class RegistroTriajeObstetricoService {
             'El paciente no fue encontrado en la base de datos. Ingrese los datos manualmente.';
         } else if (!this.mensajeError) {
           this.mensajeError =
-            'No se encontró el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
+            'No se encontr� el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
         }
       }
     } catch (error: unknown) {
@@ -333,8 +352,8 @@ export class RegistroTriajeObstetricoService {
     }
   }
 
-  // Busca por afiliación SIS (intOpcion=2): requiere DISA, tipo de formato y
-  // número de contrato, sin número de documento.
+  // Busca por afiliaci�n SIS (intOpcion=2): requiere DISA, tipo de formato y
+  // n�mero de contrato, sin n�mero de documento.
   private async buscarPorAfiliacion(): Promise<void> {
     const disa = this.formulario.afiliacionDisa.trim();
     const tipoFormato = this.formulario.afiliacionTipoFormato.trim();
@@ -342,7 +361,7 @@ export class RegistroTriajeObstetricoService {
 
     if (!disa || !tipoFormato || !nroContrato) {
       this.mensajeError =
-        'Ingrese DISA, tipo de formato y número de contrato de la afiliación.';
+        'Ingrese DISA, tipo de formato y n�mero de contrato de la afiliaci�n.';
       return;
     }
 
@@ -365,21 +384,21 @@ export class RegistroTriajeObstetricoService {
 
       if (!this.pacienteEncontrado && !this.mensajeError) {
         this.mensajeError =
-          'No se encontró la afiliación en SIS. Complete los datos manualmente o active el modo Paciente NN.';
+          'No se encontr� la afiliaci�n en SIS. Complete los datos manualmente o active el modo Paciente NN.';
       }
     } catch (error: unknown) {
       this.mensajeError =
         error instanceof ApiRequestError
           ? error.message
-          : 'Error inesperado al buscar la afiliación.';
+          : 'Error inesperado al buscar la afiliaci�n.';
     } finally {
       this.buscando = false;
     }
   }
 
-  // Consulta los parámetros que activan las integraciones con SIS y RENIEC.
-  // valorTexto === 'S' habilita la integración; cualquier otro valor la apaga.
-  // Ante un error del endpoint se asume integración desactivada (fail-closed).
+  // Consulta los par�metros que activan las integraciones con SIS y RENIEC.
+  // valorTexto === 'S' habilita la integraci�n; cualquier otro valor la apaga.
+  // Ante un error del endpoint se asume integraci�n desactivada (fail-closed).
   private async cargarParametrosIntegracion(): Promise<void> {
     try {
       const [sisParam, reniecParam] = await Promise.all([
@@ -392,6 +411,29 @@ export class RegistroTriajeObstetricoService {
     } catch {
       this.sisIntegrado = false;
       this.reniecIntegrado = false;
+    }
+  }
+
+  // Detecta el idError 6 de SIS ("USUARIO FUERA DEL LIMITE DE CONSULTAS POR
+  // DIA"). Se compara por idError y, como red de seguridad, por el texto del
+  // resultado, porque el SISReport a veces devuelve el mensaje sin el id.
+  private esLimiteConsultasSis(sis: SisAfiliado | undefined): boolean {
+    if (!sis) return false;
+    if (String(sis.idError ?? '').trim() === '6') return true;
+    return (sis.resultado || '').toUpperCase().includes('LIMITE DE CONSULTAS');
+  }
+
+  // Deja la integraci�n SIS desactivada en memoria para el resto de la sesi�n
+  // del modal: si no, el siguiente buscarPaciente() volver�a a activarla desde
+  // el par�metro 322 que todav�a no refleja el cambio.
+  private async desactivarIntegracionSis(): Promise<void> {
+    this.sisIntegrado = false;
+    try {
+      await this.maestrosApi.desactivarParametro(PARAMETRO_SIS_ID);
+    } catch {
+      // Si el PATCH falla, el estado local ya qued� en false, as� que el
+      // flujo contin�a sin integraci�n SIS. El backend se sincronizar� en el
+      // siguiente arranque cuando se vuelva a leer el par�metro.
     }
   }
 
@@ -420,7 +462,7 @@ export class RegistroTriajeObstetricoService {
   }
 
   // Identifica si el tipo de documento seleccionado es "SD" (Sin Documento,
-  // valor 0). En ese caso la búsqueda solo consulta la base de datos local.
+  // valor 0). En ese caso la b�squeda solo consulta la base de datos local.
   private get esTipoDocumentoSinDocumento(): boolean {
     const id = this.formulario.idDocIdentidad;
     if (id === '0') return true;
@@ -441,8 +483,8 @@ export class RegistroTriajeObstetricoService {
     return sd ? String(sd.id) : '';
   }
 
-  // Convierte el tipo de documento a número conservando el valor 0 (SD -
-  // Sin Documento). Si viene vacío o no es numérico usa 1 (DNI).
+  // Convierte el tipo de documento a n�mero conservando el valor 0 (SD -
+  // Sin Documento). Si viene vac�o o no es num�rico usa 1 (DNI).
   private idDocIdentidadNumero(): number {
     const v = this.formulario.idDocIdentidad?.trim();
     if (!v) return 1;
@@ -458,7 +500,7 @@ export class RegistroTriajeObstetricoService {
       );
     } catch (error: unknown) {
       // No se hace fallback a /pacientes/buscar: si no existe un paciente
-      // con ese tipo y número de documento, se pasa a RENIEC y luego SIS.
+      // con ese tipo y n�mero de documento, se pasa a RENIEC y luego SIS.
       if (error instanceof ApiRequestError && error.status === 404) {
         return null;
       }
@@ -501,7 +543,7 @@ export class RegistroTriajeObstetricoService {
         return true;
       } else {
         const msgReniec =
-          resultado.resultado?.filter((r) => !!r?.trim()).join(' · ') ||
+          resultado.resultado?.filter((r) => !!r?.trim()).join(' � ') ||
           'No se encontraron datos en la RENIEC.';
         this.mensajeError = msgReniec;
         return false;
@@ -585,11 +627,192 @@ export class RegistroTriajeObstetricoService {
         this.sisActivo = false;
       }
 
+      // SIS responder con idError 6 significa que se agot� la cuota diaria de
+      // consultas del usuario. Es un fallo de la cuenta, no del paciente, as�
+      // que se desactiva la integraci�n SIS (par�metro 322) para no seguir
+      // golpeando el endpoint. El mensaje de SIS se muestra igual al usuario.
+      if (this.esLimiteConsultasSis(sisResponse)) {
+        this.sisActivo = false;
+        this.mensajeError =
+          sisResponse.resultado?.trim() ||
+          'Se alcanz� el l�mite de consultas diarias de SIS.';
+        await this.desactivarIntegracionSis();
+        // Aun sin cuota para consultar al SIS, la afiliaci�n guardada en la base
+        // de datos local puede vigente, as� que se usa como respaldo.
+        await this.consultarFiliacionLocal();
+      }
+
       this.actualizarIafaAutomatico();
     } catch {
       this.sisConsultado = true;
       this.sisActivo = false;
       this.actualizarIafaAutomatico();
+    }
+  }
+
+  // Respaldo local de la integraci�n SIS: consulta la afiliaci�n ya registrada
+  // en la base de datos (SP usp_go_SisFiliacionesConsultar) cuando no se puede
+  // llamar al SIS por SOAP, ya sea porque el par�metro 322 est� en 'N' o porque
+  // se agot� la cuota diaria de consultas.
+  //
+  // Solo se toma en cuenta cuando el SP devuelve exactamente un registro: con
+  // varios, no hay forma de saber cu�l es la vigente, as� que se deja al
+  // usuario resolverlo. La vigencia la define Fbaja: vac�a o futura mantiene
+  // la cobertura; una fecha ya pasada la cancela.
+  private async consultarFiliacionLocal(): Promise<void> {
+    const nroDocumento = (this.formulario.nroDocumento || '').trim();
+    if (!nroDocumento) return;
+
+    const idTipoDoc = this.tipoDocumentoParaSis();
+    if (!idTipoDoc) return;
+
+    try {
+      const registros = await this.sisApi.listarFiliacionesRegistradas(
+        nroDocumento,
+        idTipoDoc,
+      );
+
+      if (registros?.length !== 1) {
+        return;
+      }
+
+      const afiliacion = registros[0];
+      if (!this.afiliacionSigueVigente(afiliacion)) {
+        this.sisActivo = false;
+        this.sisConsultado = true;
+        this.sisDescripcion = '';
+        // Fbaja pasada: la afiliaci�n existe pero est� cancelada. Se informa
+        // como "SIS Cancelado" en vez de "SIS activo", y el combo de IAFA no
+        // puede quedar en SIS. Se deja en PART�CULAR, que es lo que
+        // corresponde a un paciente sin cobertura vigente.
+        this.sisCancelado = true;
+        this.sisFechaBaja = leerCampoFiliacion(afiliacion, 'fbaja');
+        this.fijarFuenteParticular();
+        return;
+      }
+
+      this.sisConsultado = true;
+      this.sisActivo = true;
+      this.sisDescripcion = this.descripcionFiliacionLocal(afiliacion);
+      this.mapearFiliacionLocalAlFormulario(afiliacion);
+    } catch {
+      // Si la consulta local falla, el triaje sigue sin cobertura SIS y el
+      // usuario completa los datos a mano. No se sobrescribe mensajeError
+      // porque suele haber un aviso m�s relevante de RENIEC o SIS.
+      this.sisActivo = false;
+    }
+
+    this.actualizarIafaAutomatico();
+  }
+
+  // Traduce el tipo de documento del formulario al valor que espera el SP:
+  // 1 para DNI y 3 para Carnet de Extranjer�a. Otros tipos (SD, afiliaci�n,
+  // pasaporte) no tienen equivalencia en SisFiliaciones, as� que no se consulta.
+  private tipoDocumentoParaSis(): number | null {
+    if (this.formulario.idDocIdentidad === '1') return 1;
+    if (this.formulario.idDocIdentidad === '3') return 3;
+    return null;
+  }
+
+  // Fbaja es la fecha en que termin� la afiliaci�n. Vac�a o nula significa que
+  // sigue vigente. Viene como dd/mm/aaaa (ej. 17/10/2030) y se acepta tambi�n
+  // el formato ISO que puede devolver el driver.
+  private afiliacionSigueVigente(afiliacion: SisFiliacionRegistrada): boolean {
+    const fbaja = leerCampoFiliacion(afiliacion, 'fbaja');
+    if (!fbaja) return true;
+
+    const baja = this.parsearFechaFiliacion(fbaja);
+    if (!baja) {
+      // Una Fbaja con formato desconocido no se puede comparar con la fecha
+      // actual; se asume vigente para no quitarle la cobertura al paciente.
+      return true;
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return baja >= hoy;
+  }
+
+  private parsearFechaFiliacion(valor: string): Date | null {
+    const texto = valor.trim();
+
+    // dd/mm/aaaa, con o sin separadores, tal como lo muestra SIS.
+    const dmy = /^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})/.exec(texto);
+    if (dmy) {
+      return this.construirFecha(
+        Number(dmy[3]),
+        Number(dmy[2]),
+        Number(dmy[1]),
+      );
+    }
+
+    // aaaa-mm-dd, con o sin hora.
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(texto);
+    if (ymd) {
+      return this.construirFecha(
+        Number(ymd[1]),
+        Number(ymd[2]),
+        Number(ymd[3]),
+      );
+    }
+
+    return null;
+  }
+
+  // Construye la fecha validando el rango: new Date(2030, 12, 1) desborda a
+  // enero del a�o siguiente en vez de fallar, y eso ocultar�a un Fbaja inv�lido.
+  private construirFecha(anio: number, mes: number, dia: number): Date | null {
+    const fecha = new Date(anio, mes, dia);
+    if (Number.isNaN(fecha.getTime())) return null;
+    if (
+      fecha.getFullYear() !== anio ||
+      fecha.getMonth() !== mes ||
+      fecha.getDate() !== dia
+    ) {
+      return null;
+    }
+    return fecha;
+  }
+
+  private descripcionFiliacionLocal(
+    afiliacion: SisFiliacionRegistrada,
+  ): string {
+    const seguro =
+      leerCampoFiliacion(afiliacion, 'descTipoSeguro') ||
+      leerCampoFiliacion(afiliacion, 'tipoSeguro');
+    const regimen = leerCampoFiliacion(afiliacion, 'regimen');
+    return [seguro, regimen].filter((p) => !!p).join(' - ');
+  }
+
+  // Copia los datos de la afiliaci�n local al formulario. Solo rellena campos
+  // vac�os, para no pisar lo que el usuario ya escribi� o lo que vino de BD.
+  private mapearFiliacionLocalAlFormulario(
+    afiliacion: SisFiliacionRegistrada,
+  ): void {
+    type CampoNombre =
+      | 'apellidoPaterno'
+      | 'apellidoMaterno'
+      | 'primerNombre'
+      | 'segundoNombre';
+
+    const campos: (readonly [CampoNombre, string])[] = [
+      ['apellidoPaterno', leerCampoFiliacion(afiliacion, 'paterno')],
+      ['apellidoMaterno', leerCampoFiliacion(afiliacion, 'materno')],
+      ['primerNombre', leerCampoFiliacion(afiliacion, 'pnombre')],
+      ['segundoNombre', leerCampoFiliacion(afiliacion, 'onombres')],
+    ];
+
+    for (const [campo, valor] of campos) {
+      if (valor && !String(this.formulario[campo] || '').trim()) {
+        this.formulario[campo] = valor;
+      }
+    }
+
+    const fNacimientoIso = this.formatearFechaSis(
+      leerCampoFiliacion(afiliacion, 'fnacimiento'),
+    );
+    if (fNacimientoIso && !this.formulario.fechaNacimiento) {
+      this.formulario.fechaNacimiento = fNacimientoIso;
     }
   }
 
@@ -601,8 +824,13 @@ export class RegistroTriajeObstetricoService {
     return fecha;
   }
 
+  // El IAFA se deriva de la cobertura efectiva del paciente, no de si la
+  // integraci�n con el SIS est� prendida. Con el par�metro 322 en 'N' la
+  // integraci�n no se consulta, pero una afiliaci�n local vigente igual cubre
+  // al paciente y debe reflejarse como SIS en el combo. Por eso el corte se
+  // hace sobre sisConsultado/sisActivo y no sobre sisIntegrado.
   actualizarIafaAutomatico(): void {
-    if (!this.sisIntegrado) return;
+    if (!this.sisIntegrado && !this.sisActivo) return;
 
     const buscarIAFA = (termino: string) =>
       this.fuentesFinanciamiento.find((f) =>
@@ -675,8 +903,8 @@ export class RegistroTriajeObstetricoService {
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
 
-    // Al buscar por afiliación (sin documento), el número de contrato
-    // ingresado se coloca como número de documento y el tipo se fija en
+    // Al buscar por afiliaci�n (sin documento), el n�mero de contrato
+    // ingresado se coloca como n�mero de documento y el tipo se fija en
     // "Sin Documento" (SD) para grabar el triaje con los datos de SIS.
     if (this.esFiliacion) {
       this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
@@ -864,7 +1092,7 @@ export class RegistroTriajeObstetricoService {
     }
   }
 
-  // idTriaje informado: el triaje ya existe y se modifica (modo edición);
+  // idTriaje informado: el triaje ya existe y se modifica (modo edici�n);
   // si no se informa se registra uno nuevo.
   async guardarYContinuar(idTriaje?: number): Promise<void> {
     this.mensajeError = '';
@@ -895,7 +1123,7 @@ export class RegistroTriajeObstetricoService {
     }
 
     if (!this.formulario.idEstadoLlego) {
-      this.mensajeError = 'Seleccione cómo llegó el paciente.';
+      this.mensajeError = 'Seleccione c�mo lleg� el paciente.';
       return;
     }
 
@@ -911,7 +1139,7 @@ export class RegistroTriajeObstetricoService {
 
     if (!this.esCadaver) {
       if (!this.formulario.motivo) {
-        this.mensajeError = 'Ingrese los síntomas principales.';
+        this.mensajeError = 'Ingrese los s�ntomas principales.';
         return;
       }
       if (!this.formulario.peso) {
@@ -920,7 +1148,7 @@ export class RegistroTriajeObstetricoService {
       }
       if (!/^[0-9]{1,3}(\.[0-9]{1,3})?$/.test(this.formulario.peso)) {
         this.mensajeError =
-          'El peso debe ser numérico (hasta 3 decimales, ej: 5.400).';
+          'El peso debe ser num�rico (hasta 3 decimales, ej: 5.400).';
         return;
       }
       if (!this.formulario.talla) {
@@ -928,26 +1156,26 @@ export class RegistroTriajeObstetricoService {
         return;
       }
       if (!/^[0-9]{1,3}$/.test(this.formulario.talla)) {
-        this.mensajeError = 'La talla debe ser numérica.';
+        this.mensajeError = 'La talla debe ser num�rica.';
         return;
       }
       if (this.tiene15OMas && !this.formulario.presionArterial) {
-        this.mensajeError = 'Ingrese la presión arterial.';
+        this.mensajeError = 'Ingrese la presi�n arterial.';
         return;
       }
       if (
         this.formulario.presionArterial &&
         !/^[0-9]{2,3}\/[0-9]{2,3}$/.test(this.formulario.presionArterial)
       ) {
-        this.mensajeError = 'La presión arterial debe tener el formato 120/80.';
+        this.mensajeError = 'La presi�n arterial debe tener el formato 120/80.';
         return;
       }
       if (!this.formulario.saturacion) {
-        this.mensajeError = 'Ingrese la saturación de O₂.';
+        this.mensajeError = 'Ingrese la saturaci�n de O2.';
         return;
       }
       if (!/^[0-9]{1,3}$/.test(this.formulario.saturacion)) {
-        this.mensajeError = 'La saturación de O₂ debe ser numérica.';
+        this.mensajeError = 'La saturaci�n de O2 debe ser num�rica.';
         return;
       }
       if (!this.formulario.temperatura) {
@@ -956,34 +1184,34 @@ export class RegistroTriajeObstetricoService {
       }
       if (!/^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(this.formulario.temperatura)) {
         this.mensajeError =
-          'La temperatura debe ser numérica con decimales (ej: 39.5).';
+          'La temperatura debe ser num�rica con decimales (ej: 39.5).';
         return;
       }
       if (!this.formulario.tiempoEvolucionCantidad) {
-        this.mensajeError = 'Ingrese el tiempo de síntomas.';
+        this.mensajeError = 'Ingrese el tiempo de s�ntomas.';
         return;
       }
       if (!/^[0-9]{1,4}$/.test(this.formulario.tiempoEvolucionCantidad)) {
-        this.mensajeError = 'El tiempo de síntomas debe ser numérico.';
+        this.mensajeError = 'El tiempo de s�ntomas debe ser num�rico.';
         return;
       }
       if (!this.formulario.tiempoEvolucionCantidadUnidad) {
-        this.mensajeError = 'Seleccione la frecuencia del tiempo de síntomas.';
+        this.mensajeError = 'Seleccione la frecuencia del tiempo de s�ntomas.';
         return;
       }
       if (!this.formulario.frecCardiaca) {
-        this.mensajeError = 'Ingrese la frecuencia cardíaca.';
+        this.mensajeError = 'Ingrese la frecuencia card�aca.';
         return;
       }
       if (!/^[0-9]{1,3}$/.test(this.formulario.frecCardiaca)) {
-        this.mensajeError = 'La frecuencia cardíaca debe ser numérica.';
+        this.mensajeError = 'La frecuencia card�aca debe ser num�rica.';
         return;
       }
       if (
         this.formulario.frecRespiratoria &&
         !/^[0-9]{1,3}$/.test(this.formulario.frecRespiratoria)
       ) {
-        this.mensajeError = 'La frecuencia respiratoria debe ser numérica.';
+        this.mensajeError = 'La frecuencia respiratoria debe ser num�rica.';
         return;
       }
       if (
@@ -991,7 +1219,7 @@ export class RegistroTriajeObstetricoService {
         !/^[0-9]{1,2}(\.[0-9]{1,2})?$/.test(this.formulario.fiO2)
       ) {
         this.mensajeError =
-          'El FIO₂ debe ser numérico con decimales (ej: 0.21).';
+          'El FIO2 debe ser num�rico con decimales (ej: 0.21).';
         return;
       }
       if (!this.formulario.escalaDolor && this.formulario.escalaDolor !== '0') {
