@@ -99,3 +99,37 @@ export interface RegistroPacientePayload {
   discapacidad?: number;
   incapacidad?: number;
 }
+
+// RegistroPacienteConHistoriaPayload corresponde al cuerpo de
+// POST /api/v1/pacientes/historia-clinica (SP usp_go_PacienteHistoriaClinicaAgregar).
+// El SP acepta un subconjunto mas reducido que RegistroPacientePayload: no
+// recibe tercerNombre, email, celular, datos de nacimiento/procedencia,
+// centros poblados ni nombre de padres, y el idEmpleado lo toma del token, no
+// del cuerpo.
+export interface RegistroPacienteConHistoriaPayload {
+  apellidoPaterno: string;
+  primerNombre: string;
+  nroDocumento: string;
+  apellidoMaterno?: string;
+  segundoNombre?: string;
+  fechaNacimiento?: string;
+  idDocIdentidad?: number;
+  telefono?: string;
+  direccionPaciente?: string;
+  idTipoSexo?: number;
+  idEstadoCivil?: number;
+  idDistrito?: number;
+  idPais?: number;
+  idEtnia?: number;
+  idIdioma?: number;
+  idOcupacion?: number;
+  idGradoInstruccion?: number;
+  madreNroDocumento?: string;
+  madreApellidoPaterno?: string;
+  madreApellidoMaterno?: string;
+  madrePrimerNombre?: string;
+  madreSegundoNombre?: string;
+  idFuenteFinanciamiento?: number;
+  discapacidad?: number;
+  incapacidad?: number;
+}

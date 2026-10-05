@@ -218,6 +218,12 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
 
   async buscarPaciente(): Promise<void> {
     await this.srv.buscarPaciente();
+    // Se copia el documento buscado al bloque "Datos del paciente". Todas las
+    // vias de busqueda (documento, afiliacion SIS y paciente NN) pasan por
+    // srv.buscarPaciente, asi que un solo punto de copia las cubre.
+    if (this.srv.pacienteEncontrado) {
+      this.srv.sincronizarDocumentoPaciente();
+    }
     this.mostrarPaciente = true;
     this.cdr.detectChanges();
   }
@@ -260,6 +266,7 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
     if (paciente.documentNumber) {
       this.srv.formulario.nroDocumento = String(paciente.documentNumber);
     }
+    this.srv.sincronizarDocumentoPaciente();
 
     this.cdr.detectChanges();
   }
@@ -296,6 +303,9 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
       this.srv.pasoActual = 1;
       this.mostrarPaciente = true;
     }
+    // toggleNN no pasa por buscarPaciente, asi que el documento del bloque
+    // "Datos del paciente" se sincroniza aqui (SD/SD o DNI/vacio).
+    this.srv.sincronizarDocumentoPaciente();
     this.cdr.detectChanges();
   }
 

@@ -44,6 +44,9 @@ export class RegistroTriajeService {
   buscando = false;
   guardando = false;
   pacienteEncontrado = false;
+  // True cuando la busqueda no resolvio al paciente y los datos del bloque
+  // "Datos del paciente" los tiene que ingresar el operador a mano.
+  datosPacienteManuales = false;
   mensajeError = '';
   mensajeInfo = '';
 
@@ -98,6 +101,8 @@ export class RegistroTriajeService {
     return {
       idDocIdentidad: '1',
       nroDocumento: '',
+      idDocIdentidadPaciente: '1',
+      nroDocumentoPaciente: '',
       afiliacionDisa: '035',
       afiliacionTipoFormato: 'E',
       afiliacionNroContrato: '',
@@ -140,15 +145,12 @@ export class RegistroTriajeService {
   }
 
   async cargarCatalogosIniciales(): Promise<void> {
-    try {
-      [
-        this.tiposDocumentos,
-        this.tiposSexo,
-        this.estadosCivil,
-        this.departamentos,
-        this.fuentesFinanciamiento,
-        this.estadosLlegoPaciente,
-      ] = await Promise.all([
+    // Cada catalogo se asigna por separado en lugar de con un Promise.all
+    // conjunto: "fuentes-financiamiento" tarda decenas de segundos, y con
+    // Promise.all ningun select tendria valores hasta que terminara el mas
+    // lento (y si ese agotaba el timeout, el catch dejaba todos vacios).
+    const [docs, sexos, civiles, deptos, financiamiento, llegos] =
+      await Promise.allSettled([
         this.maestrosApi.getTiposDocumentos(),
         this.maestrosApi.getTiposSexo(),
         this.maestrosApi.getEstadosCivil(),
@@ -158,8 +160,24 @@ export class RegistroTriajeService {
         >,
         this.maestrosApi.getEstadosLlegoPaciente(),
       ]);
-    } catch {
-      this.mensajeError = 'Error al cargar catálogos iniciales.';
+
+    const fallidos: string[] = [];
+    if (docs.status === 'fulfilled') this.tiposDocumentos = docs.value;
+    else fallidos.push('tipos de documento');
+    if (sexos.status === 'fulfilled') this.tiposSexo = sexos.value;
+    else fallidos.push('tipos de sexo');
+    if (civiles.status === 'fulfilled') this.estadosCivil = civiles.value;
+    else fallidos.push('estados civiles');
+    if (deptos.status === 'fulfilled') this.departamentos = deptos.value;
+    else fallidos.push('departamentos');
+    if (financiamiento.status === 'fulfilled')
+      this.fuentesFinanciamiento = financiamiento.value;
+    else fallidos.push('fuentes de financiamiento');
+    if (llegos.status === 'fulfilled') this.estadosLlegoPaciente = llegos.value;
+    else fallidos.push('estados de llegada del paciente');
+
+    if (fallidos.length > 0) {
+      this.mensajeError = `No se pudieron cargar estos catálogos: ${fallidos.join(', ')}.`;
     }
     await this.cargarCausasExternas();
   }
@@ -221,7 +239,28 @@ export class RegistroTriajeService {
     this.servicios = [];
   }
 
+  // Copia el tipo y numero de documento de la barra de busqueda al bloque
+  // "Datos del paciente". La identificacion que se graba en el triaje es la
+  // de ese bloque, no la del buscador, para que el operador pueda corregir
+  // la identificacion del paciente sin volver a disparar la busqueda.
+  //
+  // Con busqueda por afiliacion NO se copia nada: el 99 del select es la
+  // opcion de buscar por afiliacion y no un tipo de documento, y el numero
+  // esta vacio. Los campos se limpian para que el operador los ingrese.
+  sincronizarDocumentoPaciente(): void {
+    if (this.esFiliacion) {
+      this.formulario.idDocIdentidadPaciente = '';
+      this.formulario.nroDocumentoPaciente = '';
+      return;
+    }
+    this.formulario.idDocIdentidadPaciente =
+      this.formulario.idDocIdentidad ?? '';
+    this.formulario.nroDocumentoPaciente = this.formulario.nroDocumento ?? '';
+  }
+
   async buscarPaciente(): Promise<void> {
+    this.datosPacienteManuales = false;
+
     if (this.formulario.pacienteNn) {
       this.habilitarModoNN();
       return;
@@ -295,6 +334,7 @@ export class RegistroTriajeService {
       // los textbox para que el usuario ingrese los datos manualmente.
       if (!this.pacienteEncontrado) {
         this.pacienteEncontrado = true;
+        this.datosPacienteManuales = true;
         this.pasoActual = 2;
         // Con tipo de documento SD (sin documento) la IAFA por defecto es
         // PARTICULAR.
@@ -524,10 +564,16 @@ export class RegistroTriajeService {
               ? Number(sisResponse.idNumReg)
               : undefined,
             codigo: sisResponse.tabla || undefined,
-            documentoTipo:
-              sisResponse.tipoDocumento || this.formulario.idDocIdentidad,
-            documentoNumero:
-              sisResponse.nroDocumento || this.formulario.nroDocumento,
+            // Con busqueda por documento el formulario es la fuente del
+            // documento. Con busqueda por afiliacion idDocIdentidad vale 99
+            // ("Afiliacion", que no es un tipo de documento) y nroDocumento
+            // esta vacio, asi que solo se usa lo que devuelve SIS.
+            documentoTipo: this.esFiliacion
+              ? sisResponse.tipoDocumento
+              : sisResponse.tipoDocumento || this.formulario.idDocIdentidad,
+            documentoNumero: this.esFiliacion
+              ? sisResponse.nroDocumento
+              : sisResponse.nroDocumento || this.formulario.nroDocumento,
             paterno: sisResponse.apePaterno,
             materno: sisResponse.apeMaterno,
             pNombre: sisResponse.nombres,
@@ -837,14 +883,13 @@ export class RegistroTriajeService {
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
 
-    // Al buscar por afiliación (sin documento), el número de contrato
-    // ingresado se coloca como número de documento y el tipo se fija en
-    // "Sin Documento" (SD) para grabar el triaje con los datos de SIS.
-    if (this.esFiliacion) {
-      this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
-      const nroContrato = this.formulario.afiliacionNroContrato.trim();
-      this.formulario.nroDocumento = nroContrato || sis.nroDocumento || '';
-    }
+    // Con busqueda por afiliacion NO se toca formulario.idDocIdentidad ni
+    // formulario.nroDocumento. Antes se fijaba el tipo en SD y se copiaba el
+    // numero de contrato al numero de documento, pero eso hacia que
+    // esFiliacion pasara a false: el select de busqueda volvia a mostrar el
+    // campo de documento, "Datos del paciente" quedaba bloqueado y se
+    // autocompletaba con SD + numero de contrato. Ahora la identificacion se
+    //-ingresa a mano en "Datos del paciente" y se valida al guardar.
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
       this.formulario.fechaNacimiento = `${sis.fecNacimiento.slice(0, 4)}-${sis.fecNacimiento.slice(4, 6)}-${sis.fecNacimiento.slice(6, 8)}`;
@@ -993,6 +1038,33 @@ export class RegistroTriajeService {
     return this.formulario.idDocIdentidad === '99';
   }
 
+  // El bloque "Datos del paciente" queda de solo lectura cuando la
+  // identificacion se resolvio con el buscador por tipo + numero de documento
+  // y el paciente fue encontrado: en ese caso el dato ya fue verificado contra
+  // la BD, RENIEC o SIS y no debe editarse.
+  //
+  // Queda editable en los tres casos en que el operador tiene que completar o
+  // corregir la identificacion:
+  //  - busqueda por afiliacion SIS: el buscador no captura ningun documento
+  //    (muestra DISA / tipo de formato / nro de contrato).
+  //  - paciente no encontrado: se informa "El paciente no fue encontrado.
+  //    Ingrese los datos manualmente." y hay que tipear nombres y apellidos.
+  //  - (el modo NN se resuelve aparte: siempre queda bloqueado porque los
+  //    nombres los fija el propio sistema en 'NN').
+  get datosPacienteBloqueados(): boolean {
+    if (this.formulario.pacienteNn) return true;
+    if (this.esFiliacion) return false;
+    return !this.datosPacienteManuales;
+  }
+
+  // Catalogo de tipos de documento para el bloque "Datos del paciente".
+  // Se excluye la opcion 99 "Afiliacion" que inyecta
+  // usp_go_ListarTiposDocumentos con un "union all": es un modo de busqueda,
+  // no un tipo de documento real del paciente.
+  get tiposDocumentoPaciente(): ICatalogoDescripcion[] {
+    return this.tiposDocumentos.filter((t) => Number(t.id) !== 99);
+  }
+
   private idTipoDocumentoSinDocumento(): string {
     const sd = this.tiposDocumentos.find(
       (t) => (t.descripcion || '').toUpperCase() === 'SD',
@@ -1013,6 +1085,15 @@ export class RegistroTriajeService {
   // Sin Documento). Si viene vacío o no es numérico usa 1 (DNI).
   private idDocIdentidadNumero(): number {
     const v = this.formulario.idDocIdentidad?.trim();
+    if (!v) return 1;
+    const n = Number(v);
+    return Number.isNaN(n) ? 1 : n;
+  }
+
+  // Igual que idDocIdentidadNumero pero sobre el dato del bloque "Datos del
+  // paciente", que es el que se envia al grabar el triaje.
+  private idDocIdentidadPacienteNumero(): number {
+    const v = this.formulario.idDocIdentidadPaciente?.trim();
     if (!v) return 1;
     const n = Number(v);
     return Number.isNaN(n) ? 1 : n;
@@ -1047,6 +1128,21 @@ export class RegistroTriajeService {
     if (!this.formulario.apellidoPaterno || !this.formulario.primerNombre) {
       this.mensajeError = 'Complete los nombres y apellidos del paciente.';
       return;
+    }
+
+    // Con busqueda por afiliacion el documento no se autocompleta: el
+    // operador tiene que ingresarlo a mano en "Datos del paciente".
+    if (this.esFiliacion) {
+      if (!this.formulario.idDocIdentidadPaciente) {
+        this.mensajeError =
+          'Seleccione el tipo de documento del paciente en "Datos del paciente".';
+        return;
+      }
+      if (!this.formulario.nroDocumentoPaciente.trim()) {
+        this.mensajeError =
+          'Ingrese el número de documento del paciente en "Datos del paciente".';
+        return;
+      }
     }
 
     if (!this.formulario.idTipoSexo) {
@@ -1222,8 +1318,8 @@ export class RegistroTriajeService {
 
       const payloadTriaje: RegistroTriajePayload = {
         idTriaje,
-        idDocIdentidad: this.idDocIdentidadNumero(),
-        nroDocumento: this.formulario.nroDocumento,
+        idDocIdentidad: this.idDocIdentidadPacienteNumero(),
+        nroDocumento: this.formulario.nroDocumentoPaciente,
         apellidoPaterno: this.formulario.apellidoPaterno,
         apellidoMaterno: this.formulario.apellidoMaterno,
         primerNombre: this.formulario.primerNombre,

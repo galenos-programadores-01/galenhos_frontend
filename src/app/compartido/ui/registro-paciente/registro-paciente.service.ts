@@ -14,7 +14,7 @@ import type {
   ICatalogoDescripcion,
   ICatalogoNombre,
   IFuenteFinanciamiento,
-  RegistroPacientePayload,
+  RegistroPacienteConHistoriaPayload,
 } from '../../tipos/api-tipos';
 import { ReniecMapper } from '../../utilidades/reniec.mapper';
 import {
@@ -403,6 +403,12 @@ export class RegistroPacienteService {
       this.form.idIdioma = texto(d.languageId);
       this.form.discapacidad = texto(d.disabilityId);
       this.form.incapacidad = texto(d.incapacityId);
+      this.form.madreTutorIdDocIdentidad = texto(d.motherDocType);
+      this.form.madreTutorNroDocumento = texto(d.motherDocument);
+      this.form.madreTutorApellidoPaterno = texto(d.motherPaternalSurname);
+      this.form.madreTutorApellidoMaterno = texto(d.motherMaternalSurname);
+      this.form.madreTutorPrimerNombre = texto(d.motherFirstName);
+      this.form.madreTutorSegundoNombre = texto(d.motherSecondName);
 
       await this.cargarUbigeoEdicion();
     } catch (err: unknown) {
@@ -625,32 +631,53 @@ export class RegistroPacienteService {
 
   private async guardarComoPaciente(): Promise<void> {
     const f = this.form;
-    const payload = this.construirPayload({
+    const name = (v: string | undefined | null) =>
+      normalizarNombre(v || '') || undefined;
+    const san = (v: string | undefined | null) =>
+      sanitizar(v || '') || undefined;
+
+    // El SP usp_go_PacienteHistoriaClinicaAgregar solo admite este subconjunto
+    // de campos, asi que no se reutiliza construirPayload: los campos que el SP
+    // ignora (tercerNombre, email, celular, ubigeo de nacimiento y procedencia,
+    // centros poblados y padres) no se envian. Si etnia o idioma no estan
+    // seleccionados se omiten para no mandarlos en NULL.
+    const payload: RegistroPacienteConHistoriaPayload = {
+      nroDocumento: sanitizar(f.nroDocumento),
+      apellidoPaterno: normalizarNombre(f.apellidoPaterno),
+      primerNombre: normalizarNombre(f.primerNombre),
+      apellidoMaterno: name(f.apellidoMaterno),
+      segundoNombre: name(f.segundoNombre),
+      fechaNacimiento: f.fechaNacimiento
+        ? new Date(`${f.fechaNacimiento}T00:00:00`).toISOString()
+        : undefined,
       idDocIdentidad: num(f.idDocIdentidad),
+      telefono: san(f.telefono),
+      direccionPaciente: san(f.direccionDomicilio),
       idTipoSexo: num(f.idTipoSexo),
-      idPaisNacimiento: num(f.idPaisNacimiento),
-      idDistritoNacimiento: num(f.idDistritoNacimiento),
-      idCentroPobladoNacimiento: num(f.idCentroPobladoNacimiento),
-      idPaisProcedencia: num(f.idPaisProcedencia),
-      idDistritoProcedencia: num(f.idDistritoProcedencia),
-      idCentroPobladoProcedencia: num(f.idCentroPobladoProcedencia),
-      idPaisDomicilio: num(f.idPaisDomicilio),
-      idDistritoDomicilio: num(f.idDistritoDomicilio),
-      idCentroPobladoDomicilio: num(f.idCentroPobladoDomicilio),
       idEstadoCivil: num(f.idEstadoCivil),
-      idGradoInstruccion: num(f.idGradoInstruccion),
-      idTipoOcupacion: num(f.idTipoOcupacion),
-      nombrePadre: normalizarNombre(f.nombrePadre) || undefined,
-      nombreMadre: normalizarNombre(f.nombreMadre) || undefined,
+      idDistrito: num(f.idDistritoDomicilio),
+      idPais: num(f.idPaisDomicilio),
       idEtnia: num(f.idEtnia),
       idIdioma: num(f.idIdioma),
-      direccionDomicilio: sanitizar(f.direccionDomicilio) || undefined,
-      discapacidad: f.discapacidad !== '' ? num(f.discapacidad) : undefined,
-      incapacidad: f.incapacidad !== '' ? num(f.incapacidad) : undefined,
+      idOcupacion: num(f.idTipoOcupacion),
+      idGradoInstruccion: num(f.idGradoInstruccion),
+      madreNroDocumento: san(f.madreTutorNroDocumento),
+      madreApellidoPaterno: name(f.madreTutorApellidoPaterno),
+      madreApellidoMaterno: name(f.madreTutorApellidoMaterno),
+      madrePrimerNombre: name(f.madreTutorPrimerNombre),
+      madreSegundoNombre: name(f.madreTutorSegundoNombre),
+      idFuenteFinanciamiento: num(f.idFuenteFinanciamiento),
+      discapacidad: num(f.discapacidad),
+      incapacidad: num(f.incapacidad),
+    };
+
+    Object.keys(payload).forEach((k) => {
+      if (payload[k as keyof typeof payload] === undefined) {
+        delete payload[k as keyof typeof payload];
+      }
     });
-    await this.pacientesApi.registrar(
-      payload as unknown as RegistroPacientePayload,
-    );
+
+    await this.pacientesApi.registrarConHistoriaClinica(payload);
   }
 
   private async actualizarPaciente(pacienteId: number | string): Promise<void> {
@@ -658,6 +685,8 @@ export class RegistroPacienteService {
     const d = this.detalleOriginal ?? {};
     const name = (v: string | undefined | null) =>
       normalizarNombre(v || '') || undefined;
+    const san = (v: string | undefined | null) =>
+      sanitizar(v || '') || undefined;
 
     const payload: ActualizarPacientePayload = {
       documentNumber: sanitizar(f.nroDocumento),
@@ -716,6 +745,11 @@ export class RegistroPacienteService {
           : num(f.discapacidad),
       incapacityId:
         f.incapacidad === '' ? num(texto(d.incapacityId)) : num(f.incapacidad),
+      motherDocumentNumber: san(f.madreTutorNroDocumento) || undefined,
+      motherPaternalSurname: name(f.madreTutorApellidoPaterno) || undefined,
+      motherMaternalSurname: name(f.madreTutorApellidoMaterno) || undefined,
+      motherFirstName: name(f.madreTutorPrimerNombre) || undefined,
+      motherSecondName: name(f.madreTutorSegundoNombre) || undefined,
     };
     const hc = Number(texto(d.historyNumber));
     if (!Number.isNaN(hc)) payload.historyNumber = hc;

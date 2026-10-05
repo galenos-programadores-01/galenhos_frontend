@@ -201,6 +201,12 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
 
   async buscarPaciente(): Promise<void> {
     await this.srv.buscarPaciente();
+    // Se copia el documento buscado al bloque "Datos del paciente". Todas las
+    // vias de busqueda (documento, afiliacion SIS y paciente NN) pasan por
+    // srv.buscarPaciente, asi que un solo punto de copia las cubre.
+    if (this.srv.pacienteEncontrado) {
+      this.srv.sincronizarDocumentoPaciente();
+    }
     this.mostrarPaciente = true;
     this.cdr.detectChanges();
   }
@@ -243,6 +249,7 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
     if (paciente.documentNumber) {
       this.srv.formulario.nroDocumento = String(paciente.documentNumber);
     }
+    this.srv.sincronizarDocumentoPaciente();
 
     this.cdr.detectChanges();
   }
@@ -279,6 +286,9 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
       this.srv.pasoActual = 1;
       this.mostrarPaciente = true;
     }
+    // toggleNN no pasa por buscarPaciente, asi que el documento del bloque
+    // "Datos del paciente" se sincroniza aqui (SD/SD o DNI/vacio).
+    this.srv.sincronizarDocumentoPaciente();
     this.cdr.detectChanges();
   }
 
@@ -348,6 +358,17 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
   }
 
   async seleccionarPrioridad(value: string): Promise<void> {
+    // La prioridad define el servicio y los signos vitales que se piden, y
+    // el triaje se guarda con la fecha de nacimiento del paciente, asi que sin
+    // esa fecha no se puede seguir. Se corta aca en vez de marcar la prioridad
+    // para dejar el formulario en un estado coherente.
+    if (!this.srv.formulario.fechaNacimiento) {
+      this.srv.mensajeError =
+        'Debe ingresar la fecha de nacimiento del paciente.';
+      this.cdr.detectChanges();
+      return;
+    }
+    this.srv.mensajeError = '';
     this.srv.formulario.idTipoPrioridad = value;
     this.srv.formulario.idServicio = '';
     if (value === this.srv.prioridadCadaver) {
@@ -366,6 +387,9 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
   }
 
   async onFechaNacimientoChange(): Promise<void> {
+    // Limpia el aviso de "debe ingresar la fecha de nacimiento" que deja
+    // seleccionarPrioridad() cuando la prioridad se elige sin fecha.
+    this.srv.mensajeError = '';
     this.srv.formulario.idServicio = '';
     await this.srv.cargarServiciosPorPrioridad();
     this.cdr.detectChanges();

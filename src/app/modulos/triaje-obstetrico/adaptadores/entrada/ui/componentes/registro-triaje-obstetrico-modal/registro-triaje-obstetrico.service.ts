@@ -41,6 +41,9 @@ export class RegistroTriajeObstetricoService {
   buscando = false;
   guardando = false;
   pacienteEncontrado = false;
+  // True cuando la busqueda no resolvio al paciente y los datos del bloque
+  // "Datos del paciente" los tiene que ingresar el operador a mano.
+  datosPacienteManuales = false;
   mensajeError = '';
   mensajeInfo = '';
 
@@ -97,18 +100,18 @@ export class RegistroTriajeObstetricoService {
         'Fiebre = 38�C asociada a dolor p�lvico (sospecha de proceso infeccioso)',
       ],
     },
-    {
-      value: '3',
-      label: 'Prioridad III',
-      subtitulo: 'Urgencia menor (sin riesgo vital, espera = 20 minutos)',
-      color: '#eab308',
-      opciones: [
-        'Sangrado vaginal leve en no gestante, con funciones vitales estables',
-        'Secreci�n vaginal anormal sin fiebre asociada',
-        'Dolor p�lvico leve, con funciones vitales estables',
-        'Control prenatal de rutina, sin signos de alarma',
-      ],
-    },
+    // {
+    //   value: '3',
+    //   label: 'Prioridad III',
+    //   subtitulo: 'Urgencia menor (sin riesgo vital, espera = 20 minutos)',
+    //   color: '#eab308',
+    //   opciones: [
+    //     'Sangrado vaginal leve en no gestante, con funciones vitales estables',
+    //     'Secreci�n vaginal anormal sin fiebre asociada',
+    //     'Dolor p�lvico leve, con funciones vitales estables',
+    //     'Control prenatal de rutina, sin signos de alarma',
+    //   ],
+    // },
   ];
 
   opcionesSeleccionadas: Record<string, string[]> = {};
@@ -128,6 +131,8 @@ export class RegistroTriajeObstetricoService {
     return {
       idDocIdentidad: '1',
       nroDocumento: '',
+      idDocIdentidadPaciente: '1',
+      nroDocumentoPaciente: '',
       afiliacionDisa: '035',
       afiliacionTipoFormato: 'E',
       afiliacionNroContrato: '',
@@ -174,15 +179,12 @@ export class RegistroTriajeObstetricoService {
   }
 
   async cargarCatalogosIniciales(): Promise<void> {
-    try {
-      [
-        this.tiposDocumentos,
-        this.tiposSexo,
-        this.estadosCivil,
-        this.departamentos,
-        this.fuentesFinanciamiento,
-        this.estadosLlegoPaciente,
-      ] = await Promise.all([
+    // Cada catalogo se asigna por separado en lugar de con un Promise.all
+    // conjunto: "fuentes-financiamiento" tarda decenas de segundos, y con
+    // Promise.all ningun select tendria valores hasta que terminara el mas
+    // lento (y si ese agotaba el timeout, el catch dejaba todos vacios).
+    const [docs, sexos, civiles, deptos, financiamiento, llegos] =
+      await Promise.allSettled([
         this.maestrosApi.getTiposDocumentos(),
         this.maestrosApi.getTiposSexo(),
         this.maestrosApi.getEstadosCivil(),
@@ -192,8 +194,24 @@ export class RegistroTriajeObstetricoService {
         >,
         this.maestrosApi.getEstadosLlegoPaciente(),
       ]);
-    } catch {
-      this.mensajeError = 'Error al cargar cat�logos iniciales.';
+
+    const fallidos: string[] = [];
+    if (docs.status === 'fulfilled') this.tiposDocumentos = docs.value;
+    else fallidos.push('tipos de documento');
+    if (sexos.status === 'fulfilled') this.tiposSexo = sexos.value;
+    else fallidos.push('tipos de sexo');
+    if (civiles.status === 'fulfilled') this.estadosCivil = civiles.value;
+    else fallidos.push('estados civiles');
+    if (deptos.status === 'fulfilled') this.departamentos = deptos.value;
+    else fallidos.push('departamentos');
+    if (financiamiento.status === 'fulfilled')
+      this.fuentesFinanciamiento = financiamiento.value;
+    else fallidos.push('fuentes de financiamiento');
+    if (llegos.status === 'fulfilled') this.estadosLlegoPaciente = llegos.value;
+    else fallidos.push('estados de llegada del paciente');
+
+    if (fallidos.length > 0) {
+      this.mensajeError = `No se pudieron cargar estos catálogos: ${fallidos.join(', ')}.`;
     }
     await this.cargarCausasExternas();
   }
@@ -257,7 +275,23 @@ export class RegistroTriajeObstetricoService {
     this.servicios = [];
   }
 
+  // Copia el documento capturado por el buscador al bloque "Datos del
+  // paciente". Con busqueda por afiliacion el buscador no captura ningun
+  // documento, asi que los campos se limpian y los ingiere el operador.
+  sincronizarDocumentoPaciente(): void {
+    if (this.esFiliacion) {
+      this.formulario.idDocIdentidadPaciente = '';
+      this.formulario.nroDocumentoPaciente = '';
+      return;
+    }
+    this.formulario.idDocIdentidadPaciente =
+      this.formulario.idDocIdentidad ?? '';
+    this.formulario.nroDocumentoPaciente = this.formulario.nroDocumento ?? '';
+  }
+
   async buscarPaciente(): Promise<void> {
+    this.datosPacienteManuales = false;
+
     if (this.formulario.pacienteNn) {
       this.habilitarModoNN();
       return;
@@ -333,6 +367,7 @@ export class RegistroTriajeObstetricoService {
           // campos para ingresar los datos del paciente manualmente y la
           // IAFA por defecto es PARTICULAR.
           this.pacienteEncontrado = true;
+          this.datosPacienteManuales = true;
           this.pasoActual = 2;
           this.fijarFuenteParticular();
           this.mensajeInfo =
@@ -466,14 +501,39 @@ export class RegistroTriajeObstetricoService {
   private get esTipoDocumentoSinDocumento(): boolean {
     const id = this.formulario.idDocIdentidad;
     if (id === '0') return true;
-    const sd = this.tiposDocumentos.find(
-      (t) => (t.descripcion || '').toUpperCase() === 'SD',
-    );
-    return sd ? id === String(sd.id) : false;
+    const sd = this.idTipoDocumentoSinDocumento();
+    return !!sd && id === sd;
   }
 
   get esFiliacion(): boolean {
     return this.formulario.idDocIdentidad === '99';
+  }
+
+  // El bloque "Datos del paciente" queda de solo lectura cuando la
+  // identificacion se resolvio con el buscador por tipo + numero de documento
+  // y el paciente fue encontrado: en ese caso el dato ya fue verificado contra
+  // la BD, RENIEC o SIS y no debe editarse.
+  //
+  // Queda editable cuando el operador tiene que completar o corregir la
+  // identificacion:
+  //  - busqueda por afiliacion SIS: el buscador no captura ningun documento
+  //    (muestra DISA / tipo de formato / nro de contrato).
+  //  - paciente no encontrado: se informa que hay que ingresar los datos
+  //    manualmente y hay que tipear nombres y apellidos.
+  // El modo NN se resuelve aparte: siempre queda bloqueado porque los nombres
+  // los fija el propio sistema en 'NN'.
+  get datosPacienteBloqueados(): boolean {
+    if (this.formulario.pacienteNn) return true;
+    if (this.esFiliacion) return false;
+    return !this.datosPacienteManuales;
+  }
+
+  // Catalogo de tipos de documento para el bloque "Datos del paciente".
+  // Se excluye la opcion 99 "Afiliacion" que inyecta
+  // usp_go_ListarTiposDocumentos con un "union all": es un modo de busqueda,
+  // no un tipo de documento real del paciente.
+  get tiposDocumentoPaciente(): ICatalogoDescripcion[] {
+    return this.tiposDocumentos.filter((t) => Number(t.id) !== 99);
   }
 
   private idTipoDocumentoSinDocumento(): string {
@@ -482,11 +542,19 @@ export class RegistroTriajeObstetricoService {
     );
     return sd ? String(sd.id) : '';
   }
-
-  // Convierte el tipo de documento a n�mero conservando el valor 0 (SD -
-  // Sin Documento). Si viene vac�o o no es num�rico usa 1 (DNI).
+  // Convierte el tipo de documento a número conservando el valor 0 (SD -
+  // Sin Documento). Si viene vacío o no es numérico usa 1 (DNI).
   private idDocIdentidadNumero(): number {
     const v = this.formulario.idDocIdentidad?.trim();
+    if (!v) return 1;
+    const n = Number(v);
+    return Number.isNaN(n) ? 1 : n;
+  }
+
+  // Igual que idDocIdentidadNumero pero sobre el dato del bloque "Datos del
+  // paciente", que es el que se envia al grabar el triaje.
+  private idDocIdentidadPacienteNumero(): number {
+    const v = this.formulario.idDocIdentidadPaciente?.trim();
     if (!v) return 1;
     const n = Number(v);
     return Number.isNaN(n) ? 1 : n;
@@ -593,10 +661,16 @@ export class RegistroTriajeObstetricoService {
               ? Number(sisResponse.idNumReg)
               : undefined,
             codigo: sisResponse.tabla || undefined,
-            documentoTipo:
-              sisResponse.tipoDocumento || this.formulario.idDocIdentidad,
-            documentoNumero:
-              sisResponse.nroDocumento || this.formulario.nroDocumento,
+            // Con busqueda por documento el formulario es la fuente del
+            // documento. Con busqueda por afiliacion idDocIdentidad vale 99
+            // ("Afiliacion", que no es un tipo de documento) y nroDocumento
+            // esta vacio, asi que solo se usa lo que devuelve SIS.
+            documentoTipo: this.esFiliacion
+              ? sisResponse.tipoDocumento
+              : sisResponse.tipoDocumento || this.formulario.idDocIdentidad,
+            documentoNumero: this.esFiliacion
+              ? sisResponse.nroDocumento
+              : sisResponse.nroDocumento || this.formulario.nroDocumento,
             paterno: sisResponse.apePaterno,
             materno: sisResponse.apeMaterno,
             pNombre: sisResponse.nombres,
@@ -903,14 +977,12 @@ export class RegistroTriajeObstetricoService {
   private mapearDatosSisAlFormulario(sis: SisAfiliado): void {
     this.mapearNombresYApellidosSis(sis);
 
-    // Al buscar por afiliaci�n (sin documento), el n�mero de contrato
-    // ingresado se coloca como n�mero de documento y el tipo se fija en
-    // "Sin Documento" (SD) para grabar el triaje con los datos de SIS.
-    if (this.esFiliacion) {
-      this.formulario.idDocIdentidad = this.idTipoDocumentoSinDocumento();
-      const nroContrato = this.formulario.afiliacionNroContrato.trim();
-      this.formulario.nroDocumento = nroContrato || sis.nroDocumento || '';
-    }
+    // Con busqueda por afiliacion NO se toca formulario.idDocIdentidad ni
+    // formulario.nroDocumento. Antes se fijaba el tipo en SD y se copiaba el
+    // numero de contrato al numero de documento, pero eso hacia que esFiliacion
+    // pasara a false: el select de busqueda volvia a mostrar el campo de
+    // documento y "Datos del paciente" quedaba bloqueado con SD + numero de
+    // contrato. Ahora la identificacion se ingresa a mano y se valida al guardar.
 
     if (!this.formulario.fechaNacimiento && sis.fecNacimiento?.length === 8) {
       this.formulario.fechaNacimiento = `${sis.fecNacimiento.slice(0, 4)}-${sis.fecNacimiento.slice(4, 6)}-${sis.fecNacimiento.slice(6, 8)}`;
@@ -1107,8 +1179,29 @@ export class RegistroTriajeObstetricoService {
       return;
     }
 
+    // Con busqueda por afiliacion el documento no se autocompleta: el
+    // operador tiene que ingresarlo a mano en "Datos del paciente".
+    if (this.esFiliacion) {
+      if (!this.formulario.idDocIdentidadPaciente) {
+        this.mensajeError =
+          'Seleccione el tipo de documento del paciente en "Datos del paciente".';
+        return;
+      }
+      if (!this.formulario.nroDocumentoPaciente.trim()) {
+        this.mensajeError =
+          'Ingrese el número de documento del paciente en "Datos del paciente".';
+        return;
+      }
+    }
+
     if (!this.formulario.idTipoSexo) {
-      this.mensajeError = 'Seleccione el sexo del paciente.';
+      this.mensajeError = 'Debe seleccionar el sexo.';
+      return;
+    }
+
+    if (this.formulario.idTipoSexo === '1') {
+      this.mensajeError =
+        'El sexo del paciente es masculino, por favor verificar.';
       return;
     }
 
@@ -1274,8 +1367,8 @@ export class RegistroTriajeObstetricoService {
 
       const payloadTriaje: RegistroTriajeObstetricoPayload = {
         idTriaje,
-        idDocIdentidad: this.idDocIdentidadNumero(),
-        nroDocumento: this.formulario.nroDocumento,
+        idDocIdentidad: this.idDocIdentidadPacienteNumero(),
+        nroDocumento: this.formulario.nroDocumentoPaciente,
         apellidoPaterno: this.formulario.apellidoPaterno,
         apellidoMaterno: this.formulario.apellidoMaterno,
         primerNombre: this.formulario.primerNombre,

@@ -1,6 +1,11 @@
 ﻿export interface FormRegistroTriajeObstetrico {
   idDocIdentidad: string;
   nroDocumento: string;
+  // Identificacion del bloque "Datos del paciente". Va separada de
+  // idDocIdentidad/nroDocumento porque en la busqueda por afiliacion SIS el
+  // buscador no captura ningun documento y el operador lo ingresa a mano.
+  idDocIdentidadPaciente: string;
+  nroDocumentoPaciente: string;
   afiliacionDisa: string;
   afiliacionTipoFormato: string;
   afiliacionNroContrato: string;
