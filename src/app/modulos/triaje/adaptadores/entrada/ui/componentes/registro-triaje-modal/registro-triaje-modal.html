@@ -227,16 +227,28 @@
                 }
               </select>
             </div>
-            <div>
-              <label for="centro-poblado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Centro poblado</label>
-        <select autocomplete="off" id="centro-poblado" [(ngModel)]="srv.formulario.idCentroPobladoDomicilio"
-                      style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-                <option value="">Seleccionar...</option>
-                @for (cp of srv.centrosPoblados; track cp.id) {
-                  <option [value]="cp.id">{{ cp.nombre }}</option>
-                }
-              </select>
-            </div>
+             <div>
+               <label for="centro-poblado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Centro poblado</label>
+               <div style="display: flex; gap: 8px;">
+                 <select autocomplete="off" id="centro-poblado" [(ngModel)]="srv.formulario.idCentroPobladoDomicilio"
+                         style="flex: 1; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
+                   <option value="">Seleccionar...</option>
+                   @for (cp of srv.centrosPoblados; track cp.id) {
+                     <option [value]="cp.id">{{ cp.nombre }}</option>
+                   }
+                 </select>
+                 <!-- @if (srv.pacienteEncontrado && srv.reniecIntegrado && (srv.formulario.idDocIdentidad === '1' || srv.formulario.idDocIdentidadPaciente === '1')) {
+                   <button type="button" (click)="consultarReniec()" [disabled]="srv.buscando"
+                           title="Consultar a RENIEC"
+                           style="display: flex; align-items: center; justify-content: center; height: 42px; width: 42px; background: #f8fafc; color: #263c7a; border: 1px solid #d5dceb; border-radius: 11px; cursor: pointer; flex-shrink: 0;">
+                     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                       <circle cx="12" cy="12" r="3" />
+                       <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" />
+                     </svg>
+                   </button>
+                 } -->
+               </div>
+             </div>
           </div>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 14px;">
             <div style="grid-column: 1 / -1;">

@@ -85,6 +85,11 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
       : 'Identificación por documento para la bandeja de triaje.';
   }
 
+  async consultarReniec(): Promise<void> {
+    await this.srv.consultarReniec();
+    this.cdr.detectChanges();
+  }
+
   private async precargarTriaje(idTriaje: number): Promise<void> {
     this.srv.mensajeError = '';
     try {

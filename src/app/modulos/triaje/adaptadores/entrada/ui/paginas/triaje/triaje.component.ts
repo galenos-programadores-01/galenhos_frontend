@@ -310,27 +310,21 @@ export class TriajeComponent implements OnInit {
   }
 
   // Total de triajes del usuario en el rango: el SP acumula cada triaje en una
-  // sola categoría (los IdServicio de los CASE son excluyentes), así que la
-  // suma de las 9 columnas es el total por empleado. Topico_Neo queda fuera
-  // de este total y solo suma en el sub-total pediátrico.
+  // sola categoría. Según solicitud: "total de adulto solo debe sumar adulto y
+  // pediatria solo pediatria y neo".
   get totalTablero(): number {
     const t = this.tablero;
     if (!t) return 0;
     return (
       t.Topico_Medicina +
-      t.Topico_Pediatria +
       t.Topico_Cirugia +
-      t.Topico_Cirugia_Pediatrica +
       t.Topico_Trauma +
       t.TraumaShock +
-      t.TraumaShock_Pediatrico +
-      t.Urgencias +
-      t.Urgencias_Pediatrica
+      t.Urgencias
     );
   }
 
-  // Sub-total pediátrico: los 4 sub-totales pediátricos de los temas más NEO,
-  // que solo Tópico medicina reporta. Topico_Neo no entra en totalTablero.
+  // Sub-total pediátrico: sumar pediátrico + neo (NEO es neonato/neonatal)
   get totalPediatrico(): number {
     const t = this.tablero;
     if (!t) return 0;

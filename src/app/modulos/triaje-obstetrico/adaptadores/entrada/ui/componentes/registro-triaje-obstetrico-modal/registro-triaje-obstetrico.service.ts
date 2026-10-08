@@ -57,6 +57,8 @@ export class RegistroTriajeObstetricoService {
   sisFechaBaja = '';
   sisIntegrado = false;
   reniecIntegrado = false;
+  pacienteEncontradoEnBD = false;
+  pacienteEncontradoEnReniec = false;
 
   ultimoTriajeId: number | null = null;
   private serviciosSolicitud = 0;
@@ -273,6 +275,8 @@ export class RegistroTriajeObstetricoService {
     this.reniecIntegrado = false;
     this.ultimoTriajeId = null;
     this.servicios = [];
+    this.pacienteEncontradoEnBD = false;
+    this.pacienteEncontradoEnReniec = false;
   }
 
   // Copia el documento capturado por el buscador al bloque "Datos del
@@ -324,7 +328,9 @@ export class RegistroTriajeObstetricoService {
     this.sisActivo = false;
     this.sisCancelado = false;
     this.sisFechaBaja = '';
-    // Se limpia el IAFA de la b�squeda anterior: si el paciente nuevo tiene la
+    this.pacienteEncontradoEnBD = false;
+    this.pacienteEncontradoEnReniec = false;
+    // Se limpia el IAFA de la búsqueda anterior: si el paciente nuevo tiene la
     // afiliaci�n cancelada (Fbaja pasada), el combo no debe seguir mostrando el
     // SIS que qued� del paciente previo.
     this.formulario.idFuenteFinanciamiento = '';
@@ -343,11 +349,13 @@ export class RegistroTriajeObstetricoService {
         // soporta DNI.
         const reniecOk = esSinDocumento ? false : await this.consultarReniec();
         if (reniecOk) {
+          this.pacienteEncontradoEnReniec = true;
           this.pacienteEncontrado = true;
           this.pasoActual = 2;
         }
       } else {
         this.mapearPacienteLocal(paciente as Record<string, unknown>);
+        this.pacienteEncontradoEnBD = true;
         this.pacienteEncontrado = true;
         this.pasoActual = 2;
       }
@@ -372,9 +380,15 @@ export class RegistroTriajeObstetricoService {
           this.fijarFuenteParticular();
           this.mensajeInfo =
             'El paciente no fue encontrado en la base de datos. Ingrese los datos manualmente.';
-        } else if (!this.mensajeError) {
-          this.mensajeError =
-            'No se encontr� el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
+        } else {
+          this.pacienteEncontrado = true;
+          this.datosPacienteManuales = true;
+          this.pasoActual = 2;
+          this.fijarFuenteParticular();
+          if (!this.mensajeError) {
+            this.mensajeError =
+              'No se encontró el paciente en la base de datos, RENIEC ni SIS. Complete los datos manualmente o active el modo Paciente NN.';
+          }
         }
       }
     } catch (error: unknown) {
@@ -576,16 +590,18 @@ export class RegistroTriajeObstetricoService {
     }
   }
 
-  private async consultarReniec(): Promise<boolean> {
+  async consultarReniec(): Promise<boolean> {
     if (!this.reniecIntegrado) return false;
 
     // RENIEC solo consulta DNI (idDocIdentidad = 1).
-    if (this.formulario.idDocIdentidad !== '1') return false;
+    const tipoDoc =
+      this.formulario.idDocIdentidad || this.formulario.idDocIdentidadPaciente;
+    const nroDoc =
+      this.formulario.nroDocumento || this.formulario.nroDocumentoPaciente;
+    if (tipoDoc !== '1') return false;
 
     try {
-      const resultado = await this.pacientesApi.consultarReniec(
-        this.formulario.nroDocumento,
-      );
+      const resultado = await this.pacientesApi.consultarReniec(nroDoc);
 
       if (resultado.datos) {
         const formComoPaciente = this
@@ -608,10 +624,11 @@ export class RegistroTriajeObstetricoService {
         if (this.formulario.idDistritoDomicilio)
           await this.cargarCentrosPoblados();
 
+        this.pacienteEncontradoEnReniec = true;
         return true;
       } else {
         const msgReniec =
-          resultado.resultado?.filter((r) => !!r?.trim()).join(' � ') ||
+          resultado.resultado?.filter((r) => !!r?.trim()).join('  ') ||
           'No se encontraron datos en la RENIEC.';
         this.mensajeError = msgReniec;
         return false;

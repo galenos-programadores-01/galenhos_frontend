@@ -91,6 +91,11 @@ export class RegistroTriajeObstetricoModal implements OnInit, OnChanges {
       : 'Identificación por documento para la bandeja de triaje.';
   }
 
+  async consultarReniec(): Promise<void> {
+    await this.srv.consultarReniec();
+    this.cdr.detectChanges();
+  }
+
   // Precarga el formulario con el triaje indicado y salta directo al paso de
   // la evaluación clínica (paso 3).
   private async precargarTriaje(idTriaje: number): Promise<void> {

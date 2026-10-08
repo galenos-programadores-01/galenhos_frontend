@@ -479,16 +479,18 @@ export class RegistroTriajeService {
     }
   }
 
-  private async consultarReniec(): Promise<boolean> {
+  async consultarReniec(): Promise<boolean> {
     if (!this.reniecIntegrado) return false;
 
     // RENIEC solo consulta DNI (idDocIdentidad = 1).
-    if (this.formulario.idDocIdentidad !== '1') return false;
+    const tipoDoc =
+      this.formulario.idDocIdentidad || this.formulario.idDocIdentidadPaciente;
+    const nroDoc =
+      this.formulario.nroDocumento || this.formulario.nroDocumentoPaciente;
+    if (tipoDoc !== '1') return false;
 
     try {
-      const resultado = await this.pacientesApi.consultarReniec(
-        this.formulario.nroDocumento,
-      );
+      const resultado = await this.pacientesApi.consultarReniec(nroDoc);
 
       if (resultado.datos) {
         const formComoPaciente = this
