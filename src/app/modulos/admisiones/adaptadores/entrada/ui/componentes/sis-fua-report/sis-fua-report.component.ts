@@ -64,6 +64,7 @@ interface DatosInstitucion {
 })
 export class SisFuaReportComponent implements OnInit {
   @Input() idCuentaAtencion!: number;
+  @Input() imprimirAutomatico = false;
   @Output() alCerrar = new EventEmitter<void>();
   @ViewChild('fuaFrame') fuaFrame!: ElementRef<HTMLIFrameElement>;
 
@@ -127,6 +128,11 @@ export class SisFuaReportComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
       setTimeout(() => this.escribirIframe(), 0);
+      if (this.imprimirAutomatico) {
+        setTimeout(() => {
+          if (this.htmlFua) this.imprimir();
+        }, 500);
+      }
     } catch {
       this.error = 'No se pudo cargar el FUA.';
       this.cargando = false;
@@ -655,19 +661,24 @@ export class SisFuaReportComponent implements OnInit {
         </tr>
         ${filasDiag || filasDiagVacias}
         <tr>
-          <td colspan="3" class="datosfua">${v(g('M_NumDocumento'))}</td>
-          <td colspan="14" class="datosfua">${v(g('M_Nombres'))}</td>
-          <td colspan="3" class="datosfua">${v(g('M_Colegiatura'))}</td>
+          <td colspan="3" class="datoscabecerafua">N° DE DNI</td>
+          <td colspan="14" class="datoscabecerafua"> NOMBRE DEL RESPONSABLE DE LA ATENCIÓN</td>
+          <td colspan="3" class="datoscabecerafua">N° DE COLEGIATURA</td>
         </tr>
         <tr>
+          <td colspan="3" class="datosfua">${v(g('M_NumDocumento2'))}</td>
+          <td colspan="14" class="datosfua">${v(g('M_Nombres2'))}</td>
+          <td colspan="3" class="datosfua">${v(g('M_Colegiatura2'))}</td>
+        </tr>        
+        <tr>
           <td colspan="3" class="datoscabecerafua">RESPONSABLE DE LA ATENCIÓN</td>
-          <td class="datosfua">${v(g('Respo_Atencion'))}</td>
+          <td class="datosfua">${v(g('Respo_Atencion2'))}</td>
           <td colspan="2" class="datoscabecerafua">ESPECIALIDAD</td>
-          <td colspan="7" class="datosfua">${v(g('Especialidad_Med'))}</td>
+          <td colspan="7" class="datosfua">&nbsp;</td>
           <td colspan="2" class="datoscabecerafua">N° RNE</td>
-          <td colspan="2" class="datosfua">${v(g('M_rne'))}</td>
+          <td colspan="2" class="datosfua">&nbsp;</td>
           <td colspan="2" class="datoscabecerafua">EGRESADO</td>
-          <td class="datosfua">${v(g('M_egresado'))}</td>
+          <td class="datosfua">&nbsp;</td>
         </tr>
       </table>
       <div style="text-align:left;font-size:6.1px;margin-top:1px">
@@ -703,8 +714,8 @@ export class SisFuaReportComponent implements OnInit {
         <tr>
           <td colspan="8" valign="top" style="text-align:center;font-size:6.5px">
             FIRMA Y SELLO DEL RESPONSABLE DE LA ATENCIÓN<br>
-            <b>${v(g('Especialidad_Med'))}</b> ${v(g('M_Nombres'))}<br>
-            <b>DNI:</b> ${v(g('M_NumDocumento'))} - <b>RNE:</b> ${v(g('M_rne'))} - <b>COLEGIATURA:</b> ${v(g('M_Colegiatura'))}
+            <b>${v(g('M_Nombres'))}</b><br>
+            <b>DNI:</b> ${v(g('M_NumDocumento'))} - <b>COLEGIATURA:</b> ${v(g('M_Colegiatura'))}
           </td>
           <td colspan="2" style="text-align:left;font-size:6.5px">DNI O CE DEL APODERADO</td>
           <td colspan="7" style="text-align:center;font-size:6.5px">____________________________________________________________</td>
@@ -888,8 +899,7 @@ export class SisFuaReportComponent implements OnInit {
         <tr>
           <td colspan="8" valign="top" style="text-align:center;font-size:6.5px">
             FIRMA Y SELLO DEL RESPONSABLE DE LA ATENCIÓN<br>
-            <b>${v(g('Especialidad_Med'))}</b> ${v(g('M_Nombres'))}<br>
-            <b>DNI:</b> ${v(g('M_NumDocumento'))} - <b>RNE:</b> ${v(g('M_rne'))} - <b>COLEGIATURA:</b> ${v(g('M_Colegiatura'))}
+          
           </td>
           <td colspan="2" style="text-align:left;font-size:6.5px">DNI O CE DEL APODERADO</td>
           <td colspan="7" style="text-align:center;font-size:6.5px">____________________________________________________________</td>

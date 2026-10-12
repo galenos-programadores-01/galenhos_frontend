@@ -28,6 +28,7 @@ export interface ListaEsperaQxCrearPayload {
   fechaICNeumo: string;
   fechaICAnestesio: string;
   observacion: string;
+  telefono: string;
 }
 
 export interface DiagnosticoItem {
@@ -137,8 +138,18 @@ export class ListaEsperaQxApiService {
     );
   }
 
-  listarDiagnosticos(filtro: string): Promise<DiagnosticoItem[]> {
-    const query = new URLSearchParams({ filtro });
+  // idAtencion e idPaciente acotan el catálogo CIE-10; por defecto se envían
+  // en 0 (sin acotar), que es lo que espera el SP.
+  listarDiagnosticos(
+    filtro: string,
+    idAtencion = 0,
+    idPaciente = 0,
+  ): Promise<DiagnosticoItem[]> {
+    const query = new URLSearchParams({
+      filtro,
+      idAtencion: String(idAtencion),
+      idPaciente: String(idPaciente),
+    });
     return this.apiClient.request<DiagnosticoItem[]>(
       `/api/v1/diagnosticos/listar?${query.toString()}`,
     );
@@ -164,7 +175,8 @@ export class ListaEsperaQxApiService {
     idEspecialidad?: number,
   ): Promise<ListaEsperaQxReporteItem[]> {
     const query = new URLSearchParams({ fecha, fechaFin });
-    if (idEspecialidad) query.append('idEspecialidad', String(idEspecialidad));
+    if (idEspecialidad !== undefined)
+      query.append('idEspecialidad', String(idEspecialidad));
     return this.apiClient.request<ListaEsperaQxReporteItem[]>(
       `/api/v1/lista-espera-qx/reporte?${query.toString()}`,
     );

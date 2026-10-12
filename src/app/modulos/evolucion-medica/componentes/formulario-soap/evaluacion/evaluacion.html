@@ -8,20 +8,23 @@
       </div>
     </div>
     <div class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" formGroupName="evaluacion">
-        <div class="flex flex-col gap-1.5">
+      <div class="flex flex-wrap items-start gap-6 mb-8" formGroupName="evaluacion">
+        <div class="flex flex-col gap-1.5 w-full sm:w-72">
           <label for="evaluacion-estado-clinico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Estado clínico</label>
           <app-select-global id="evaluacion-estado-clinico" formControlName="estadoClinico">
+            <option value="" disabled selected>Seleccione estado clínico...</option>
             <option value="Mejoría">Mejoría</option>
             <option value="Estacionario">Estacionario</option>
+            <option value="Desfavorable">Desfavorable</option>
             <option value="Empeoramiento">Empeoramiento</option>
             <option value="Resuelto">Resuelto</option>
           </app-select-global>
           <app-error-mensaje [control]="soapForm.get('evaluacion.estadoClinico')"></app-error-mensaje>
         </div>
-        <div class="flex flex-col gap-1.5">
+        <div class="flex flex-col gap-1.5 w-full sm:w-72">
           <label for="evaluacion-pronostico" class="text-[11px] font-bold uppercase tracking-wider text-[#54617f]">Pronóstico</label>
           <app-select-global id="evaluacion-pronostico" formControlName="pronostico">
+            <option value="" disabled selected>Seleccione pronóstico...</option>
             <option value="Bueno">Bueno</option>
             <option value="Reservado">Reservado</option>
             <option value="Malo">Malo</option>
@@ -39,8 +42,8 @@
             {{ soapForm.get('evolucionLibre')?.value?.length || 0 }} / 4000
           </span>
         </div>
-        <textarea id="evolucion-libre" maxlength="4000" formControlName="evolucionLibre" rows="8"
-          class="w-full border border-slate-200 rounded-md p-4 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y leading-relaxed transition-all"
+        <textarea id="evolucion-libre" maxlength="4000" formControlName="evolucionLibre" rows="10"
+          class="w-full border border-slate-200 rounded-md p-4 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y leading-relaxed transition-all min-h-[260px]"
           [class.border-rose-300]="soapForm.get('evolucionLibre')?.invalid && soapForm.get('evolucionLibre')?.touched"
           placeholder="Redacte la evolución clínica detallada..."></textarea>
         <app-error-mensaje [control]="soapForm.get('evolucionLibre')"></app-error-mensaje>

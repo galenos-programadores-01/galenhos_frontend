@@ -6,8 +6,8 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import { PASOS_NAVEGACION } from '../../../constantes/formulario-soap.constantes';
 import type { PacienteItem } from '../../../servicios/evolucion.service';
-import { PASOS_NAVEGACION } from '../constantes/formulario-soap.constantes';
 
 @Component({
   selector: 'app-navegacion-sidebar',

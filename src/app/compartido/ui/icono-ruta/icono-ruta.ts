@@ -76,6 +76,9 @@ export class IconoRuta {
         'programacion',
         'cajas',
         'servicios',
+        'catalogos_servicios',
+        'catalogo-servicios',
+        'facturacioncatalogoservicios',
         'progra_image',
       ].includes(r)
     )
@@ -87,6 +90,10 @@ export class IconoRuta {
         'atencionesbi',
         'atencionesprebi',
         'atenciontel',
+        'atencion-ce',
+        'atencion_ce',
+        'consulta-externa',
+        'consulta_externa',
         'bandejalab',
         'laboratorio_patologia_clinica',
         'aprobancionrecetas',
@@ -115,6 +122,14 @@ export class IconoRuta {
         'inventario',
         'notas_de_ingreso_al',
         'notas_de_salida_al',
+        'catalogos_bienes-insumos',
+        'bienes-insumos',
+        'bienes_insumos',
+        'catalogobienes',
+        'farmacia_disponibilidad',
+        'farmacia',
+        'dashfarm',
+        'disponibilidad-medicamentos',
       ].includes(r)
     )
       return 'pastilla';

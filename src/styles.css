@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Modo oscuro controlado por la clase `.dark` en <html> (la alterna TemaService).
+   Tailwind 4 no trae `tailwind.config`, así que el variant se define aquí. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @keyframes gp-spin {
   to {
     transform: rotate(360deg);
@@ -128,6 +132,10 @@
   scrollbar-color: #b9c3d8 transparent;
 }
 
+.dark * {
+  scrollbar-color: #475569 transparent;
+}
+
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -144,8 +152,16 @@
   background-clip: content-box;
 }
 
+.dark *::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
 *::-webkit-scrollbar-thumb:hover {
   background-color: #94a0bd;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
 }
 
 *::-webkit-scrollbar-corner {
@@ -176,6 +192,191 @@
 ::selection {
   background: rgba(38, 60, 122, 0.18);
 }
+
+.dark ::selection {
+  background: rgba(45, 212, 191, 0.28);
+}
+
+/* Permite que controles nativos (inputs, scrollbars) se adapten al modo. */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* ---------- Capa de compatibilidad para modo oscuro ----------
+   TRANSITORIA. Remapea los colores del modo claro en las plantillas que aún no
+   tienen variantes `dark:` explícitas, para que sus labels y textos no queden
+   invisibles sobre el fondo oscuro. El selector `:not([class*="dark:"])` hace
+   que solo afecte a lo NO migrado, de modo que no pisa los templates que ya
+   traen su propia variante dark. Debe retirarse página por página conforme se
+   migren; cuando todas usen `dark:` explícito, esta capa se puede borrar. */
+
+.dark .bg-white:not([class*="dark:"]) {
+  background-color: #182234;
+}
+.dark .bg-slate-50:not([class*="dark:"]) {
+  background-color: #141d2e;
+}
+.dark .bg-slate-100:not([class*="dark:"]) {
+  background-color: #1e293b;
+}
+.dark .bg-slate-200:not([class*="dark:"]) {
+  background-color: #273549;
+}
+.dark .bg-gray-50:not([class*="dark:"]) {
+  background-color: #141d2e;
+}
+.dark .bg-gray-100:not([class*="dark:"]) {
+  background-color: #1e293b;
+}
+.dark .from-white:not([class*="dark:"]) {
+  --tw-gradient-from: #182234 var(--tw-gradient-from-position);
+}
+.dark .via-white:not([class*="dark:"]) {
+  --tw-gradient-via: #182234 var(--tw-gradient-via-position);
+}
+
+/* Textos oscuros -> claros */
+.dark .text-slate-900:not([class*="dark:"]),
+.dark .text-slate-800:not([class*="dark:"]),
+.dark .text-slate-700:not([class*="dark:"]),
+.dark .text-\[\#07153a\]:not([class*="dark:"]) {
+  color: #f1f5f9;
+}
+
+/* Textos medios/grises -> gris claro legible */
+.dark .text-slate-600:not([class*="dark:"]),
+.dark .text-slate-500:not([class*="dark:"]),
+.dark .text-slate-400:not([class*="dark:"]),
+.dark .text-slate-300:not([class*="dark:"]),
+.dark .text-\[\#54617f\]:not([class*="dark:"]),
+.dark .text-\[\#7a86a1\]:not([class*="dark:"]),
+.dark .text-\[\#8a94ad\]:not([class*="dark:"]),
+.dark .text-\[\#94a0bd\]:not([class*="dark:"]) {
+  color: #cbd5e1;
+}
+
+/* Azules de marca -> azul legible sobre fondo oscuro */
+.dark .text-\[\#263c7a\]:not([class*="dark:"]) {
+  color: #93c5fd;
+}
+.dark .text-\[\#0f766e\]:not([class*="dark:"]) {
+  color: #5eead4;
+}
+.dark .bg-\[\#263c7a\]:not([class*="dark:"]) {
+  background-color: #3b54a0;
+}
+.dark .bg-\[\#07153a\]:not([class*="dark:"]) {
+  background-color: #1e293b;
+}
+
+/* Bordes claros -> bordes visibles */
+.dark .border-slate-100:not([class*="dark:"]),
+.dark .border-slate-200:not([class*="dark:"]),
+.dark .border-slate-300:not([class*="dark:"]),
+.dark .border-\[\#e0e6f1\]:not([class*="dark:"]),
+.dark .border-\[\#e3e8f2\]:not([class*="dark:"]),
+.dark .border-\[\#e6eaf2\]:not([class*="dark:"]),
+.dark .border-\[\#d5dceb\]:not([class*="dark:"]),
+.dark .border-\[\#eef1f6\]:not([class*="dark:"]) {
+  border-color: #334155;
+}
+
+.dark .placeholder\:text-slate-400:not([class*="dark:"]) {
+  color: #64748b;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="email"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="search"],
+select,
+textarea {
+  color-scheme: dark;
+}
+
+/* ---------- Estilos inline en modo oscuro ----------
+   Segunda capa transitoria. Cubre los templates que fijan el color con
+   `style="..."` en vez de clases (sobre todo registro-triaje-modal,
+   registro-triaje-obstetrico-modal y los modales de firma). El estilo inline
+   gana siempre en cascada, así que aquí es imprescindible `!important`.
+   Al ser una transición, se retira cuando esos templates se conviertan a
+   clases. */
+
+/* biome-ignore-start lint/complexity/noImportantStyles: los estilos inline ganan en cascada; es la unica forma de pisarlos */
+.dark label {
+  color: #e2e8f0 !important;
+}
+
+/* Controles de formulario: fondo claro inline -> oscuro */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.dark select,
+.dark textarea {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Colores de texto fijados por atributo style */
+.dark [style*="color: #07153a"] {
+  color: #f1f5f9 !important;
+}
+.dark [style*="color: #54617f"],
+.dark [style*="color: #7a86a1"] {
+  color: #cbd5e1 !important;
+}
+.dark [style*="color: #94a0bd"] {
+  color: #94a3b8 !important;
+}
+.dark [style*="color: #263c7a"] {
+  color: #93c5fd !important;
+}
+
+/* Fondos claros fijados por atributo style. Sin esto, texto ya aclarado sobre
+   una caja clara quedaría ilegible. */
+.dark [style*="background: #f8fafc"],
+.dark [style*="background:#f8fafc"] {
+  background-color: #1e293b !important;
+}
+.dark [style*="background: #f0f4ff"],
+.dark [style*="background: #f3f5fb"] {
+  background-color: #1a2337 !important;
+}
+.dark [style*="background: #fff"] {
+  background-color: #182234 !important;
+}
+
+/* Cajas de aviso (éxito / error / advertencia) */
+.dark [style*="background: #ecfdf5"] {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+.dark [style*="background: #fee2e2"] {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+.dark [style*="background: #fef9c3"] {
+  background-color: rgba(234, 179, 8, 0.12) !important;
+}
+.dark [style*="color: #047857"] {
+  color: #6ee7b7 !important;
+}
+.dark [style*="color: #b91c1c"] {
+  color: #fca5a5 !important;
+}
+.dark [style*="color: #854d0e"] {
+  color: #fcd34d !important;
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: fin del bloque transitorio de estilos inline */
 
 body {
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;

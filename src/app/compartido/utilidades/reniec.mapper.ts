@@ -1,10 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { UbigeoService } from '../../core/servicios/ubigeo.service';
-import type { ICatalogoDescripcion } from '../tipos/api-tipos';
+import type { ICatalogoDescripcion, IReniecDatos } from '../tipos/api-tipos';
 import {
   type FormRegistroPaciente,
   normalizarTexto,
 } from '../ui/registro-paciente/registro-paciente.interfaces';
+
+export interface ResultadoMapeoReniec {
+  form: Partial<FormRegistroPaciente>;
+  depNacimientoSel?: string;
+  provNacimientoSel?: string;
+}
+
+function limpiarCadena(valor: unknown): string {
+  if (typeof valor === 'string') {
+    return valor.trim();
+  }
+  if (typeof valor === 'number') {
+    return String(valor);
+  }
+  return '';
+}
 
 @Injectable({
   providedIn: 'root',
@@ -22,93 +38,135 @@ export class ReniecMapper {
   };
 
   async mapearDatos(
-    datos: Record<string, unknown>,
+    datos: Partial<IReniecDatos>,
     formExistente: FormRegistroPaciente,
     tiposSexo: ICatalogoDescripcion[],
     estadosCivil: ICatalogoDescripcion[],
-  ): Promise<{
-    form: Partial<FormRegistroPaciente>;
-    depNacimientoSel?: string;
-    provNacimientoSel?: string;
-  }> {
+  ): Promise<ResultadoMapeoReniec> {
     const parcial: Partial<FormRegistroPaciente> = {};
-    const extra: { depNacimientoSel?: string; provNacimientoSel?: string } = {};
+    const seleccionUbigeoNacimiento: {
+      depNacimientoSel?: string;
+      provNacimientoSel?: string;
+    } = {};
 
     this.parsearNombres(datos, formExistente, parcial);
 
-    if (datos.fechaNacimiento)
-      parcial.fechaNacimiento = String(datos.fechaNacimiento);
-    if (datos.nombrePadre)
-      parcial.nombrePadre = String(datos.nombrePadre || '').toUpperCase();
-    if (datos.nombreMadre)
-      parcial.nombreMadre = String(datos.nombreMadre || '').toUpperCase();
+    const fechaNacimiento = limpiarCadena(datos.fechaNacimiento);
+    if (fechaNacimiento) {
+      parcial.fechaNacimiento = fechaNacimiento;
+    }
 
-    parcial.idTipoSexo = this.mapearSexo(String(datos.sexo), tiposSexo);
+    const nombrePadre = limpiarCadena(datos.nombrePadre);
+    if (nombrePadre) {
+      parcial.nombrePadre = nombrePadre.toUpperCase();
+    }
+
+    const nombreMadre = limpiarCadena(datos.nombreMadre);
+    if (nombreMadre) {
+      parcial.nombreMadre = nombreMadre.toUpperCase();
+    }
+
+    parcial.idTipoSexo = this.mapearSexo(limpiarCadena(datos.sexo), tiposSexo);
     parcial.idEstadoCivil = this.mapearEstadoCivil(
-      String(datos.estadoCivil),
+      limpiarCadena(datos.estadoCivil),
       estadosCivil,
     );
 
-    if (datos.direccion) parcial.direccionDomicilio = String(datos.direccion);
+    const direccionDomicilio = limpiarCadena(datos.direccion);
+    if (direccionDomicilio) {
+      parcial.direccionDomicilio = direccionDomicilio;
+    }
 
-    await this.asignarUbigeos(datos as Record<string, string>, parcial, extra);
+    await this.asignarUbigeos(datos, parcial, seleccionUbigeoNacimiento);
 
-    return { form: parcial, ...extra };
+    return { form: parcial, ...seleccionUbigeoNacimiento };
   }
 
   private parsearNombres(
-    datos: Record<string, unknown>,
-    form: FormRegistroPaciente,
+    datos: Partial<IReniecDatos>,
+    formExistente: FormRegistroPaciente,
     parcial: Partial<FormRegistroPaciente>,
   ): void {
-    parcial.apellidoPaterno = String(
-      datos.apellidoPaterno || form.apellidoPaterno || '',
-    ).toUpperCase();
-    parcial.apellidoMaterno = String(
-      datos.apellidoMaterno || form.apellidoMaterno || '',
-    ).toUpperCase();
-    parcial.primerNombre = String(
-      datos.primerNombre || form.primerNombre || '',
-    ).toUpperCase();
-    parcial.segundoNombre = String(
-      datos.segundoNombre || form.segundoNombre || '',
-    ).toUpperCase();
+    const apellidoPaterno =
+      limpiarCadena(datos.apellidoPaterno) ||
+      limpiarCadena(formExistente.apellidoPaterno);
+    parcial.apellidoPaterno = apellidoPaterno.toUpperCase();
+
+    const apellidoMaterno =
+      limpiarCadena(datos.apellidoMaterno) ||
+      limpiarCadena(formExistente.apellidoMaterno);
+    parcial.apellidoMaterno = apellidoMaterno.toUpperCase();
+
+    const primerNombre =
+      limpiarCadena(datos.primerNombre) ||
+      limpiarCadena(formExistente.primerNombre);
+    parcial.primerNombre = primerNombre.toUpperCase();
+
+    const segundoNombre =
+      limpiarCadena(datos.segundoNombre) ||
+      limpiarCadena(formExistente.segundoNombre);
+    parcial.segundoNombre = segundoNombre.toUpperCase();
 
     if (!parcial.primerNombre && datos.nombres) {
-      const partes = String(datos.nombres || '')
+      const partesNombres = limpiarCadena(datos.nombres)
         .toUpperCase()
         .split(/\s+/)
         .filter(Boolean);
-      if (partes.length > 0) parcial.primerNombre = partes[0];
-      if (partes.length > 1) parcial.segundoNombre = partes[1];
-      if (partes.length > 2) parcial.tercerNombre = partes.slice(2).join(' ');
+
+      if (partesNombres.length > 0) {
+        parcial.primerNombre = partesNombres[0];
+      }
+      if (partesNombres.length > 1) {
+        parcial.segundoNombre = partesNombres[1];
+      }
+      if (partesNombres.length > 2) {
+        parcial.tercerNombre = partesNombres.slice(2).join(' ');
+      }
     }
 
-    if (datos.tercerNombre)
-      parcial.tercerNombre = String(datos.tercerNombre || '').toUpperCase();
+    const tercerNombre = limpiarCadena(datos.tercerNombre);
+    if (tercerNombre) {
+      parcial.tercerNombre = tercerNombre.toUpperCase();
+    }
   }
 
   private async asignarUbigeos(
-    datos: Record<string, string>,
+    datos: Partial<IReniecDatos>,
     parcial: Partial<FormRegistroPaciente>,
-    extra: Record<string, string>,
+    seleccionUbigeoNacimiento: {
+      depNacimientoSel?: string;
+      provNacimientoSel?: string;
+    },
   ): Promise<void> {
-    const d = await this.autocompletarUbigeo(
-      datos.departamento,
-      datos.provincia,
-      datos.distrito,
+    const domicilio = await this.autocompletarUbigeo(
+      limpiarCadena(datos.departamento),
+      limpiarCadena(datos.provincia),
+      limpiarCadena(datos.distrito),
     );
-    if (d.departamento) parcial.idDepartamentoDomicilio = d.departamento;
-    if (d.provincia) parcial.idProvinciaDomicilio = d.provincia;
-    if (d.distrito) parcial.idDistritoDomicilio = d.distrito;
-    const n = await this.autocompletarUbigeo(
-      datos.departamentoNacimiento,
-      datos.provinciaNacimiento,
-      datos.distritoNacimiento,
+    if (domicilio.departamento) {
+      parcial.idDepartamentoDomicilio = domicilio.departamento;
+    }
+    if (domicilio.provincia) {
+      parcial.idProvinciaDomicilio = domicilio.provincia;
+    }
+    if (domicilio.distrito) {
+      parcial.idDistritoDomicilio = domicilio.distrito;
+    }
+
+    const nacimiento = await this.autocompletarUbigeo(
+      limpiarCadena(datos.departamentoNacimiento),
+      limpiarCadena(datos.provinciaNacimiento),
+      limpiarCadena(datos.distritoNacimiento),
     );
-    if (n.departamento) extra.depNacimientoSel = n.departamento;
-    if (n.provincia) extra.provNacimientoSel = n.provincia;
-    if (n.distrito) parcial.idDistritoNacimiento = n.distrito;
+    if (nacimiento.departamento) {
+      seleccionUbigeoNacimiento.depNacimientoSel = nacimiento.departamento;
+    }
+    if (nacimiento.provincia) {
+      seleccionUbigeoNacimiento.provNacimientoSel = nacimiento.provincia;
+    }
+    if (nacimiento.distrito) {
+      parcial.idDistritoNacimiento = nacimiento.distrito;
+    }
   }
 
   async autocompletarUbigeo(
@@ -121,67 +179,115 @@ export class ReniecMapper {
       provincia?: string;
       distrito?: string;
     } = {};
-    if (!departamento && !provincia && !distrito) return resultado;
+    if (!departamento && !provincia && !distrito) {
+      return resultado;
+    }
 
-    const deps = await this.ubigeoService.getDepartamentos();
-    const dep = this.ubigeoService.buscarEnCatalogo(deps, departamento);
-    if (!dep) return resultado;
-    resultado.departamento = String(dep.id);
+    const departamentos = await this.ubigeoService.getDepartamentos();
+    const departamentoEncontrado = this.ubigeoService.buscarEnCatalogo(
+      departamentos,
+      departamento,
+    );
+    if (!departamentoEncontrado) {
+      return resultado;
+    }
+    resultado.departamento = String(departamentoEncontrado.id);
 
-    const provs = await this.ubigeoService.getProvincias(String(dep.id));
-    const prv = this.ubigeoService.buscarEnCatalogo(provs, provincia);
-    if (!prv) return resultado;
-    resultado.provincia = String(prv.id);
+    const provincias = await this.ubigeoService.getProvincias(
+      String(departamentoEncontrado.id),
+    );
+    const provinciaEncontrada = this.ubigeoService.buscarEnCatalogo(
+      provincias,
+      provincia,
+    );
+    if (!provinciaEncontrada) {
+      return resultado;
+    }
+    resultado.provincia = String(provinciaEncontrada.id);
 
-    const dists = await this.ubigeoService.getDistritos(String(prv.id));
-    const dis = this.ubigeoService.buscarEnCatalogo(dists, distrito);
-    if (dis) resultado.distrito = String(dis.id);
+    const distritos = await this.ubigeoService.getDistritos(
+      String(provinciaEncontrada.id),
+    );
+    const distritoEncontrado = this.ubigeoService.buscarEnCatalogo(
+      distritos,
+      distrito,
+    );
+    if (distritoEncontrado) {
+      resultado.distrito = String(distritoEncontrado.id);
+    }
 
     return resultado;
   }
 
   private mapearSexo(
-    sexoRaw: string,
+    sexoOrigen: string,
     tiposSexo: ICatalogoDescripcion[],
   ): string | undefined {
-    const sexo = (sexoRaw || '').trim().toUpperCase();
-    if (!sexo) return undefined;
-    const esMasculino = sexo.includes('MASC') || sexo === 'M' || sexo === '1';
-    const esFemenino = sexo.includes('FEM') || sexo === 'F' || sexo === '2';
-    if (!esMasculino && !esFemenino) return undefined;
+    const sexoNormalizado = sexoOrigen.trim().toUpperCase();
+    if (!sexoNormalizado) {
+      return undefined;
+    }
 
-    const match = tiposSexo.find((sx) => {
-      const d = normalizarTexto(sx.descripcion || '');
+    const esMasculino =
+      sexoNormalizado.includes('MASC') ||
+      sexoNormalizado === 'M' ||
+      sexoNormalizado === '1';
+    const esFemenino =
+      sexoNormalizado.includes('FEM') ||
+      sexoNormalizado === 'F' ||
+      sexoNormalizado === '2';
+
+    if (!esMasculino && !esFemenino) {
+      return undefined;
+    }
+
+    const sexoEncontrado = tiposSexo.find((catalogoSexo) => {
+      const descripcion = normalizarTexto(catalogoSexo.descripcion || '');
       return esMasculino
-        ? d.includes('MASC') || d === 'M' || d === '1'
-        : d.includes('FEM') || d === 'F' || d === '2';
+        ? descripcion.includes('MASC') ||
+            descripcion === 'M' ||
+            descripcion === '1'
+        : descripcion.includes('FEM') ||
+            descripcion === 'F' ||
+            descripcion === '2';
     });
-    return match ? String(match.id) : undefined;
+
+    return sexoEncontrado ? String(sexoEncontrado.id) : undefined;
   }
 
   private mapearEstadoCivil(
-    estadoRaw: string,
+    estadoOrigen: string,
     estadosCivil: ICatalogoDescripcion[],
   ): string | undefined {
-    const estado = normalizarTexto(estadoRaw);
-    if (!estado) return undefined;
-
-    if (/^\d+$/.test(estado)) {
-      const texto = ReniecMapper.CODIGOS_ESTADO_CIVIL[estado];
-      if (!texto) return undefined;
-      const match = estadosCivil.find(
-        (ec) => normalizarTexto(ec.descripcion || '') === texto,
-      );
-      return match ? String(match.id) : undefined;
+    const estadoNormalizado = normalizarTexto(estadoOrigen);
+    if (!estadoNormalizado) {
+      return undefined;
     }
 
-    const match = estadosCivil.find((ec) => {
-      const d = normalizarTexto(ec.descripcion || '');
+    if (/^\d+$/.test(estadoNormalizado)) {
+      const textoEstadoCivil =
+        ReniecMapper.CODIGOS_ESTADO_CIVIL[estadoNormalizado];
+      if (!textoEstadoCivil) {
+        return undefined;
+      }
+      const estadoPorCodigo = estadosCivil.find(
+        (catalogoEstado) =>
+          normalizarTexto(catalogoEstado.descripcion || '') ===
+          textoEstadoCivil,
+      );
+      return estadoPorCodigo ? String(estadoPorCodigo.id) : undefined;
+    }
+
+    const estadoPorDescripcion = estadosCivil.find((catalogoEstado) => {
+      const descripcion = normalizarTexto(catalogoEstado.descripcion || '');
       return (
-        d.length >= 3 &&
-        (estado === d || estado.includes(d) || d.includes(estado))
+        descripcion.length >= 3 &&
+        (estadoNormalizado === descripcion ||
+          estadoNormalizado.includes(descripcion) ||
+          descripcion.includes(estadoNormalizado))
       );
     });
-    return match ? String(match.id) : undefined;
+
+    return estadoPorDescripcion ? String(estadoPorDescripcion.id) : undefined;
   }
 }

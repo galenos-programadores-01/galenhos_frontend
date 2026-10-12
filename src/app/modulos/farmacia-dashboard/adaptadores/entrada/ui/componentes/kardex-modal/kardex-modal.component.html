@@ -1,0 +1,168 @@
+@if (visible()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="modal-kardex-titulo">
+    <div class="bg-white rounded-xl border border-slate-300 w-[96vw] max-w-[1700px] overflow-hidden flex flex-col max-h-[94vh] shadow-2xl">
+      
+      <!-- Cabecera -->
+      <div class="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-[#07153a] text-white">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] font-bold tracking-wider border border-blue-400/30 uppercase">Kardex Físico</span>
+            <h2 id="modal-kardex-titulo" class="text-sm md:text-base font-bold uppercase tracking-wide">Movimientos del Medicamento</h2>
+          </div>
+          @if (producto()) {
+            <p class="text-xs text-slate-300 mt-1">
+              <strong class="text-white">{{ producto()?.codigo }}</strong> &mdash; {{ producto()?.nombre }} 
+              <span class="text-slate-400">({{ producto()?.concentracion }} - {{ producto()?.formaFarmaceutica }})</span>
+            </p>
+          }
+        </div>
+        <button
+          type="button"
+          (click)="alCerrar()"
+          class="text-xs font-semibold text-slate-300 hover:text-white px-3.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+          aria-label="Cerrar modal de kardex">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- Filtros de fecha y resumen -->
+      <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-1.5">
+            <label for="kardex-fecha-desde" class="font-semibold text-slate-700">Desde:</label>
+            <input
+              id="kardex-fecha-desde"
+              type="date"
+              [ngModel]="fechaInicioSignal()"
+              (ngModelChange)="fechaInicioSignal.set($event)"
+              class="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-800 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label for="kardex-fecha-hasta" class="font-semibold text-slate-700">Hasta:</label>
+            <input
+              id="kardex-fecha-hasta"
+              type="date"
+              [ngModel]="fechaFinSignal()"
+              (ngModelChange)="fechaFinSignal.set($event)"
+              class="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-800 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+          </div>
+          <button
+            type="button"
+            (click)="alBuscarRango()"
+            class="px-4 py-1.5 bg-[#07153a] hover:bg-blue-900 text-white rounded text-xs font-semibold transition-colors cursor-pointer shadow-xs">
+            Consultar Rango
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 text-slate-700 font-medium flex-wrap">
+          <div class="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-md text-emerald-800 shadow-xs flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+            <span>Total Entradas:</span>
+            <strong class="text-emerald-700 font-bold font-mono text-sm">{{ totalEntradas() | number:'1.0-2' }}</strong>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 px-3 py-1 rounded-md text-blue-800 shadow-xs flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+            <span>Total Salidas:</span>
+            <strong class="text-blue-700 font-bold font-mono text-sm">{{ totalSalidas() | number:'1.0-2' }}</strong>
+          </div>
+          <div class="bg-slate-100 border border-slate-200 px-3.5 py-1 rounded-md text-slate-800 shadow-xs flex items-center gap-1.5">
+            <span class="text-slate-500 font-bold">Monto Total:</span>
+            <strong class="text-slate-950 font-bold font-mono text-sm">S/ {{ totalMonto() | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido Tabla de Kardex -->
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+        @if (cargando()) {
+          <div class="text-center py-12 text-slate-500 text-xs">
+            Consultando movimientos de kardex...
+          </div>
+        } @else if (movimientos().length === 0) {
+          <div class="text-center py-12 text-slate-500 text-xs">
+            <p class="text-sm font-semibold text-slate-700">Sin movimientos registrados</p>
+            <p class="text-slate-400 mt-1">No se encontraron transacciones en el periodo y almacén seleccionados.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-xs">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100/80 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3 whitespace-nowrap">Fecha</th>
+                  <th class="px-3 py-3 whitespace-nowrap text-center">Tipo</th>
+                  <th class="px-4 py-3 whitespace-nowrap">Doc / Nro</th>
+                  <th class="px-4 py-3 whitespace-nowrap">Origen &rarr; Destino</th>
+                  <th class="px-4 py-3 whitespace-nowrap">Lote / Vcto</th>
+                  <th class="px-4 py-3 text-right whitespace-nowrap">Cant.</th>
+                  <th class="px-4 py-3 text-right whitespace-nowrap">Precio</th>
+                  <th class="px-4 py-3 text-right whitespace-nowrap">Total</th>
+                  <th class="px-4 py-3 whitespace-nowrap">Concepto</th>
+                  <th class="px-4 py-3 whitespace-nowrap">Usuario</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (mov of movimientos(); track mov.movNumero) {
+                  <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="px-4 py-2.5 whitespace-nowrap text-slate-600 font-mono text-[11px]">
+                      {{ mov.fechaCreacion }}
+                    </td>
+                    <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                      <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider border uppercase"
+                            [ngClass]="mov.movTipo === 'S' || mov.movTipo === 'SALIDA' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
+                        {{ mov.movTipo === 'S' || mov.movTipo === 'SALIDA' ? 'SALIDA' : 'ENTRADA' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-2.5 font-mono text-slate-700 whitespace-nowrap">
+                      <span class="font-semibold text-slate-900">{{ mov.documentoTipo }}</span> {{ mov.documentoNumero }}
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-700 text-[11px] whitespace-nowrap">
+                      <span class="text-slate-600">{{ mov.almacenOrigen || 'N/A' }}</span>
+                      <span class="text-slate-400 font-bold mx-1.5">&rarr;</span>
+                      <span class="font-semibold text-slate-800">{{ mov.almacenDestino || 'N/A' }}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-[11px] font-mono text-slate-800 whitespace-nowrap">
+                      <span class="font-semibold">{{ mov.lote || '-' }}</span>
+                      @if (mov.fechaVencimiento) {
+                        <span class="text-slate-500 ml-1">({{ mov.fechaVencimiento }})</span>
+                      }
+                    </td>
+                    <td class="px-4 py-2.5 text-right font-bold whitespace-nowrap font-mono text-xs"
+                        [ngClass]="mov.movTipo === 'S' || mov.movTipo === 'SALIDA' ? 'text-red-600' : 'text-emerald-700'">
+                      {{ mov.movTipo === 'S' || mov.movTipo === 'SALIDA' ? '-' : '+' }}{{ mov.cantidad | number:'1.0-2' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-right text-slate-600 font-mono whitespace-nowrap text-xs">
+                      S/ {{ mov.precio | number:'1.2-2' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-right font-bold text-slate-900 font-mono whitespace-nowrap text-xs">
+                      S/ {{ mov.total | number:'1.2-2' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-700 whitespace-nowrap text-xs" [title]="mov.concepto">
+                      {{ mov.concepto || '-' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-700 text-[11px] whitespace-nowrap">
+                      {{ mov.usuario || '-' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Pie -->
+      <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-between bg-slate-50 text-xs text-slate-500">
+        <div>
+          Mostrando <strong class="text-slate-800 font-semibold">{{ movimientos().length }}</strong> movimientos registrados
+        </div>
+        <button
+          type="button"
+          (click)="alCerrar()"
+          class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs font-semibold transition-colors cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

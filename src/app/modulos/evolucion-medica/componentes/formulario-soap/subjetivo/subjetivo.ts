@@ -18,18 +18,18 @@ import { ModalGlobalService } from '../../../../../compartido/ui/modal-global/mo
 import { SelectGlobalComponent } from '../../../../../compartido/ui/select-global/select-global';
 import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/error-mensaje.component';
 import {
+  ETIQUETAS_SISTEMA,
+  type GrupoSintomasVista,
+} from '../../../constantes/formulario-soap.constantes';
+import {
   type SintomaCatalogo,
   SintomaService,
 } from '../../../servicios/sintoma.service';
 import {
-  ETIQUETAS_SISTEMA,
-  type GrupoSintomasVista,
-} from '../constantes/formulario-soap.constantes';
-import {
   type EtiquetaDolor,
   obtenerEtiquetaDolor,
   procesarValidacionEscalaDolor,
-} from '../utilidades/formulario-soap-dolor.util';
+} from '../../../utilidades/formulario-soap-dolor.util';
 
 @Component({
   selector: 'app-subjetivo',
@@ -57,7 +57,7 @@ export class SubjetivoComponent implements OnInit {
   private readonly modalGlobal = inject(ModalGlobalService);
 
   public readonly sintomasCargando = signal<boolean>(false);
-  public readonly grupoSintomasAbierto = signal<string>('general');
+  public readonly grupoSintomasAbierto = signal<string>('');
   public nuevoSintomaTexto = '';
   public nuevoSintomaSistema = 'general';
 
@@ -78,6 +78,33 @@ export class SubjetivoComponent implements OnInit {
         ),
       });
     }
+
+    const ordenPredefinido = [
+      'general',
+      'respiratorio-cv',
+      'gastrointestinal',
+      'neurologico',
+    ];
+
+    gruposGenerados.sort((grupoA, grupoB) => {
+      const claveA = grupoA.clave.toLowerCase();
+      const claveB = grupoB.clave.toLowerCase();
+
+      if (claveA === 'otros') return 1;
+      if (claveB === 'otros') return -1;
+
+      const indiceA = ordenPredefinido.indexOf(claveA);
+      const indiceB = ordenPredefinido.indexOf(claveB);
+
+      if (indiceA !== -1 && indiceB !== -1) {
+        return indiceA - indiceB;
+      }
+      if (indiceA !== -1) return -1;
+      if (indiceB !== -1) return 1;
+
+      return grupoA.etiqueta.localeCompare(grupoB.etiqueta);
+    });
+
     return gruposGenerados;
   });
 

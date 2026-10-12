@@ -8,38 +8,50 @@
     Procedimientos realizados
   </h3>
   <div class="overflow-x-auto">
-    <app-tabla [columnas]="columnasProcedimientos" [datos]="procedimientosArray.controls" [cargando]="false"
+    <app-tabla [columnas]="columnasProcedimientos" [datos]="procedimientosPaginados" [cargando]="false"
                mensajeVacio="No hay procedimientos registrados.">
 
-      <ng-template appColumnaTemplate="cie10cxCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1">
-          <input type="text" [id]="'cie10cx_' + i" aria-label="CIE-10 / CPT" formControlName="cie10cx" class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800" placeholder="Ej. 86.22">
+      <ng-template appColumnaTemplate="cie10cxCustom" let-item>
+        <div [formGroup]="item.control" class="p-1">
+          <input type="text" [id]="'cie10cx_' + item.indiceOriginal" aria-label="CIE-10 / CPT" formControlName="cie10cx" class="w-full border border-slate-200 rounded-md p-1.5 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. 86.22">
         </div>
       </ng-template>
 
-      <ng-template appColumnaTemplate="descripcionCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1">
-          <input type="text" [id]="'descripcion_' + i" aria-label="Descripción del procedimiento" formControlName="descripcion" class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800" placeholder="Ej. Desbridamiento de herida">
+      <ng-template appColumnaTemplate="descripcionCustom" let-item>
+        <div [formGroup]="item.control" class="p-1">
+          <input type="text" [id]="'descripcion_' + item.indiceOriginal" aria-label="Descripción del procedimiento" formControlName="descripcion" class="w-full border border-slate-200 rounded-md p-1.5 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ej. Desbridamiento de herida">
         </div>
       </ng-template>
 
-      <ng-template appColumnaTemplate="complicacionesCustom" let-ctrl let-i="index">
-        <div [formGroup]="ctrl" class="p-1">
-          <input type="text" [id]="'complicaciones_' + i" aria-label="Complicaciones / Observaciones" formControlName="complicaciones" class="w-full border border-slate-200 rounded p-1.5 text-[12.5px] bg-slate-50 text-slate-800" placeholder="Ninguna">
+      <ng-template appColumnaTemplate="complicacionesCustom" let-item>
+        <div [formGroup]="item.control" class="p-1">
+          <input type="text" [id]="'complicaciones_' + item.indiceOriginal" aria-label="Complicaciones / Observaciones" formControlName="complicaciones" class="w-full border border-slate-200 rounded-md p-1.5 text-[12.5px] bg-slate-50 text-slate-800 focus:ring-1 focus:ring-teal-600 focus:outline-none" placeholder="Ninguna">
         </div>
       </ng-template>
 
-      <ng-template appColumnaTemplate="accionesCustom" let-ctrl let-i="index">
+      <ng-template appColumnaTemplate="accionesCustom" let-item>
         @if (authService.hasPermission('modificar') || authService.hasPermission('eliminar')) {
-          <button type="button" class="text-slate-400 hover:text-rose-600 transition-colors mt-1.5" (click)="removerProcedimiento(i)" title="Eliminar fila">
+          <button type="button" class="text-slate-400 hover:text-rose-600 transition-colors mt-1.5 cursor-pointer" (click)="removerProcedimiento(item.indiceOriginal)" title="Eliminar fila">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
           </button>
         }
       </ng-template>
 
     </app-tabla>
+
+    @if (procedimientosArray.controls.length > elementosPorPagina) {
+      <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end">
+        <app-paginacion
+          [page]="paginaActual()"
+          [totalPages]="totalPaginas"
+          [totalItems]="procedimientosArray.controls.length"
+          (pageChange)="paginaActual.set($event)"
+        />
+      </div>
+    }
+
     @if (authService.hasPermission('agregar') || authService.hasPermission('modificar')) {
-      <button type="button" class="mt-3 bg-teal-50 text-teal-700 border border-dashed border-teal-500 px-3 py-2 rounded-lg text-[12.6px] font-semibold hover:bg-teal-100 transition-colors"
+      <button type="button" class="mt-3 bg-teal-50 text-teal-700 border border-dashed border-teal-500 px-3 py-2 rounded-md text-[12.6px] font-semibold hover:bg-teal-100 transition-colors cursor-pointer"
         (click)="agregarProcedimiento()">+ Agregar procedimiento</button>
     }
   </div>
@@ -58,7 +70,7 @@
       Incapacidad médica
     </h3>
     @if (authService.hasPermission('imprimir') || authService.hasPermission('agregar')) {
-      <button type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded text-[12.6px] font-semibold shadow-sm transition-colors flex items-center gap-1.5">
+      <button type="button" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-md text-[12.6px] font-semibold shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer">
         <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="6 9 6 2 18 2 18 9"></polyline>
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
@@ -101,7 +113,7 @@
       Certificados e Informes
     </h3>
     @if (authService.hasPermission('imprimir') || authService.hasPermission('agregar')) {
-      <button type="button" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded text-[12.6px] font-semibold transition-colors flex items-center gap-1.5">
+      <button type="button" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-md text-[12.6px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer">
         Generar documentos
       </button>
     }

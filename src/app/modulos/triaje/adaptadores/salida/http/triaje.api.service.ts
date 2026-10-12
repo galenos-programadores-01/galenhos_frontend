@@ -56,6 +56,7 @@ export interface RegistroTriajePayload {
   nroControlesPrenatales?: number | null;
   movimientosFetales?: number | null;
   idEmpleado?: number;
+  idCausaExternaMorbilidad?: number;
 }
 
 export interface PendientesAdmisionParams {
@@ -72,6 +73,7 @@ export interface CrearAdmisionPayload {
   idTriaje: number;
   idPacienteTriaje: number;
   nroDocumento?: string;
+  idEmpleado?: number;
   idMedico?: number;
   nombreAcompanante?: string;
   telefonoAcompanante?: string;
@@ -156,20 +158,60 @@ export class TriajeApiService {
     });
   }
 
+  modificarTriaje(
+    idTriaje: number,
+    payload: RegistroTriajePayload,
+  ): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  actualizarIafa(idTriaje: number): Promise<{ ok: boolean }> {
+    return this.apiClient.request<{ ok: boolean }>(
+      `/api/v1/triaje/${idTriaje}/iafa`,
+      { method: 'PUT' },
+    );
+  }
+
+  listarCausasExternasMorbilidad(): Promise<IFilaBackend[]> {
+    return this.apiClient.request<IFilaBackend[]>(
+      '/api/v1/triaje/causas-externas-morbilidad',
+    );
+  }
+
   listar(
     fini: string,
     ffin: string,
+    filtro = '',
     derivadoAServicio = '-100',
     idEmpleado: number = this.authService.getIdEmpleado(),
   ): Promise<IFilaBackend[]> {
     const query = new URLSearchParams({
       fini,
       ffin,
+      filtro,
       derivadoAServicio,
       idEmpleado: String(idEmpleado),
     });
     return this.apiClient.request<IFilaBackend[]>(
       `/api/v1/triaje?${query.toString()}`,
+    );
+  }
+
+  reporteTriajePorEmpleado(
+    idEmpleado: number,
+    fechaini: string,
+    fechafin: string,
+  ): Promise<IFilaBackend[]> {
+    const query = new URLSearchParams({
+      IdEmpleado: String(idEmpleado),
+      fechaini,
+      fechafin,
+    });
+    return this.apiClient.request<IFilaBackend[]>(
+      `/api/v1/triaje/reporte-por-empleado?${query.toString()}`,
     );
   }
 
@@ -180,11 +222,11 @@ export class TriajeApiService {
     query.append('fecha', params.fecha);
     if (params.filtro) query.append('filtro', params.filtro);
     if (params.nroCta) query.append('nroCta', String(params.nroCta));
-    if (params.idDepartamento)
+    if (params.idDepartamento !== undefined)
       query.append('idDepartamento', String(params.idDepartamento));
-    if (params.IdEspecialidad)
+    if (params.IdEspecialidad !== undefined)
       query.append('IdEspecialidad', String(params.IdEspecialidad));
-    if (params.idServicio)
+    if (params.idServicio !== undefined)
       query.append('idServicio', String(params.idServicio));
     if (params.idTipoServicio)
       query.append('idTipoServicio', String(params.idTipoServicio));
@@ -197,6 +239,16 @@ export class TriajeApiService {
     return this.apiClient.request<RespuestaSp>('/api/v1/triaje/admision', {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  }
+
+  // Elimina (baja lógica) un triaje de emergencia. El backend devuelve el
+  // @Resultado del SP: "OK; ..." si se eliminó o "ERROR; ..." si el triaje
+  // ya cuenta con ficha de admisión.
+  eliminarTriaje(idTriaje: number, idEmpleado: number): Promise<RespuestaSp> {
+    return this.apiClient.request<RespuestaSp>(`/api/v1/triaje/${idTriaje}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ idEmpleado }),
     });
   }
 
@@ -213,6 +265,12 @@ export class TriajeApiService {
   obtenerFichaAdmision(idCuentaAtencion: number): Promise<IFilaBackend> {
     return this.apiClient.request<IFilaBackend>(
       `/api/v1/triaje/ficha-admision?idCuentaAtencion=${idCuentaAtencion}`,
+    );
+  }
+
+  obtenerTriajePorId(idTriaje: number): Promise<IFilaBackend | null> {
+    return this.apiClient.request<IFilaBackend | null>(
+      `/api/v1/triaje/${idTriaje}`,
     );
   }
 

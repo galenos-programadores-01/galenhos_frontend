@@ -103,12 +103,38 @@ export class MaestrosApiService {
       `/api/v1/servicios/${idArea}`,
     );
   }
+  getServiciosPorPrioridad(
+    idPrioridad: number | string,
+    fechaNac: string,
+  ): Promise<ICatalogoNombre[]> {
+    const path = fechaNac
+      ? `/api/v1/servicios-prioridad/${idPrioridad}/${fechaNac}`
+      : `/api/v1/servicios-prioridad/${idPrioridad}`;
+    return this.apiClient
+      .request<{ idServicio: number; nombre: string }[]>(path)
+      .then((items) =>
+        (items || []).map((s) => ({
+          id: s.idServicio,
+          nombre: s.nombre,
+        })),
+      );
+  }
   getDatosInstitucion(): Promise<IFilaBackend> {
     return this.apiClient.request<IFilaBackend>('/api/v1/datos-institucion');
   }
   getParametro(id: number | string): Promise<IFilaBackend | IFilaBackend[]> {
     return this.apiClient.request<IFilaBackend | IFilaBackend[]>(
       `/api/v1/parametros/${id}`,
+    );
+  }
+
+  // Marca el parámetro con ValorTexto = 'N' (SP
+  // usp_go_ActualizarParametroValorTextoPorId). El backend invalida la cache
+  // de parámetros clínicos, así que el siguiente getParametro ya ve el 'N'.
+  desactivarParametro(id: number | string): Promise<{ message: string }> {
+    return this.apiClient.request<{ message: string }>(
+      `/api/v1/catalogos/parametros/${id}/valor-texto`,
+      { method: 'PATCH' },
     );
   }
 

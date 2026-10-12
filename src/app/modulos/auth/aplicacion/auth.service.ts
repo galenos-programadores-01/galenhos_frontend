@@ -129,10 +129,6 @@ export class AuthService {
     this.permisos.set([]);
   }
 
-  loginDemo(): void {
-    this.setSession('demo-token', 'demo');
-  }
-
   logout(): void {
     this.clearSession();
     this.router.navigate(['/login']);
@@ -142,11 +138,35 @@ export class AuthService {
     action: 'agregar' | 'modificar' | 'eliminar' | 'ver' | 'imprimir',
     path?: string,
   ): boolean {
-    const targetPath = path || this.router.url;
+    const targetPath = (path || this.router.url).toLowerCase();
 
-    const currentPermiso = this.permisos().find(
-      (p) => targetPath.includes(p.claveWeb) && p.claveWeb !== '',
-    );
+    const mapaEquivalencias: Record<string, string[]> = {
+      'catalogos/bienes-insumos': ['catalogobienes', 'bienes-insumos'],
+      'catalogos/servicios': [
+        'facturacioncatalogoservicios',
+        'servicios',
+        'catalogo-servicios',
+      ],
+      'farmacia/disponibilidad': [
+        'dashfarm',
+        'farmacia',
+        'disponibilidad-medicamentos',
+        'inventario',
+      ],
+      'atencion-ce': ['atenciones', 'consulta-externa'],
+    };
+
+    const currentPermiso = this.permisos().find((p) => {
+      const clave = (p.claveWeb || '').toLowerCase();
+      if (!clave) return false;
+      if (targetPath.includes(clave)) return true;
+      for (const [ruta, claves] of Object.entries(mapaEquivalencias)) {
+        if (targetPath.includes(ruta) && claves.includes(clave)) {
+          return true;
+        }
+      }
+      return false;
+    });
 
     if (!currentPermiso) {
       return false;

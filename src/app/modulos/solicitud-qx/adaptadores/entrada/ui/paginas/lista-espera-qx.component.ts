@@ -526,6 +526,7 @@ export class ListaEsperaQxComponent implements OnInit {
         fechaICNeumo: this.form.fechaICNeumo,
         fechaICAnestesio: this.form.fechaICAnestesio,
         observacion: this.form.observacion.trim(),
+        telefono: this.form.telefono,
       };
       if (this.editingId) {
         await this.apiService.modificar(this.editingId, payload);
@@ -556,7 +557,7 @@ export class ListaEsperaQxComponent implements OnInit {
       const datos = await this.apiService.reporte(
         this.fechaInicio,
         this.fechaFin,
-        this.filtroEspecialidad ?? undefined,
+        this.filtroEspecialidad ?? 0,
       );
       if (!datos || datos.length === 0) {
         this.error = 'No hay datos para exportar.';

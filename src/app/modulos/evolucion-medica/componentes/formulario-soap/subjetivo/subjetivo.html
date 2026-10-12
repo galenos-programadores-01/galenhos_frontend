@@ -101,8 +101,8 @@
               {{ soapForm.get('subjetivo.evolucionSintomas')?.value?.length || 0 }} / 2000
             </span>
           </div>
-          <textarea id="subjetivo-evolucion" rows="4" maxlength="2000" formControlName="evolucionSintomas"
-            class="w-full border border-slate-200 rounded-md p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y transition-all"
+          <textarea id="subjetivo-evolucion" rows="8" maxlength="2000" formControlName="evolucionSintomas"
+            class="w-full border border-slate-200 rounded-md p-3 text-[13px] text-[#07153a] bg-white focus:ring-2 focus:ring-[#263c7a]/30 focus:border-[#263c7a] outline-none resize-y transition-all min-h-[200px]"
             placeholder="Describa cómo han evolucionado los síntomas..."></textarea>
           <app-error-mensaje [control]="soapForm.get('subjetivo.evolucionSintomas')"></app-error-mensaje>
         </div>

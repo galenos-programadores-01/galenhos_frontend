@@ -1,6 +1,11 @@
 export interface FormRegistroTriaje {
   idDocIdentidad: string;
   nroDocumento: string;
+  // Datos del paciente: copia de la busqueda que se envia al grabar el
+  // triaje. Se separan de los campos de busqueda para que el operador
+  // pueda corregir la identificacion sin volver a disparar la busqueda.
+  idDocIdentidadPaciente: string;
+  nroDocumentoPaciente: string;
   afiliacionDisa: string;
   afiliacionTipoFormato: string;
   afiliacionNroContrato: string;
@@ -37,6 +42,7 @@ export interface FormRegistroTriaje {
   tiempoEvolucionCantidadUnidad: string;
   idServicio: string;
   idTipoPrioridad: string;
+  idCausaExternaMorbilidad: string;
   fechaUltimaRegla: string;
   esGestante: boolean;
 }

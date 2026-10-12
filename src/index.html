@@ -9,9 +9,25 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico ">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    // Aplica el tema ANTES de que arranque Angular para evitar el parpadeo
+    // de una pantalla clara en un dispositivo en modo oscuro.
+    // Debe mantenerse sincronizado con leerPreferencia() de tema.service.ts.
+    try {
+      const guardada = localStorage.getItem('galenos.tema');
+      const oscuro = guardada === 'oscuro'
+        || (guardada !== 'claro' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (oscuro) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch {
+      // Storage bloqueado: se usa el tema claro por defecto.
+    }
+  </script>
 </head>
 
-<body class="bg-gray-50 text-gray-900 font-['Poppins']">
+<body class="bg-gray-50 text-gray-900 font-['Poppins'] dark:bg-[#0b1120] dark:text-slate-100">
   <div id="addComponent" style="display:none"></div>
   <componente-raiz></componente-raiz>
 </body>

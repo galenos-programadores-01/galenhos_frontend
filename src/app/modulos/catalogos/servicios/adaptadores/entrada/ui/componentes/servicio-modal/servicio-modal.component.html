@@ -1,0 +1,391 @@
+@if (visible) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="relative w-full max-w-3xl bg-white border border-slate-300 rounded shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Cabecera del Modal -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-[#07153a] text-white">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wide">
+            {{ soloLectura ? 'Detalle de Servicio / Procedimiento CPT' : (esEdicion ? 'Editar Servicio / Procedimiento CPT' : 'Nuevo Servicio / Procedimiento CPT') }}
+          </h3>
+          <p class="text-xs text-slate-300 mt-0.5">
+            {{ soloLectura ? 'Consulta de especificaciones normativas y tarifario institucional' : (esEdicion ? 'Actualice codificaciones normativas, tarifas y puntos de facturación' : 'Incorpore un procedimiento al catálogo y tarifario institucional') }}
+          </p>
+        </div>
+
+        <button 
+          type="button" 
+          (click)="cerrar()"
+          aria-label="Cerrar modal"
+          class="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+      <div class="flex border-b border-slate-200 bg-slate-50 px-4 gap-2 pt-2">
+        <button 
+          type="button"
+          (click)="cambiarPestana('procedimiento')"
+          [class.text-blue-700]="pestanaActiva() === 'procedimiento'"
+          [class.border-blue-700]="pestanaActiva() === 'procedimiento'"
+          [class.font-bold]="pestanaActiva() === 'procedimiento'"
+          [class.text-slate-600]="pestanaActiva() !== 'procedimiento'"
+          [class.border-transparent]="pestanaActiva() !== 'procedimiento'"
+          class="py-2 px-3 text-xs border-b-2 transition-colors cursor-pointer flex items-center gap-1">
+          <span>1. Definición del Procedimiento</span>
+          <span class="text-red-500 font-bold">*</span>
+        </button>
+
+        <button 
+          type="button"
+          (click)="cambiarPestana('normativa')"
+          [class.text-blue-700]="pestanaActiva() === 'normativa'"
+          [class.border-blue-700]="pestanaActiva() === 'normativa'"
+          [class.font-bold]="pestanaActiva() === 'normativa'"
+          [class.text-slate-600]="pestanaActiva() !== 'normativa'"
+          [class.border-transparent]="pestanaActiva() !== 'normativa'"
+          class="py-2 px-3 text-xs border-b-2 transition-colors cursor-pointer">
+          2. Codificación Normativa (CPT / CPMS / MINSA)
+        </button>
+
+        <button 
+          type="button"
+          (click)="cambiarPestana('tarifas')"
+          [class.text-blue-700]="pestanaActiva() === 'tarifas'"
+          [class.border-blue-700]="pestanaActiva() === 'tarifas'"
+          [class.font-bold]="pestanaActiva() === 'tarifas'"
+          [class.text-slate-600]="pestanaActiva() !== 'tarifas'"
+          [class.border-transparent]="pestanaActiva() !== 'tarifas'"
+          class="py-2 px-3 text-xs border-b-2 transition-colors cursor-pointer">
+          3. Tarifario & Financiamiento
+        </button>
+      </div>
+
+      <!-- Contenido de Formulario -->
+      <div class="p-4 overflow-y-auto flex-1 space-y-4 text-xs">
+        @if (errorMensaje) {
+          <div class="p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            {{ errorMensaje }}
+          </div>
+        }
+
+        @if (erroresValidacion().length > 0) {
+          <div class="p-2.5 bg-amber-50 border border-amber-200 rounded text-xs space-y-1">
+            @for (error of erroresValidacion(); track error) {
+              <p class="font-semibold text-amber-800 flex items-start gap-1.5">
+                <span class="shrink-0 font-black">•</span>{{ error }}
+              </p>
+            }
+          </div>
+        }
+
+        <!-- Pestaña 1: Procedimiento -->
+        @if (pestanaActiva() === 'procedimiento') {
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            <div class="md:col-span-3">
+              <label for="srv-nombre" class="block font-bold text-slate-700 mb-1">
+                Descripción del Servicio / Procedimiento <span class="text-red-600">*</span>
+              </label>
+              <textarea 
+                id="srv-nombre"
+                rows="2"
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.nombre"
+                placeholder="Ej. CONSULTA MEDICA ESPECIALIZADA EN MEDICINA INTERNA"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"></textarea>
+            </div>
+
+            <div class="md:col-span-3">
+              <label for="srv-nombre-corto" class="block font-bold text-slate-700 mb-1">
+                Nombre Corto / Abreviatura
+              </label>
+              <input 
+                id="srv-nombre-corto"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.nombreCorto"
+                placeholder="Ej. CONSULTA MED INTERNA"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="srv-grupo" class="block font-bold text-slate-700 mb-1">
+                Grupo de Servicio <span class="text-red-600">*</span>
+              </label>
+              <app-select-global
+                id="srv-grupo"
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.idServicioGrupo">
+                <option [ngValue]="0">-- Seleccione Grupo de Servicio --</option>
+                @for (grupo of grupos; track grupo.idServicioGrupo) {
+                  <option [ngValue]="grupo.idServicioGrupo">
+                    {{ grupo.codigo ? (grupo.codigo + ' - ' + grupo.descripcion) : grupo.descripcion }}
+                  </option>
+                }
+              </app-select-global>
+            </div>
+
+            <div>
+              <label for="srv-estado" class="block font-bold text-slate-700 mb-1">Estado</label>
+              <app-select-global
+                id="srv-estado"
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.idEstado">
+                <option [ngValue]="1">Activo</option>
+                <option [ngValue]="0">Inactivo</option>
+              </app-select-global>
+            </div>
+
+            <!-- Switches y Banderas -->
+            <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+              <label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-300 rounded cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.esCpt"
+                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60" />
+                <span class="font-medium text-slate-700">Procedimiento CPT Normado</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-300 rounded cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.esQuirurgico"
+                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60" />
+                <span class="font-medium text-slate-700">Procedimiento Quirúrgico (QX)</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-300 rounded cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.cargaEnFua"
+                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60" />
+                <span class="font-medium text-slate-700">Permite Carga en FUA (SIS)</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-300 rounded cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.cargaEnHis"
+                  class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60" />
+                <span class="font-medium text-slate-700">Permite Carga en HIS MINSA</span>
+              </label>
+            </div>
+
+          </div>
+        }
+
+        <!-- Pestaña 2: Normativa & Homologación -->
+        @if (pestanaActiva() === 'normativa') {
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            
+            <div>
+              <label for="srv-codigo" class="block font-bold text-slate-700 mb-1">Código Interno del Servicio</label>
+              <input 
+                id="srv-codigo"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codigo"
+                placeholder="Ej. 010101"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cpms" class="block font-bold text-slate-700 mb-1">Código CPMS (Catálogo MINSA)</label>
+              <input 
+                id="srv-cpms"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.cpms"
+                placeholder="Ej. 99203"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cod-minsa" class="block font-bold text-slate-700 mb-1">Código MINSA Oficial</label>
+              <input 
+                id="srv-cod-minsa"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codMinsa"
+                placeholder="Ej. 056"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-nombre-minsa" class="block font-bold text-slate-700 mb-1">Denominación MINSA Oficial</label>
+              <input 
+                id="srv-nombre-minsa"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.nombreMinsa"
+                placeholder="Ej. CONSULTA MEDICA GENERAL"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cod-sis" class="block font-bold text-slate-700 mb-1">Código Convenio SIS</label>
+              <input 
+                id="srv-cod-sis"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codigoSis"
+                placeholder="Ej. 056"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cod-soat" class="block font-bold text-slate-700 mb-1">Código Tarifario SOAT</label>
+              <input 
+                id="srv-cod-soat"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codigoSoat"
+                placeholder="Ej. 10.01"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cod-his" class="block font-bold text-slate-700 mb-1">Código HIS MINSA</label>
+              <input 
+                id="srv-cod-his"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codigoHis"
+                placeholder="Ej. U001"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+            <div>
+              <label for="srv-cod-sunat" class="block font-bold text-slate-700 mb-1">Código SUNAT</label>
+              <input 
+                id="srv-cod-sunat"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.codigoSunat"
+                placeholder="Ej. 85121600"
+                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+            </div>
+
+          </div>
+        }
+
+        <!-- Pestaña 3: Tarifario & Financiamiento -->
+        @if (pestanaActiva() === 'tarifas') {
+          <div class="space-y-3">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="p-3 bg-slate-50 border border-slate-300 rounded">
+                <label for="tarifa-particular" class="block font-bold text-slate-700 mb-1 cursor-pointer">Tarifa Particular / Pagante</label>
+                <div class="flex items-center gap-1">
+                  <span class="font-bold text-slate-500 text-xs">S/.</span>
+                  <input 
+                    id="tarifa-particular"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.01"
+                    [disabled]="soloLectura"
+                    (keydown)="validarTeclaPrecio($event)"
+                    aria-label="Tarifa Particular o Pagante en Soles"
+                    [(ngModel)]="formulario.precioParticular"
+                    class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+                </div>
+                <span class="block text-[11px] text-slate-500 mt-1">Precio regular para pacientes sin seguro subsidiado</span>
+              </div>
+
+              <div class="p-3 bg-slate-50 border border-slate-300 rounded">
+                <label for="tarifa-sis" class="block font-bold text-slate-700 mb-1 cursor-pointer">Tarifa Convenio SIS</label>
+                <div class="flex items-center gap-1">
+                  <span class="font-bold text-slate-500 text-xs">S/.</span>
+                  <input 
+                    id="tarifa-sis"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.01"
+                    [disabled]="soloLectura"
+                    (keydown)="validarTeclaPrecio($event)"
+                    aria-label="Tarifa Convenio SIS en Soles"
+                    [(ngModel)]="formulario.precioSis"
+                    class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed" />
+                </div>
+                <span class="block text-[11px] text-slate-500 mt-1">Tarifa tarifada para cobertura del Seguro Integral de Salud</span>
+              </div>
+            </div>
+
+          </div>
+        }
+
+      </div>
+
+      <div class="flex items-center justify-between gap-2.5 px-4 py-2.5 border-t border-slate-200 bg-slate-50">
+        <div>
+          @if (esEdicion && !soloLectura) {
+            <button
+              type="button"
+              (click)="eliminar()"
+              [disabled]="guardando"
+              class="px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded border border-red-200 transition-colors cursor-pointer disabled:opacity-50"
+              title="Dar de baja este servicio o procedimiento">
+              Dar de Baja
+            </button>
+          }
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            (click)="cerrar()"
+            [disabled]="guardando"
+            class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer">
+            {{ soloLectura ? 'Cerrar' : 'Cancelar' }}
+          </button>
+
+          @if (!soloLectura) {
+            @if (pestanaActiva() !== 'procedimiento') {
+              <button
+                type="button"
+                (click)="retrocederPaso()"
+                [disabled]="guardando"
+                class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded border border-slate-300 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Anterior</span>
+              </button>
+            }
+
+            @if (pestanaActiva() === 'procedimiento' || pestanaActiva() === 'normativa') {
+              <button
+                type="button"
+                (click)="avanzarPaso()"
+                [disabled]="guardando"
+                class="px-4 py-1.5 text-xs font-semibold text-white bg-[#07153a] hover:bg-blue-900 rounded transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <span>Siguiente</span>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="guardar()"
+                [disabled]="guardando"
+                class="px-4 py-1.5 text-xs font-semibold text-white bg-[#07153a] hover:bg-blue-900 rounded transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-xs">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>{{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar Servicio' : 'Registrar Servicio') }}</span>
+              </button>
+            }
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+}

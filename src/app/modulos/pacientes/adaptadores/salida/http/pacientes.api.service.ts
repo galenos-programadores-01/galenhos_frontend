@@ -7,6 +7,7 @@ import type {
   IListadoPacientes,
   IPaciente,
   IReniecResultado,
+  RegistroPacienteConHistoriaPayload,
   RegistroPacientePayload,
 } from '../../../../../compartido/tipos/api-tipos';
 import type { IPacienteDatosAdicionales } from '../../../../../compartido/tipos/tipos';
@@ -46,6 +47,11 @@ export interface ActualizarPacientePayload {
   email?: string;
   disabilityId?: number;
   incapacityId?: number;
+  motherDocumentNumber?: string;
+  motherPaternalSurname?: string;
+  motherMaternalSurname?: string;
+  motherFirstName?: string;
+  motherSecondName?: string;
   auditUserId?: number;
 }
 
@@ -105,6 +111,15 @@ export class PacientesApiService {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  registrarConHistoriaClinica(
+    payload: RegistroPacienteConHistoriaPayload,
+  ): Promise<IPaciente> {
+    return this.apiClient.request<IPaciente>(
+      '/api/v1/pacientes/historia-clinica',
+      { method: 'POST', body: JSON.stringify(payload) },
+    );
   }
 
   actualizar(

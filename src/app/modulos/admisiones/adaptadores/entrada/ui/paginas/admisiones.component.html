@@ -2,7 +2,7 @@
 
 
   <app-filtros-global>
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[150px_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[150px_1fr_1fr_auto] gap-4 items-end">
       <div>
         <label for="fecha" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Fecha</label>
         <input id="fecha" type="date" [(ngModel)]="fecha" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors" />
@@ -13,24 +13,6 @@
                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors" />
       </div>
       <div>
-        <label for="departamento" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Departamento</label>
-        <app-select-global id="departamento" [(ngModel)]="idDepartamento">
-          <option value="0">Todos</option>
-          @for (d of departamentos; track d.id) {
-            <option [value]="d.id">{{ d.nombre }}</option>
-          }
-        </app-select-global>
-      </div>
-      <div>
-        <label for="selEsp" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Especialidad</label>
-        <app-select-global id="selEsp" [(ngModel)]="IdEspecialidad">
-          <option value="0">Todas</option>
-          @for (e of especialidades; track e.id) {
-            <option [value]="e.id">{{ e.nombre }}</option>
-          }
-        </app-select-global>
-      </div>
-      <div>
         <label for="selServ" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Consultorio</label>
         <app-select-global id="selServ" [(ngModel)]="idServicio">
           <option value="0">Todos</option>
@@ -39,11 +21,13 @@
           }
         </app-select-global>
       </div>
-      <app-botones-filtro 
-        [cargando]="cargando" 
-        [mostrarLimpiar]="false"
-        (buscar)="handleBuscar()" 
-      />
+      <div class="flex justify-end">
+        <app-botones-filtro 
+          [cargando]="cargando" 
+          [mostrarLimpiar]="false"
+          (buscar)="handleBuscar()" 
+        />
+      </div>
     </div>
   </app-filtros-global>
 
@@ -72,7 +56,7 @@
     </div>
 
     <div style="overflow-x: auto;">
-      <app-tabla [columnas]="columnasTabla" [datos]="items" [cargando]="cargando" mensajeCargando="Consultando..."
+      <app-tabla [columnas]="columnasTabla" [datos]="itemsPagina" [cargando]="cargando" mensajeCargando="Consultando..."
                  [mostrarFiltroRequerido]="!buscar" mensajeFiltroRequerido="Realice una búsqueda para ver resultados."
                  mensajeVacio="No se encontraron pacientes para los filtros aplicados.">
 
@@ -92,7 +76,7 @@
         <ng-template appColumnaTemplate="pacienteCustom" let-p>
           <div style="font-weight: 600; color: #07153a;">{{ nombrePaciente(p) }}</div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap;">
-            <span style="font-size: 12px; color: #54617f;">DNI: {{ documento(p) || '—' }}</span>
+            <span style="font-size: 12px; color: #54617f;">{{ tipoDocumento(p) }}: {{ documento(p) || '—' }}</span>
             @if (idCuentaAtencion(p) > 0) {
               <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: #d1fae5; color: #047857; font-size: 11px; font-weight: 700; white-space: nowrap;">
                 <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12" /></svg>
@@ -120,14 +104,10 @@
           </span>
         </ng-template>
 
-        <ng-template appColumnaTemplate="sexoCustom" let-p>
-          @if (sexo(p) === '1' || sexo(p)?.toUpperCase() === 'MASCULINO' || sexo(p)?.toUpperCase() === 'VARÓN' || sexo(p)?.toUpperCase() === 'VARON' || sexo(p)?.toUpperCase() === 'M' || sexo(p)?.toUpperCase() === 'V') {
-            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Varón" style="margin: 0 auto;"><circle cx="10" cy="14" r="5"></circle><path d="M13.5 10.5 21 3"></path><path d="M16 3h5v5"></path></svg>
-          } @else if (sexo(p) === '2' || sexo(p)?.toUpperCase() === 'FEMENINO' || sexo(p)?.toUpperCase() === 'MUJER' || sexo(p)?.toUpperCase() === 'F') {
-            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Mujer" style="margin: 0 auto;"><circle cx="12" cy="10" r="5"></circle><path d="M12 15v7"></path><path d="M9 19h6"></path></svg>
-          } @else {
-            <span style="color: #94a0bd; font-weight: bold; font-size: 16px;">—</span>
-          }
+        <ng-template appColumnaTemplate="observacionCustom" let-p>
+          <span [title]="observacion(p) || '—'" style="display: block; max-width: 200px; color: #334155; font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ observacion(p) || '—' }}
+          </span>
         </ng-template>
 
         <ng-template appColumnaTemplate="accionCustom" let-p>
@@ -147,15 +127,42 @@
               }
             </div>
           } @else {
-            <button type="button" (click)="abrirModalAdmision(p)"
-                    style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #263c7a; color: #fff; border: none; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              Para admisionar
-            </button>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              @if (esParticularPorAdmisionar(p)) {
+                <button type="button" (click)="consultarSisPaciente(p)"
+                        title="Consultar al SIS por tipo y número de documento"
+                        style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #fff; color: #075985; border: 1px solid #075985; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" /></svg>
+                  Consultar SIS
+                </button>
+              }
+              <button type="button" (click)="abrirModalAdmision(p)"
+                      style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #263c7a; color: #fff; border: none; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Para admisionar
+              </button>
+            </div>
           }
         </ng-template>
 
       </app-tabla>
+
+      @if (totalRegistros > 0) {
+        <div
+          class="px-6 py-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 bg-white"
+        >
+          <span class="text-sm font-medium text-slate-600">
+            Mostrando {{ itemsPagina.length }} de {{ totalRegistros }}
+            registros
+          </span>
+          <app-paginacion
+            [page]="paginaActual"
+            [totalPages]="totalPaginas"
+            [totalItems]="totalRegistros"
+            (pageChange)="cambiarPagina($event)"
+          />
+        </div>
+      }
     </div>
   </div>
 
@@ -164,8 +171,24 @@
       <div style="margin-bottom: 18px; padding: 14px; border-radius: 12px; background: #f0f4ff; border: 1px solid #dbe3f4;">
         <div style="font-size: 18px; font-weight: 700; color: #07153a; text-transform: uppercase; letter-spacing: .01em;">{{ nombrePaciente(modalAdmision) }}</div>
         @if (documento(modalAdmision)) {
-          <div style="font-size: 12.5px; color: #7a86a1; margin-top: 4px;">Documento: {{ documento(modalAdmision) }}</div>
+          <div style="font-size: 12.5px; color: #7a86a1; margin-top: 4px;">{{ tipoDocumento(modalAdmision) }}: {{ documento(modalAdmision) }}</div>
         }
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 9h1M9 13h1M14 9h1M14 13h1" /></svg>
+            Servicio: {{ servicio(modalAdmision) || '—' }}
+          </span>
+          @if (prioridadTexto(modalAdmision)) {
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+              Prioridad: {{ prioridadTexto(modalAdmision) }}
+            </span>
+          }
+          @if (tipoIngreso(modalAdmision)) {
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid #dbe3f4; font-size: 11.5px; font-weight: 700; color: #263c7a; white-space: nowrap;">
+              Ingreso: {{ tipoIngreso(modalAdmision) }}
+            </span>
+          }
+        </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
@@ -190,15 +213,21 @@
         <app-error-mensaje [control]="dirPacCtrl"></app-error-mensaje>
       </div>
 
-      <div style="margin-top: 14px;">
-        <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Médico</label>
-        <select id="medico" [(ngModel)]="formAdmision.idMedico"
-                style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;">
-          <option value="">— Seleccionar médico —</option>
-          @for (med of medicosDisponibles; track med['idMedico']) {
-            <option [ngValue]="med['idMedico']">{{ med['nombreCompleto'] }}</option>
-          }
-        </select>
+      <div style="margin-top: 14px; position: relative;">
+        <label for="medico" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Médico *</label>
+        <input id="medico" name="medico" autocomplete="off" [ngModel]="medicoBusqueda" (ngModelChange)="onMedicoInput($event)"
+               (blur)="cerrarSugerenciasMedico()" placeholder="Escriba el nombre del médico..." [disabled]="cargandoMedicos"
+               style="width: 100%; padding: 10px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        @if (mostrarSugerenciasMedico && medicosFiltrados.length > 0) {
+          <div style="position: absolute; z-index: 100; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d5dceb; border-radius: 11px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            @for (med of medicosFiltrados; track med['idMedico']) {
+              <div (mousedown)="seleccionarMedico(med)"
+                   style="padding: 9px 12px; cursor: pointer; font-size: 13px; color: #07153a; border-bottom: 1px solid #f1f5f9;">
+                {{ med['nombreCompleto'] }}
+              </div>
+            }
+          </div>
+        }
         @if (cargandoMedicos) {
           <div style="font-size: 11px; color: #7a86a1; margin-top: 4px;">Cargando médicos...</div>
         }

@@ -17,6 +17,8 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
+import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   type RegistroTriajeObstetricoPayload,
@@ -111,6 +113,7 @@ const SI_NO = [
     FirmaMasivaObstetricoModal,
     TablaComponent,
     ColumnaTemplateDirective,
+    PaginacionComponent,
   ],
   templateUrl: './triaje-obstetrico.component.html',
 })
@@ -118,6 +121,7 @@ export class TriajeObstetricoComponent implements OnInit {
   private readonly triajeApi = inject(TriajeObstetricoApiService);
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly modalGlobal = inject(ModalGlobalService);
   public readonly authService = inject(AuthService);
 
   pacientes: IFilaBackend[] = [];
@@ -126,20 +130,21 @@ export class TriajeObstetricoComponent implements OnInit {
   mensajeExito = '';
 
   filtro = '';
-  fechaInicio = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
-  fechaFin = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
+  fechaInicio = `${new Date().toISOString().slice(0, 10)}T08:00`;
+  fechaFin = `${new Date().toISOString().slice(0, 10)}T20:00`;
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
 
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
+
   modalRegistro = false;
   reporteTriajeId: number | null = null;
+  triajeEditarId: number | null = null;
+  eliminandoId: number | null = null;
 
   columnasTabla: ColumnaTabla[] = [
     {
@@ -156,7 +161,7 @@ export class TriajeObstetricoComponent implements OnInit {
     { campo: 'servicioCustom', cabecera: 'Servicio' },
     { campo: 'gravedadCustom', cabecera: 'Tipo gravedad' },
     { campo: 'estadoCustom', cabecera: 'Estado' },
-    { campo: 'accionCustom', cabecera: 'Reporte', alineacion: 'right' },
+    { campo: 'accionCustom', cabecera: 'Acciones', alineacion: 'right' },
   ];
 
   modalFirma = false;
@@ -198,9 +203,16 @@ export class TriajeObstetricoComponent implements OnInit {
       const items = await this.triajeApi.listar(
         this.fechaInicio,
         this.fechaFin,
+        this.filtro,
         derivado,
       );
       this.pacientes = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.pacientes.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError
@@ -210,6 +222,17 @@ export class TriajeObstetricoComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  get pacientesPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.pacientes.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
   }
 
   async cargarCatalogos() {
@@ -240,7 +263,7 @@ export class TriajeObstetricoComponent implements OnInit {
   }
 
   seleccionarTodosVisibles() {
-    for (const p of this.pacientes) {
+    for (const p of this.pacientesPagina) {
       const id = this.idTriaje(p);
       if (id) this.seleccionFirma.add(id);
     }
@@ -375,11 +398,70 @@ export class TriajeObstetricoComponent implements OnInit {
   }
 
   abrirModalRegistro() {
+    this.triajeEditarId = null;
     this.modalRegistro = true;
   }
 
   cerrarModalRegistro() {
+    this.triajeEditarId = null;
     this.modalRegistro = false;
+  }
+
+  abrirEditarTriaje(idTriaje?: number) {
+    if (!idTriaje) return;
+    this.triajeEditarId = idTriaje;
+    this.modalRegistro = true;
+  }
+
+  // Pide confirmación y elimina (baja lógica) el triaje. El @Resultado del
+  // SP decide: si empieza con "ERROR" el mensaje se muestra en el modal
+  // global y el triaje se mantiene; si empieza con "OK" el modal de
+  // confirmación ya se cerró, se informa el éxito y se refresca la bandeja.
+  async eliminarTriaje(item: IFilaBackend) {
+    const idTriaje = this.idTriaje(item);
+    if (!idTriaje) {
+      this.error = 'El registro no tiene un id de triaje válido.';
+      return;
+    }
+
+    const confirmado = await this.modalGlobal.confirmar(
+      `¿Desea eliminar el triaje N.º ${idTriaje} de la paciente ` +
+        `${this.nombrePaciente(item)}?  ` +
+        'no se podrá volver a mostrar en la bandeja de triaje.',
+      'Eliminar triaje',
+      'Sí, eliminar',
+    );
+    if (!confirmado) return;
+
+    this.eliminandoId = idTriaje;
+    try {
+      const resp = await this.triajeApi.eliminarTriaje(
+        idTriaje,
+        this.authService.getIdEmpleado(),
+      );
+      const resultado = (resp?.resultado || '').trim();
+      const mensaje = resultado.replace(/^(OK|ERROR)\s*;\s*/i, '');
+
+      if (/^ERROR/i.test(resultado)) {
+        this.modalGlobal.error(mensaje || 'No se pudo eliminar el triaje.');
+        return;
+      }
+
+      this.modalGlobal.exito(
+        mensaje || 'El triaje fue eliminado correctamente.',
+        'Triaje eliminado',
+      );
+      await this.cargarLista();
+    } catch (err: unknown) {
+      this.modalGlobal.error(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'No se pudo eliminar el triaje.',
+      );
+    } finally {
+      this.eliminandoId = null;
+      this.cdr.detectChanges();
+    }
   }
 
   onPacienteRegistrado() {

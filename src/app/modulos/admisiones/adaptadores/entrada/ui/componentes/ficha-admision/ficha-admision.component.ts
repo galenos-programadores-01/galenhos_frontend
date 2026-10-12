@@ -10,6 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { VentanaModal } from '../../../../../../../compartido/ui/ventana-modal/ventana-modal';
+import { generarBarcodeHtml } from '../../../../../../../compartido/utilidades/barcode.util';
 import { imprimirHtml } from '../../../../../../../compartido/utilidades/print.util';
 import { TriajeApiService } from '../../../../../../triaje/adaptadores/salida/http/triaje.api.service';
 
@@ -39,6 +40,7 @@ interface FichaData {
   Consultorio?: string | null;
   EspecialidadMedico?: string | null;
   TipoPrioridad?: string | null;
+  Motivo?: string | null;
   TipoEdad?: string | null;
   Telefono_Acompaniante?: string | null;
   NombresMedico?: string | null;
@@ -83,6 +85,7 @@ function decodificarBase64(valor: string | null | undefined): string {
 })
 export class FichaAdmisionComponent implements OnInit {
   @Input() idCuentaAtencion!: number;
+  @Input() imprimirAutomatico = false;
   @Output() alCerrar = new EventEmitter<void>();
   @ViewChild('fichaFrame') fichaFrame!: ElementRef<HTMLIFrameElement>;
 
@@ -120,6 +123,11 @@ export class FichaAdmisionComponent implements OnInit {
       this.cargando = false;
       this.cdr.detectChanges();
       setTimeout(() => this.escribirIframe(), 0);
+      if (this.imprimirAutomatico) {
+        setTimeout(() => {
+          if (this.htmlFicha) this.imprimir();
+        }, 500);
+      }
     } catch {
       this.error = 'No se pudo cargar la ficha de admisión.';
       this.cargando = false;
@@ -164,19 +172,6 @@ export class FichaAdmisionComponent implements OnInit {
     const casillaLetra = (letra: string) =>
       `<span style="display:inline-block;width:15px;height:15px;border:1px solid #000;text-align:center;font-size:9px;line-height:15px;margin-right:2px;vertical-align:middle">${letra}</span>`;
 
-    function generarBarras(valor: string, alto = 32): string {
-      let barras = '';
-      let x = 0;
-      const seed = valor.split('').map((c) => c.charCodeAt(0));
-      for (let i = 0; i < 46; i++) {
-        const w = (seed[i % seed.length] % 3) + 1;
-        if (i % 2 === 0)
-          barras += `<rect x="${x}" y="0" width="${w}" height="${alto}" fill="#000"/>`;
-        x += w + 1;
-      }
-      return `<svg width="${x}" height="${alto}" viewBox="0 0 ${x} ${alto}" xmlns="http://www.w3.org/2000/svg">${barras}</svg>`;
-    }
-
     const label = (t: string) =>
       `<span style="font-size:9.5px;color:#000">${t}</span>`;
     const filaCampos = (
@@ -186,7 +181,7 @@ export class FichaAdmisionComponent implements OnInit {
         .map(
           ([et, val]) => `
         <td style="width:18%;padding:1.5px 4px;white-space:nowrap;vertical-align:top">${label(et)}</td>
-        <td style="width:32%;padding:1.5px 10px 1.5px 4px;font-size:10.5px;text-transform:uppercase;overflow-wrap:break-word">${v(val)}</td>
+        <td style="width:32%;padding:1.5px 10px 1.5px 4px;font-size:8.5px;line-height:1.25;text-transform:uppercase;overflow-wrap:break-word">${v(val)}</td>
       `,
         )
         .join('');
@@ -234,11 +229,14 @@ export class FichaAdmisionComponent implements OnInit {
 
     const tmpl = `<!doctype html><html><head><meta charset="utf-8"><title> </title>
       <style>
-        @page { size: letter portrait; margin: 0.7cm; }
+        @page { size: letter portrait; margin: 0.5cm; }
         body { margin: 0; color: #000; font-family: Arial, sans-serif; }
         table { border-collapse: collapse; width: 100%; }
         .seccion { border:1px solid #000; padding:3px 6px; margin-top:5px; }
-        .titulo-seccion { font-size:11px; font-weight:bold; margin-top:6px; }
+        .titulo-seccion { font-size:11px; font-weight:bold; margin-top:4px; }
+        @media print {
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+        }
       </style></head><body>
 
       <table>
@@ -254,19 +252,35 @@ export class FichaAdmisionComponent implements OnInit {
           <td style="width:32%;text-align:center;vertical-align:middle">
             <b style="font-size:16px;letter-spacing:.03em">REGISTRO DE EMERGENCIA</b>
           </td>
-          <td style="width:34%;text-align:right;vertical-align:top">${generarBarras(String(ficha?.IdCuentaAtencion ?? this.idCuentaAtencion))}</td>
+          <td style="width:34%;text-align:right;vertical-align:top">${generarBarcodeHtml(String(ficha?.IdCuentaAtencion ?? this.idCuentaAtencion))}</td>
         </tr>
       </table>
 
-      <table style="margin-top:6px;table-layout:fixed">
+      <table style="margin-top:4px;table-layout:fixed">
         <colgroup><col style="width:16%"><col style="width:12%"><col style="width:16%"><col style="width:10%"><col style="width:46%"></colgroup>
-        <tr>
-          <td style="padding:1.5px 4px;white-space:nowrap">${label('N° Historia clínica:')}</td>
-          <td style="padding:1.5px 4px;font-size:12px;font-weight:bold">${v(ficha?.NroHistoriaClinica)}</td>
-          <td style="padding:1.5px 4px;white-space:nowrap">${label('N° Cuenta:')}</td>
-          <td style="padding:1.5px 4px;font-size:12px;font-weight:bold">${v(ficha?.IdCuentaAtencion)}</td>
-          <td style="padding:1.5px 4px;white-space:nowrap"><b style="font-size:23px">${v(ficha?.IAFA)}</b></td>
-        </tr>
+            <tr>
+              <td style="padding:1.5px 2px 1.5px 4px;white-space:nowrap">
+                ${label('N° Historia clínica:')}
+              </td>
+
+              <td style="padding:1.5px 12px 1.5px 2px;font-size:12px;font-weight:bold">
+                ${v(ficha?.NroHistoriaClinica)}
+              </td>
+
+              <td style="padding:1.5px 2px 1.5px 4px;white-space:nowrap">
+                ${label('N° Cuenta:')}
+              </td>
+
+              <td style="padding:1.5px 30px 1.5px 2px;font-size:18px;font-weight:bold">
+                ${v(ficha?.IdCuentaAtencion)}
+              </td>
+
+              <td style="padding:4.5px 8px 4.5px 35px;white-space:nowrap">
+                <b style="font-size:23px">${v(ficha?.IAFA)}</b>
+                ${Number(ficha?.IdTipoGravedad) === 3 ? '<b style="font-size:23px">&nbsp;&nbsp;CAR</b>' : ''}
+              </td>
+
+            </tr>
       </table>
       <table style="margin-top:1px;table-layout:fixed">
         <colgroup><col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%"></colgroup>
@@ -303,6 +317,7 @@ export class FichaAdmisionComponent implements OnInit {
         ])}
       </table>
       <div style="font-size:11px;font-weight:bold;margin-top:3px">PRIORIDAD: <span style="text-transform:uppercase">${v(ficha?.TipoPrioridad)}</span></div>
+       <div style="font-size:11px;margin-top:3px">Motivo consulta: <span">${v(ficha?.Motivo)}</span></div>
 
       <div class="titulo-seccion">ANAMNESIS
         <span style="font-weight:normal;margin-left:10px">${casilla()} DIRECTA &nbsp;&nbsp; ${casilla()} INDIRECTA</span>
@@ -314,12 +329,12 @@ export class FichaAdmisionComponent implements OnInit {
         <tr>
           <td style="width:66%;vertical-align:top;padding-right:8px">
             <div style="font-size:10.5px">Signos y síntomas:</div>
-            <div style="height:34px;border-bottom:1px solid #000;margin-top:14px"></div>
-            <div style="font-size:10.5px;margin-top:8px">Relato cronológico:</div>
-            <div style="height:20px;border-bottom:1px solid #000;margin-top:14px"></div>
-            <div style="height:20px;border-bottom:1px solid #000;margin-top:8px"></div>
-            <div style="font-size:10.5px;margin-top:8px">Antecedentes:</div>
-            <div style="height:16px;border-bottom:1px solid #000;margin-top:14px"></div>
+            <div style="height:26px;border-bottom:1px solid #000;margin-top:12px"></div>
+            <div style="font-size:10.5px;margin-top:6px">Relato cronológico:</div>
+            <div style="height:15px;border-bottom:1px solid #000;margin-top:12px"></div>
+            <div style="height:15px;border-bottom:1px solid #000;margin-top:6px"></div>
+            <div style="font-size:10.5px;margin-top:6px">Antecedentes:</div>
+            <div style="height:13px;border-bottom:1px solid #000;margin-top:12px"></div>
           </td>
           <td style="width:34%;vertical-align:top;text-align:center">
             <div style="font-size:9px;font-weight:bold;margin-bottom:2px">FUNCIONES VITALES</div>
@@ -346,12 +361,12 @@ export class FichaAdmisionComponent implements OnInit {
           <td style="width:34%">Nivel de conciencia</td>
         </tr>
       </table>
-      <div style="height:14px;border-bottom:1px solid #000;margin-top:12px"></div>
-      <div style="font-size:10.5px;margin-top:8px">Piel y anexos</div>
-      <div style="height:14px;border-bottom:1px solid #000;margin-top:12px"></div>
-      <div style="font-size:10.5px;margin-top:8px">Exámen clínico regional</div>
-      <div style="height:14px;border-bottom:1px solid #000;margin-top:12px"></div>
-      <div style="height:14px;border-bottom:1px solid #000;margin-top:8px"></div>
+      <div style="height:12px;border-bottom:1px solid #000;margin-top:10px"></div>
+      <div style="font-size:10.5px;margin-top:6px">Piel y anexos</div>
+      <div style="height:12px;border-bottom:1px solid #000;margin-top:10px"></div>
+      <div style="font-size:10.5px;margin-top:6px">Exámen clínico regional</div>
+      <div style="height:12px;border-bottom:1px solid #000;margin-top:10px"></div>
+      <div style="height:12px;border-bottom:1px solid #000;margin-top:6px"></div>
 
       <div class="titulo-seccion">DIAGNÓSTICOS</div>
       <table style="margin-top:4px;table-layout:fixed">${colgroupDiagnostico}${cabeceraDiagnostico}${filasDiagnostico(4)}</table>
@@ -367,10 +382,10 @@ export class FichaAdmisionComponent implements OnInit {
           <td>${checklist(['AGA', 'EKG', 'Rx', 'Otros'])}</td>
         </tr>
       </table>
-      <div style="font-size:10.5px;margin-top:8px">Exámenes imágenes:</div>
-        <div style="height:14px;border-bottom:1px solid #000;margin-top:12px"></div>
-      <div style="font-size:10.5px;margin-top:8px">Interconsultas:</div>
-      <div style="height:14px;border-bottom:1px solid #000;margin-top:12px"></div>
+      <div style="font-size:10.5px;margin-top:6px">Exámenes imágenes:</div>
+        <div style="height:12px;border-bottom:1px solid #000;margin-top:10px"></div>
+      <div style="font-size:10.5px;margin-top:6px">Interconsultas:</div>
+      <div style="height:12px;border-bottom:1px solid #000;margin-top:10px"></div>
 
       <div style="page-break-before:always"></div>
       <div style="font-size:10.5px;margin-top:8px">Referencia oportuna:</div>

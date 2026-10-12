@@ -17,6 +17,8 @@ import type {
   ICatalogoNombre,
   IFilaBackend,
 } from '../../../../../../../compartido/tipos/api-tipos';
+import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   type RegistroTriajePayload,
@@ -25,6 +27,19 @@ import {
 import { FirmaMasivaModal } from '../../componentes/firma-masiva/firma-masiva-modal';
 import { RegistroTriajeModal } from '../../componentes/registro-triaje-modal/registro-triaje-modal';
 import { ReporteTriajeComponent } from '../../componentes/reporte-triaje/reporte-triaje.component';
+
+// Fila del tablero de triaje: un área con su total general y, si el SP lo
+// entrega, el sub-total pediátrico (null cuando el área no tiene variante
+// pediátrica).
+interface TableroArea {
+  titulo: string;
+  principal: number;
+  etiquetaPrincipal: string;
+  pediatrico: number | null;
+  // Contador NEO: solo Tópico medicina lo tiene en usp_go_ReporteTriaje, por
+  // eso null en el resto (igual que pediatrico en Trauma).
+  neo: number | null;
+}
 
 interface FormEvaluacion {
   motivo: string;
@@ -111,6 +126,7 @@ const SI_NO = [
     FirmaMasivaModal,
     TablaComponent,
     ColumnaTemplateDirective,
+    PaginacionComponent,
   ],
   templateUrl: './triaje.component.html',
 })
@@ -118,6 +134,7 @@ export class TriajeComponent implements OnInit {
   private readonly triajeApi = inject(TriajeApiService);
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly modalGlobal = inject(ModalGlobalService);
   public readonly authService = inject(AuthService);
 
   pacientes: IFilaBackend[] = [];
@@ -126,20 +143,37 @@ export class TriajeComponent implements OnInit {
   mensajeExito = '';
 
   filtro = '';
-  fechaInicio = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
-  fechaFin = ((d) =>
-    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
-    new Date(),
-  );
+  fechaInicio = `${new Date().toISOString().slice(0, 10)}T08:00`;
+  fechaFin = `${new Date().toISOString().slice(0, 10)}T20:00`;
   servicioFiltro = '';
   serviciosFiltro: ICatalogoNombre[] = [];
   triajesBuscados = false;
 
+  filasPorPagina = 15;
+  paginaActual = 1;
+  totalPaginas = 1;
+  totalRegistros = 0;
+
+  tablero: {
+    Medico: string;
+    Topico_Medicina: number;
+    Topico_Neo: number;
+    Topico_Pediatria: number;
+    Topico_Cirugia: number;
+    Topico_Cirugia_Pediatrica: number;
+    Topico_Trauma: number;
+    TraumaShock: number;
+    TraumaShock_Pediatrico: number;
+    Urgencias: number;
+    Urgencias_Pediatrica: number;
+  } | null = null;
+  cargandoTablero = false;
+  errorTablero = '';
+
   modalRegistro = false;
   reporteTriajeId: number | null = null;
+  triajeEditarId: number | null = null;
+  eliminandoId: number | null = null;
 
   columnasTabla: ColumnaTabla[] = [
     {
@@ -156,7 +190,7 @@ export class TriajeComponent implements OnInit {
     { campo: 'servicioCustom', cabecera: 'Servicio' },
     { campo: 'gravedadCustom', cabecera: 'Tipo gravedad' },
     { campo: 'estadoCustom', cabecera: 'Estado' },
-    { campo: 'accionCustom', cabecera: 'Reporte', alineacion: 'right' },
+    { campo: 'accionCustom', cabecera: 'Acciones', alineacion: 'right' },
   ];
 
   modalFirma = false;
@@ -198,9 +232,17 @@ export class TriajeComponent implements OnInit {
       const items = await this.triajeApi.listar(
         this.fechaInicio,
         this.fechaFin,
+        this.filtro,
         derivado,
       );
       this.pacientes = Array.isArray(items) ? items : [];
+      this.totalRegistros = this.pacientes.length;
+      this.paginaActual = 1;
+      this.totalPaginas = Math.max(
+        1,
+        Math.ceil(this.totalRegistros / this.filasPorPagina),
+      );
+      this.cargarTablero();
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError
@@ -208,6 +250,128 @@ export class TriajeComponent implements OnInit {
           : 'No se pudo cargar el listado de triaje.';
     } finally {
       this.cargando = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  get pacientesPagina(): IFilaBackend[] {
+    const inicio = (this.paginaActual - 1) * this.filasPorPagina;
+    return this.pacientes.slice(inicio, inicio + this.filasPorPagina);
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPaginas) return;
+    this.paginaActual = nuevaPagina;
+    this.cdr.detectChanges();
+  }
+
+  // Filas del tablero: una por área, con el total general y, cuando el SP lo
+  // entrega, el sub-total pediátrico. Tópico Trauma no tiene contraparte
+  // pediátrica en usp_go_ReporteTriaje, por eso va en null.
+  get tableroAreas(): TableroArea[] {
+    const t = this.tablero;
+    return [
+      {
+        titulo: 'Tópico medicina',
+        principal: t?.Topico_Medicina ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Topico_Pediatria ?? 0,
+        neo: t?.Topico_Neo ?? 0,
+      },
+      {
+        titulo: 'Tópico Cirugía',
+        principal: t?.Topico_Cirugia ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Topico_Cirugia_Pediatrica ?? 0,
+        neo: null,
+      },
+      {
+        titulo: 'Tópico Trauma',
+        principal: t?.Topico_Trauma ?? 0,
+        etiquetaPrincipal: 'General',
+        pediatrico: null,
+        neo: null,
+      },
+      {
+        titulo: 'Trauma Shock',
+        principal: t?.TraumaShock ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.TraumaShock_Pediatrico ?? 0,
+        neo: null,
+      },
+      {
+        titulo: 'Urgencias',
+        principal: t?.Urgencias ?? 0,
+        etiquetaPrincipal: 'ADULTO',
+        pediatrico: t?.Urgencias_Pediatrica ?? 0,
+        neo: null,
+      },
+    ];
+  }
+
+  // Total de triajes del usuario en el rango: el SP acumula cada triaje en una
+  // sola categoría. Según solicitud: "total de adulto solo debe sumar adulto y
+  // pediatria solo pediatria y neo".
+  get totalTablero(): number {
+    const t = this.tablero;
+    if (!t) return 0;
+    return (
+      t.Topico_Medicina +
+      t.Topico_Cirugia +
+      t.Topico_Trauma +
+      t.TraumaShock +
+      t.Urgencias
+    );
+  }
+
+  // Sub-total pediátrico: sumar pediátrico + neo (NEO es neonato/neonatal)
+  get totalPediatrico(): number {
+    const t = this.tablero;
+    if (!t) return 0;
+    return (
+      t.Topico_Pediatria +
+      t.Topico_Cirugia_Pediatrica +
+      t.TraumaShock_Pediatrico +
+      t.Urgencias_Pediatrica +
+      t.Topico_Neo
+    );
+  }
+
+  async cargarTablero() {
+    const idEmpleado = this.authService.getIdEmpleado();
+    if (!idEmpleado) return;
+    this.cargandoTablero = true;
+    this.errorTablero = '';
+    try {
+      const items = await this.triajeApi.reporteTriajePorEmpleado(
+        idEmpleado,
+        this.fechaInicio,
+        this.fechaFin,
+      );
+      const row = Array.isArray(items) ? items[0] : undefined;
+      this.tablero = {
+        Medico: campo(row, ['Medico']),
+        Topico_Medicina: Number(campo(row, ['Topico_Medicina'])) || 0,
+        Topico_Neo: Number(campo(row, ['Topico_Neo'])) || 0,
+        Topico_Pediatria: Number(campo(row, ['Topico_Pediatria'])) || 0,
+        Topico_Cirugia: Number(campo(row, ['Topico_Cirugia'])) || 0,
+        Topico_Cirugia_Pediatrica:
+          Number(campo(row, ['Topico_Cirugia_Pediatrica'])) || 0,
+        Topico_Trauma: Number(campo(row, ['Topico_Trauma'])) || 0,
+        TraumaShock: Number(campo(row, ['TraumaShock'])) || 0,
+        TraumaShock_Pediatrico:
+          Number(campo(row, ['TraumaShock_Pediatrico'])) || 0,
+        Urgencias: Number(campo(row, ['Urgencias'])) || 0,
+        Urgencias_Pediatrica: Number(campo(row, ['Urgencias_Pediatrica'])) || 0,
+      };
+    } catch (error: unknown) {
+      this.tablero = null;
+      this.errorTablero =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo cargar el reporte.';
+    } finally {
+      this.cargandoTablero = false;
       this.cdr.detectChanges();
     }
   }
@@ -240,7 +404,7 @@ export class TriajeComponent implements OnInit {
   }
 
   seleccionarTodosVisibles() {
-    for (const p of this.pacientes) {
+    for (const p of this.pacientesPagina) {
       const id = this.idTriaje(p);
       if (id) this.seleccionFirma.add(id);
     }
@@ -281,6 +445,63 @@ export class TriajeComponent implements OnInit {
     } else {
       this.modalReporte = false;
       this.reporte = [];
+    }
+  }
+
+  abrirEditarTriaje(idTriaje?: number) {
+    if (!idTriaje) return;
+    this.triajeEditarId = idTriaje;
+    this.modalRegistro = true;
+  }
+
+  // Pide confirmación y elimina (baja lógica) el triaje. El @Resultado del
+  // SP decide: si empieza con "ERROR" el mensaje se muestra en el modal
+  // global y el triaje se mantiene; si empieza con "OK" el modal de
+  // confirmación ya se cerró, se informa el éxito y se refresca la bandeja.
+  async eliminarTriaje(item: IFilaBackend) {
+    const idTriaje = this.idTriaje(item);
+    if (!idTriaje) {
+      this.error = 'El registro no tiene un id de triaje válido.';
+      return;
+    }
+
+    const confirmado = await this.modalGlobal.confirmar(
+      `¿Desea eliminar el triaje N.º ${idTriaje} del paciente ` +
+        `${this.nombrePaciente(item)}?  ` +
+        'no se podrá volver a mostrar en la bandeja de triaje.',
+      'Eliminar triaje',
+      'Sí, eliminar',
+    );
+    if (!confirmado) return;
+
+    this.eliminandoId = idTriaje;
+    try {
+      const resp = await this.triajeApi.eliminarTriaje(
+        idTriaje,
+        this.authService.getIdEmpleado(),
+      );
+      const resultado = (resp?.resultado || '').trim();
+      const mensaje = resultado.replace(/^(OK|ERROR)\s*;\s*/i, '');
+
+      if (/^ERROR/i.test(resultado)) {
+        this.modalGlobal.error(mensaje || 'No se pudo eliminar el triaje.');
+        return;
+      }
+
+      this.modalGlobal.exito(
+        mensaje || 'El triaje fue eliminado correctamente.',
+        'Triaje eliminado',
+      );
+      await this.cargarLista();
+    } catch (err: unknown) {
+      this.modalGlobal.error(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'No se pudo eliminar el triaje.',
+      );
+    } finally {
+      this.eliminandoId = null;
+      this.cdr.detectChanges();
     }
   }
 
@@ -375,11 +596,13 @@ export class TriajeComponent implements OnInit {
   }
 
   abrirModalRegistro() {
+    this.triajeEditarId = null;
     this.modalRegistro = true;
   }
 
   cerrarModalRegistro() {
     this.modalRegistro = false;
+    this.triajeEditarId = null;
   }
 
   onPacienteRegistrado() {

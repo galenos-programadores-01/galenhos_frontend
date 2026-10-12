@@ -34,6 +34,12 @@ export interface FormRegistroPaciente {
   idIdioma: string;
   discapacidad: string;
   incapacidad: string;
+  madreTutorIdDocIdentidad: string;
+  madreTutorNroDocumento: string;
+  madreTutorApellidoPaterno: string;
+  madreTutorApellidoMaterno: string;
+  madreTutorPrimerNombre: string;
+  madreTutorSegundoNombre: string;
   idFuenteFinanciamiento: string;
   idEstadollego: string;
   idEsAccidenteTransito: string;
@@ -76,6 +82,12 @@ export function formVacio(): FormRegistroPaciente {
     idIdioma: '',
     discapacidad: '',
     incapacidad: '',
+    madreTutorIdDocIdentidad: '',
+    madreTutorNroDocumento: '',
+    madreTutorApellidoPaterno: '',
+    madreTutorApellidoMaterno: '',
+    madreTutorPrimerNombre: '',
+    madreTutorSegundoNombre: '',
     idFuenteFinanciamiento: '',
     idEstadollego: '',
     idEsAccidenteTransito: '',

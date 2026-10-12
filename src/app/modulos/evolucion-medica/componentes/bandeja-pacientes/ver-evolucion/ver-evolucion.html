@@ -1,31 +1,8 @@
 <div class="bg-white p-6 sm:p-8 font-sans text-black mx-auto shadow-sm border border-slate-200" style="max-width: 210mm;">
-  <!-- Header FUA Style -->
-  <div class="flex justify-between items-start mb-6">
-    <div class="flex items-center gap-3">
-      <!-- Logo placeholder -->
-      <div class="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center text-[11px] font-bold text-center p-1 leading-tight shrink-0">
-        MINSA
-      </div>
-      <div class="text-[11px] leading-tight">
-        <p>MINISTERIO</p>
-        <p>DE SALUD</p>
-        <p class="mt-1 font-bold">HOSPITAL NACIONAL SERGIO E BERNALES</p>
-        <p>AV.TUPAC AMARU 8000 COMAS</p>
-      </div>
-    </div>
-    <div class="text-center flex-1">
-      <h1 class="text-[18px] font-bold uppercase tracking-wide mb-1">Evolución Médica</h1>
-      <div class="text-[14px] font-bold uppercase">
-        Nº: {{ cabecera.numeroEvolucion || '—' }}
-      </div>
-    </div>
-    <div class="text-right flex flex-col items-end">
-       <div class="text-[32px] font-black uppercase leading-none mb-1 tracking-tighter">{{ financiamiento }}</div>
-       <!-- Barcode placeholder -->
-       <div class="w-36 h-10 border-2 border-black border-solid flex items-center justify-center">
-         <!-- Simulated barcode lines -->
-         <div class="flex h-full w-full opacity-80" style="background: repeating-linear-gradient(90deg, #000, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 5px, #fff 5px, #fff 8px);"></div>
-       </div>
+  <div class="text-center mb-6">
+    <h1 class="text-[18px] font-bold uppercase tracking-wide mb-1">Evolución Médica</h1>
+    <div class="text-[14px] font-bold uppercase">
+      Nº: {{ cabecera.numeroEvolucion || '—' }}
     </div>
   </div>
 
