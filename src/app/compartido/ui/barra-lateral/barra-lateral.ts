@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../modulos/auth/aplicacion/auth.service';
+import type { IMenuPermiso } from '../../tipos/tipos';
 import { IconoRuta } from '../icono-ruta/icono-ruta';
 
 @Component({
@@ -48,6 +49,50 @@ export class BarraLateral {
   }
 
   isGroupExpanded(idListGrupo: number): boolean {
-    return !!this.expandedGroups()[idListGrupo];
+    return Boolean(this.expandedGroups()[idListGrupo]);
+  }
+
+  resolverRuta(permiso: IMenuPermiso): string {
+    const clave = (permiso.claveWeb || '').trim();
+    const claveMin = clave.toLowerCase();
+    const menuMin = (permiso.menu || '').trim().toLowerCase();
+
+    if (
+      clave === 'CatalogoBienes' ||
+      claveMin === 'catalogobienes' ||
+      menuMin.includes('bienes')
+    ) {
+      return '/catalogos/bienes-insumos';
+    }
+
+    if (
+      clave === 'FacturacionCatalogoServicios' ||
+      claveMin === 'facturacioncatalogoservicios' ||
+      (menuMin.includes('catalogo') && menuMin.includes('servicios'))
+    ) {
+      return '/catalogos/servicios';
+    }
+
+    if (
+      clave === 'DashFarm' ||
+      claveMin === 'dashfarm' ||
+      menuMin.includes('dashboard farmacia')
+    ) {
+      return '/farmacia/disponibilidad';
+    }
+
+    if (
+      clave === 'atenciones' ||
+      claveMin === 'atenciones' ||
+      menuMin.includes('registro de atenciones')
+    ) {
+      return '/atencion-ce';
+    }
+
+    if (!clave) {
+      return `/${menuMin.replace(/\s+/g, '-')}`;
+    }
+
+    return clave.startsWith('/') ? clave : `/${clave}`;
   }
 }

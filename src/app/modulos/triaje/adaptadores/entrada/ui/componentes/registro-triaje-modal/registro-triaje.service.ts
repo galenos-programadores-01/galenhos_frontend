@@ -5,7 +5,6 @@ import type {
   ICatalogoDescripcion,
   ICatalogoNombre,
   IFilaBackend,
-  RegistroPacientePayload,
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.mapper';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
@@ -22,12 +21,8 @@ import {
 } from '../../../../salida/http/triaje.api.service';
 import type { FormRegistroTriaje } from './registro-triaje.interfaces';
 
-// Parámetros que habilitan/deshabilitan la integración con webservices
-// externos: 'S' habilita la consulta, 'N' la deshabilita.
 const PARAMETRO_SIS_ID = 322;
 const PARAMETRO_RENIEC_ID = 296;
-
-// Valor de la prioridad "Llegó Cadáver".
 const PRIORIDAD_CADAVER = '5';
 
 @Injectable()
@@ -80,7 +75,6 @@ export class RegistroTriajeService {
     { value: '1', label: 'I. Emerg. o Gravedad', color: '#3b82f6' },
     { value: '2', label: 'II. Urgencia Mayor', color: '#22c55e' },
     { value: '3', label: 'III. Urgencia Menor', color: '#eab308' },
-    // { value: '4', label: 'IV. Patología Aguda Común', color: '#f97316' },
     { value: PRIORIDAD_CADAVER, label: 'Llegó Cadáver', color: '#ef4444' },
   ];
 
@@ -496,7 +490,7 @@ export class RegistroTriajeService {
         const formComoPaciente = this
           .formulario as unknown as import('../../../../../../../compartido/ui/registro-paciente/registro-paciente.interfaces').FormRegistroPaciente;
         const mapeado = await this.reniecMapper.mapearDatos(
-          resultado.datos as unknown as Record<string, unknown>,
+          resultado.datos,
           formComoPaciente,
           this.tiposSexo,
           this.estadosCivil,
@@ -1275,48 +1269,9 @@ export class RegistroTriajeService {
     this.guardando = true;
 
     try {
-      const idPacienteFinal = this.formulario.idPaciente;
-
       const fechaNacIso = this.formulario.fechaNacimiento
         ? `${this.formulario.fechaNacimiento}T00:00:00Z`
         : undefined;
-
-      const payloadPaciente = {
-        nroDocumento: this.formulario.nroDocumento,
-        idDocIdentidad: this.idDocIdentidadNumero(),
-        apellidoPaterno: this.formulario.apellidoPaterno,
-        apellidoMaterno: this.formulario.apellidoMaterno,
-        primerNombre: this.formulario.primerNombre,
-        segundoNombre: this.formulario.segundoNombre,
-        fechaNacimiento: fechaNacIso,
-        idTipoSexo: Number(this.formulario.idTipoSexo) || undefined,
-        idEstadoCivil: Number(this.formulario.idEstadoCivil) || undefined,
-        telefono: this.formulario.telefono,
-        direccionDomicilio: this.formulario.direccionDomicilio,
-        idDepartamentoDomicilio:
-          Number(this.formulario.idDepartamentoDomicilio) || undefined,
-        idProvinciaDomicilio:
-          Number(this.formulario.idProvinciaDomicilio) || undefined,
-        idDistritoDomicilio:
-          Number(this.formulario.idDistritoDomicilio) || undefined,
-        idCentroPobladoDomicilio:
-          Number(this.formulario.idCentroPobladoDomicilio) || undefined,
-      };
-
-      // if (
-      //   !idPacienteFinal &&
-      //   !this.formulario.pacienteNn &&
-      //   this.formulario.nroDocumento
-      // ) {
-      //   await this.pacientesApi.registrar(
-      //     payloadPaciente as unknown as RegistroPacientePayload,
-      //   );
-      // } else if (idPacienteFinal) {
-      //   await this.pacientesApi.actualizar(
-      //     idPacienteFinal,
-      //     payloadPaciente as unknown as RegistroPacientePayload,
-      //   );
-      // }
 
       const payloadTriaje: RegistroTriajePayload = {
         idTriaje,

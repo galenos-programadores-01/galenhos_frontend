@@ -168,18 +168,6 @@ export class VerEvolucionComponent implements OnInit {
     return p;
   }
 
-  get financiamiento(): string {
-    const f =
-      convertirTextoSeguro(
-        (this.detalle?.paciente as Record<string, unknown>)?.financiamiento,
-      ) ||
-      convertirTextoSeguro(
-        (this.detalle?.cabecera as Record<string, unknown>)?.financiamiento,
-      ) ||
-      convertirTextoSeguro(this.detalle?.financiamiento);
-    return f || 'SIS';
-  }
-
   get antecedentes(): IPacienteDatosAdicionales | null {
     return (this.detalle?.antecedentes as IPacienteDatosAdicionales) ?? null;
   }

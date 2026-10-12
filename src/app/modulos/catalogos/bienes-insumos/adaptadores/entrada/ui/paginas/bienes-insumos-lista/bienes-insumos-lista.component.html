@@ -1,0 +1,252 @@
+<div class="flex flex-col gap-4">
+
+  @if (errorGeneral()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 text-xs font-medium px-4 py-2.5 rounded">
+      {{ errorGeneral() }}
+    </div>
+  }
+
+  <app-filtros-global titulo="Catálogo de Bienes e Insumos Hospitalarios">
+    <div acciones>
+      <button 
+        type="button" 
+        (click)="abrirModalCreacion()"
+        class="px-3 py-1.5 bg-[#07153a] hover:bg-blue-900 text-white text-xs font-semibold rounded transition-colors cursor-pointer">
+        Nuevo Bien / Insumo
+      </button>
+    </div>
+
+    <!-- Contenido de los filtros -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+      
+      <!-- Búsqueda por texto -->
+      <div class="lg:col-span-5">
+        <label for="filtro-bienes-texto" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+          DCI / Nombre Comercial / SISMED / SIGA
+        </label>
+        <input 
+          id="filtro-bienes-texto"
+          type="text" 
+          [(ngModel)]="filtroTexto"
+          (ngModelChange)="onFiltroTextoChange()"
+          placeholder="Buscar por DCI, Nombre Comercial, Código SISMED o SIGA..."
+          class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+      </div>
+
+      <!-- Selector de Tipo de Catálogo -->
+      <div class="lg:col-span-3">
+        <label for="filtro-bienes-tipo" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+          Tipo de Catálogo
+        </label>
+        <app-select-global
+          id="filtro-bienes-tipo"
+          [ngModel]="tipoProductoSeleccionado"
+          (ngModelChange)="cambiarTipoProducto($event)">
+          <option [ngValue]="0">Todos los Tipos</option>
+          <option [ngValue]="1">Medicamentos</option>
+          <option [ngValue]="2">Material Médico / Insumos</option>
+          <option [ngValue]="3">Reactivos de Laboratorio</option>
+          <option [ngValue]="4">Nutrición / Fórmulas</option>
+        </app-select-global>
+      </div>
+
+      <!-- Selector de Estado -->
+      <div class="lg:col-span-2">
+        <label for="filtro-bienes-estado" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+          Estado
+        </label>
+        <app-select-global
+          id="filtro-bienes-estado"
+          [ngModel]="estadoSeleccionado"
+          (ngModelChange)="cambiarEstado($event)">
+          <option [ngValue]="1">Solo Activos</option>
+          <option [ngValue]="0">Solo Inactivos</option>
+          <option [ngValue]="null">Todos</option>
+        </app-select-global>
+      </div>
+
+      <!-- Botones de Filtro Globales -->
+      <div class="lg:col-span-2 flex items-center justify-end">
+        <app-botones-filtro
+          [cargando]="cargando()"
+          (buscar)="cargarDatos(1)"
+          (limpiar)="limpiarFiltros()">
+        </app-botones-filtro>
+      </div>
+
+    </div>
+
+    <!-- Filtros complementarios -->
+    <div class="flex items-center justify-end mt-4 pt-3 border-t border-slate-100 text-xs gap-2">
+      <button 
+        type="button" 
+        (click)="toggleEsencial()"
+        [class]="soloEsencial ? 'bg-teal-50 text-teal-800 font-bold border-teal-300' : 'bg-slate-50 text-slate-600 border-slate-300'"
+        class="px-2.5 py-1 rounded border transition-colors cursor-pointer">
+        {{ soloEsencial ? '✓ Solo Esenciales SIS / DIGEMID' : 'Filtrar Esenciales SIS / DIGEMID' }}
+      </button>
+      <button 
+        type="button" 
+        (click)="togglePetitorio()"
+        [class]="soloPetitorio ? 'bg-emerald-50 text-emerald-800 font-bold border-emerald-300' : 'bg-slate-50 text-slate-600 border-slate-300'"
+        class="px-2.5 py-1 rounded border transition-colors cursor-pointer">
+        {{ soloPetitorio ? '✓ Solo Petitorio SISMED' : 'Filtrar Petitorio SISMED' }}
+      </button>
+    </div>
+  </app-filtros-global>
+
+  <!-- Tabla con el layout oficial institucional de Galenos (Sin scroll horizontal forzado) -->
+  <div class="bg-white border border-slate-200 rounded overflow-hidden flex flex-col">
+    <div class="w-full overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm table-auto">
+        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-xs">
+          <tr>
+            <th class="px-3 py-3 w-28">Código</th>
+            <th class="px-3 py-3 min-w-[200px]">Descripción / Nombre Comercial</th>
+            <th class="px-3 py-3 w-36">Tipo Catálogo</th>
+            <th class="px-3 py-3 text-right w-24">P. Compra</th>
+            <th class="px-3 py-3 text-right w-24">P. Venta</th>
+            <th class="px-3 py-3 text-center w-24">Estado</th>
+            <th class="px-3 py-3 text-center w-28">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-100">
+          @if (cargando()) {
+            <tr>
+              <td colspan="7" class="px-3 py-16 text-center text-slate-600 text-sm font-medium">
+                Consultando catálogo de bienes e insumos...
+              </td>
+            </tr>
+          } @else if (items().length === 0) {
+            <tr>
+              <td colspan="7" class="px-3 py-16 text-center text-slate-600 text-sm">
+                No se encontraron bienes ni insumos para los filtros seleccionados.
+              </td>
+            </tr>
+          } @else {
+            @for (item of items(); track item.idProducto) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                
+                <!-- Códigos -->
+                <td class="px-3 py-2.5 font-mono font-bold text-[#07153a] text-xs whitespace-nowrap">
+                  {{ item.codigo || 'S/C' }}
+                  @if (item.codigoSiga) {
+                    <span class="block text-xs text-slate-500 font-normal font-mono">SIGA: {{ item.codigoSiga }}</span>
+                  }
+                </td>
+
+                <!-- Descripción -->
+                <td class="px-3 py-2.5 break-words">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-bold text-slate-900 text-sm">{{ item.nombre }}</span>
+                    @if (item.esIndicadorGestion) {
+                      <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-teal-50 text-teal-700 border border-teal-200">
+                        SIS / DIGEMID
+                      </span>
+                    }
+                  </div>
+                  @if (item.nombreComercial && item.nombreComercial !== item.nombre) {
+                    <span class="text-xs text-slate-600 block italic font-medium">{{ item.nombreComercial }}</span>
+                  }
+                </td>
+
+                <!-- Tipo Catálogo -->
+                <td class="px-3 py-2.5 break-words text-xs font-semibold">
+                  @switch (item.tipoProducto) {
+                    @case (1) { <span class="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Medicamento</span> }
+                    @case (2) { <span class="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Material Médico</span> }
+                    @case (3) { <span class="text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">Reactivo Lab.</span> }
+                    @case (4) { <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Nutrición</span> }
+                    @default { <span class="text-slate-500">General</span> }
+                  }
+                </td>
+
+                <!-- Precio Compra -->
+                <td class="px-3 py-2.5 text-right font-mono text-slate-700 text-sm whitespace-nowrap">
+                  S/. {{ item.precioCompra | number:'1.2-2' }}
+                </td>
+
+                <!-- Precio Venta -->
+                <td class="px-3 py-2.5 text-right font-mono font-bold text-emerald-800 text-sm whitespace-nowrap">
+                  S/. {{ item.precioDistribucion | number:'1.2-2' }}
+                </td>
+
+                <!-- Estado -->
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  @if (item.estado === 1) {
+                    <span class="inline-block px-2.5 py-0.5 text-xs font-bold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Activo
+                    </span>
+                  } @else {
+                    <span class="inline-block px-2.5 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-600 border border-slate-300">
+                      Inactivo
+                    </span>
+                  }
+                </td>
+
+                <!-- Acción -->
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button 
+                      type="button" 
+                      (click)="abrirModalEdicion(item)"
+                      title="Editar especificaciones y precios del producto"
+                      class="px-2 py-1 text-xs font-bold text-blue-800 hover:bg-blue-50 rounded border border-blue-200 transition-colors cursor-pointer flex items-center gap-1">
+                      <svg aria-hidden="true" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      <span>Modificar</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      (click)="abrirModalConsulta(item)"
+                      title="Ver ficha institucional en modo solo lectura"
+                      class="px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded border border-slate-300 transition-colors cursor-pointer flex items-center gap-1">
+                      <svg aria-hidden="true" class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                      <span>Consultar</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación Global -->
+    @if (totalItems() > 0) {
+      <div class="px-4 py-3 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 bg-white text-xs">
+        <span class="font-medium text-slate-600">
+          Mostrando {{ items().length }} de {{ totalItems() | number }} registros
+        </span>
+        <app-paginacion
+          [page]="paginaActual()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalItems()"
+          (pageChange)="irPagina($event)">
+        </app-paginacion>
+      </div>
+    }
+  </div>
+
+  <!-- Modal de Edición / Creación / Consulta -->
+  <app-bien-insumo-modal 
+    [visible]="modalVisible"
+    [esEdicion]="esModoEdicion"
+    [soloLectura]="soloLecturaModal()"
+    [detalle]="detalleSeleccionado"
+    [auxiliares]="auxiliares()"
+    [subgrupos]="subgrupos()"
+    [guardando]="guardando()"
+    [errorMensaje]="errorMensajeModal()"
+    (alCerrar)="cerrarModal()"
+    (alCambiarGrupo)="cargarSubGrupos($event)"
+    (alGuardar)="guardarBienInsumo($event)"
+    (alEliminar)="eliminarBienInsumo($event)">
+  </app-bien-insumo-modal>
+
+</div>

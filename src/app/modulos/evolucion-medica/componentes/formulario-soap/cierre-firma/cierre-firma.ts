@@ -6,7 +6,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import type { ItemResumenVerificacion } from '../constantes/formulario-soap.constantes';
+import type { ItemResumenVerificacion } from '../../../constantes/formulario-soap.constantes';
 
 @Component({
   selector: 'app-cierre-firma',

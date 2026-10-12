@@ -48,7 +48,7 @@
           {{ ordenesGroup.get('detalle')?.value?.length || 0 }} / 1000
         </span>
       </div>
-      <textarea id="detalleOrden" rows="2" maxlength="1000" formControlName="detalle" class="w-full border border-slate-200 rounded-md p-2 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y" placeholder="Detalles específicos de la orden..."></textarea>
+      <textarea id="detalleOrden" rows="10" maxlength="1000" formControlName="detalle" class="w-full border border-slate-200 rounded-md p-3 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none resize-y min-h-[260px]" placeholder="Detalles específicos de la orden..."></textarea>
       <app-error-mensaje [control]="ordenesGroup.get('detalle')"></app-error-mensaje>
     </div>
 

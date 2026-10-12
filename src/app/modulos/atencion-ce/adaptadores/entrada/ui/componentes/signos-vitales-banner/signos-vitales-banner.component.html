@@ -1,0 +1,96 @@
+<div class="bg-white rounded border border-slate-200 p-3.5">
+  <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-[#07153a]">
+      Signos Vitales y Somatometría (Triaje)
+    </h2>
+    @if (triaje()?.fechaRegistro) {
+      <span class="text-[11px] text-slate-500 font-medium">
+        Registrado: {{ triaje()?.fechaRegistro }}
+      </span>
+    }
+  </div>
+
+  @if (!triaje()) {
+    <div class="text-center py-3 text-slate-500 text-sm font-medium">
+      No se registran signos vitales de triaje para esta atención.
+    </div>
+  } @else {
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
+      
+      <!-- Presión Arterial -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">P.A.</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.presionArterial || '--/--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">mmHg</span>
+      </div>
+
+      <!-- Frecuencia Cardíaca -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">F.C.</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.frecuenciaCardiaca || '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">lpm</span>
+      </div>
+
+      <!-- Frecuencia Respiratoria -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">F.R.</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.frecuenciaRespiratoria || '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">rpm</span>
+      </div>
+
+      <!-- Temperatura -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Temp.</span>
+        <span class="text-base font-black block my-0.5" [ngClass]="obtenerClaseTemperatura(triaje()?.temperatura)">
+          {{ triaje()?.temperatura ? (triaje()?.temperatura + ' °C') : '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">Axilar</span>
+      </div>
+
+      <!-- Saturación O2 -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Sat O₂</span>
+        <span class="text-base font-black block my-0.5" [ngClass]="obtenerClaseSaturacion(triaje()?.saturacion)">
+          {{ triaje()?.saturacion ? (triaje()?.saturacion + ' %') : '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">Oxímetro</span>
+      </div>
+
+      <!-- Peso -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Peso</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.peso ? (triaje()?.peso + ' kg') : '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">Masa</span>
+      </div>
+
+      <!-- Talla -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Talla</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.talla ? (triaje()?.talla + ' cm') : '--' }}
+        </span>
+        <span class="text-xs text-slate-500 block font-medium">Estatura</span>
+      </div>
+
+      <!-- IMC -->
+      <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+        <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">IMC</span>
+        <span class="text-base font-black text-slate-900 block my-0.5">
+          {{ triaje()?.imc || '--' }}
+        </span>
+        <span class="text-xs text-slate-600 block font-semibold truncate">
+          {{ obtenerClasificacionImc(triaje()?.imc) }}
+        </span>
+      </div>
+
+    </div>
+  }
+</div>

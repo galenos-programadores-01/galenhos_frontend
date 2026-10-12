@@ -144,6 +144,10 @@ export class EvolucionService {
       }
       params.append('fini', fini);
       if (this.fechaHasta()) params.append('ffin', this.fechaHasta());
+      const filtro = this.patientSearch().trim();
+      if (filtro) {
+        params.append('filtro', filtro);
+      }
       params.append('page', this.page().toString());
       params.append('pageSize', this.pageSize().toString());
       const qs = params.toString();

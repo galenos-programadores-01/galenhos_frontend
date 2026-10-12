@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   signal,
@@ -32,7 +33,7 @@ import {
   construirPdfEvolucion,
   type DatosInstitucion,
   type EvolucionPdfData,
-} from '../formulario-soap/evolucion-pdf.util';
+} from '../../utilidades/pdf';
 import { VerEvolucionComponent } from './ver-evolucion/ver-evolucion';
 
 @Component({
@@ -63,6 +64,25 @@ export class BandejaPacientesComponent {
   public readonly evolucionDetalle = signal<
     (EvolucionFirma & Record<string, unknown>) | null
   >(null);
+  public readonly descargandoPdfId = signal<number | null>(null);
+
+  public readonly paginaActualEvoluciones = signal<number>(1);
+  public readonly elementosPorPaginaEvoluciones = 5;
+
+  public readonly totalPaginasEvoluciones = computed(() => {
+    return (
+      Math.ceil(
+        this.evolucionesPaciente().length / this.elementosPorPaginaEvoluciones,
+      ) || 1
+    );
+  });
+
+  public readonly evolucionesPacientePaginadas = computed(() => {
+    const inicio =
+      (this.paginaActualEvoluciones() - 1) * this.elementosPorPaginaEvoluciones;
+    const fin = inicio + this.elementosPorPaginaEvoluciones;
+    return this.evolucionesPaciente().slice(inicio, fin);
+  });
 
   public readonly columnasEvoluciones: ColumnaTabla[] = [
     {
@@ -88,7 +108,7 @@ export class BandejaPacientesComponent {
       campo: 'accionesCustom',
       cabecera: 'Acciones',
       alineacion: 'center',
-      ancho: '140px',
+      ancho: '190px',
     },
   ];
 
@@ -105,6 +125,7 @@ export class BandejaPacientesComponent {
     const paciente = this.evolucionService.activePatient();
     if (!paciente?.idRegAtencion) return;
 
+    this.paginaActualEvoluciones.set(1);
     this.evolucionesCargando.set(true);
     try {
       const evoluciones = await this.evolucionService.listarEvoluciones(
@@ -116,7 +137,9 @@ export class BandejaPacientesComponent {
     }
   }
 
-  async verEvolucion(evolucion: EvolucionFirma): Promise<void> {
+  private async construirDetalleEvolucion(
+    evolucion: EvolucionFirma,
+  ): Promise<EvolucionFirma & Record<string, unknown>> {
     let estadoTexto = 'Pendiente';
     if (evolucion.estado === 1) {
       estadoTexto = 'Firmado';
@@ -242,14 +265,44 @@ export class BandejaPacientesComponent {
         '',
     };
 
-    this.evolucionDetalle.set({
+    return {
       ...evolucion,
       ...decodificada,
       paciente: pacienteCombinado,
       cabecera: cabeceraCombinada,
       antecedentes: antecedentes ?? null,
       sintomas: sintomas.length > 0 ? sintomas : decodificada.sintomas,
-    } as EvolucionFirma & Record<string, unknown>);
+    } as EvolucionFirma & Record<string, unknown>;
+  }
+
+  async verEvolucion(evolucion: EvolucionFirma): Promise<void> {
+    const detalle = await this.construirDetalleEvolucion(evolucion);
+    this.evolucionDetalle.set(detalle);
+  }
+
+  async descargarPdfDirecto(evolucion: EvolucionFirma): Promise<void> {
+    const paciente = this.evolucionService.activePatient();
+    if (!paciente || this.descargandoPdfId() !== null) return;
+
+    this.descargandoPdfId.set(evolucion.idFirma);
+    try {
+      const detalle = await this.construirDetalleEvolucion(evolucion);
+      const cabecera = (detalle.cabecera as Record<string, unknown>) || {};
+      const uuidFirma =
+        (cabecera.firmaDni as string) || (detalle.firmaDigital as string) || '';
+
+      if (uuidFirma && !uuidFirma.startsWith('data:')) {
+        const descargado = await this.descargarPdfFirmadoRemoto(
+          uuidFirma,
+          paciente.historia || paciente.idRegAtencion,
+        );
+        if (descargado) return;
+      }
+
+      await this.generarYDescargarPdfCopia(detalle, paciente, cabecera);
+    } finally {
+      this.descargandoPdfId.set(null);
+    }
   }
 
   cerrarDetalle(): void {
@@ -460,7 +513,7 @@ export class BandejaPacientesComponent {
     return 'Médico tratante';
   }
 
-  obtenerNumero(evolucion: EvolucionFirma, indice: number): string {
+  obtenerNumero(evolucion: EvolucionFirma, indiceEnPagina: number): string {
     const decodificada = this.evolucionService.decodificarEvolucion(
       evolucion.dataB64,
     );
@@ -476,7 +529,11 @@ export class BandejaPacientesComponent {
     if (evolucion.idFirma > 0) {
       return `#${evolucion.idFirma}`;
     }
-    return `#${indice + 1}`;
+    const indiceReal =
+      (this.paginaActualEvoluciones() - 1) *
+        this.elementosPorPaginaEvoluciones +
+      indiceEnPagina;
+    return `#${indiceReal + 1}`;
   }
 
   obtenerFechaHora(evolucion: EvolucionFirma): { fecha: string; hora: string } {

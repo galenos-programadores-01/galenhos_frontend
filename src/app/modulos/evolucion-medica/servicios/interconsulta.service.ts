@@ -8,8 +8,10 @@ export interface Interconsulta {
   idEspecialidad?: number;
   idMedicoDestino: number;
   motivo: string;
+  resumenHC?: string;
   fechaSolicitud?: string;
   estado?: string;
+  especialidad?: string;
 }
 
 @Injectable({

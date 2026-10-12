@@ -69,6 +69,100 @@
           </label>
         </div>
         
+        @if (interconsultaForm.get('chkOpinion')?.value) {
+          <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div class="flex items-center justify-between mb-2">
+              <label for="txt-busqueda-dx" class="text-[11.5px] font-semibold text-slate-600 flex items-center gap-1.5">
+                <svg aria-hidden="true" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Diagnóstico para la interconsulta (CIE-10):
+              </label>
+              @if (diagnosticoSeleccionado()) {
+                <span class="text-[11px] font-semibold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full">
+                  Seleccionado
+                </span>
+              }
+            </div>
+
+            @if (diagnosticoSeleccionado(); as dx) {
+              <div class="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-md p-2.5 shadow-2xs">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="font-mono text-[11.5px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded shrink-0">
+                    {{ dx.codigoCIE10 }}
+                  </span>
+                  <span class="text-[12.5px] font-medium text-slate-800 truncate">
+                    {{ dx.descripcion }}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  (click)="limpiarDiagnostico()"
+                  class="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+                  title="Eliminar o cambiar diagnóstico"
+                >
+                  <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            } @else {
+              <div class="relative">
+                <div class="relative">
+                  <input
+                    id="txt-busqueda-dx"
+                    type="text"
+                    (input)="onBuscarDiagnostico($event)"
+                    (blur)="cerrarDropdown()"
+                    autocomplete="off"
+                    placeholder="Escriba código CIE-10 o patología (ej: J18, dolor)..."
+                    class="w-full border border-slate-300 rounded-md pl-8 pr-3 py-1.5 text-[12.5px] bg-white text-slate-800 placeholder:text-slate-400 focus:ring-1 focus:ring-slate-400 focus:outline-none"
+                  >
+                  <svg aria-hidden="true" class="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                </div>
+
+                @if (showDropdown()) {
+                  <div class="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-52 overflow-y-auto w-full">
+                    @if (isSearching()) {
+                      <div class="p-3 text-center text-[12px] text-slate-500 flex items-center justify-center gap-2">
+                        <svg aria-hidden="true" class="animate-spin h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Buscando diagnósticos...</span>
+                      </div>
+                    } @else if (searchResults().length === 0) {
+                      <div class="p-3 text-center text-[12px] text-slate-500">
+                        No se encontraron diagnósticos coincidentes.
+                      </div>
+                    } @else {
+                      <ul class="py-1 divide-y divide-slate-100">
+                        @for (dx of searchResults(); track dx.idDiagnostico) {
+                          <li
+                            class="px-3 py-2 hover:bg-slate-50 cursor-pointer transition-colors"
+                            (mousedown)="seleccionarDiagnostico(dx); $event.preventDefault()"
+                          >
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                                {{ dx.codigoCIE10 }}
+                              </span>
+                              <span class="text-[12.5px] text-slate-700 font-medium">
+                                {{ dx.descripcion }}
+                              </span>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+        
         <div class="flex flex-col gap-1 mt-3">
           <div class="flex items-center gap-2">
             <label for="chk-otro" class="flex items-center gap-2 cursor-pointer whitespace-nowrap hover:text-teal-700 transition-colors">
@@ -85,6 +179,29 @@
             <app-error-mensaje [control]="interconsultaForm.get('motivoOtro')"></app-error-mensaje>
           }
         </div>
+      </div>
+
+      <div class="flex flex-col mt-2">
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="txt-resumen-hc" class="text-[11.5px] font-semibold text-slate-600 flex items-center gap-1.5">
+            <svg aria-hidden="true" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            Resumen de Historia Clínica:
+          </label>
+          <span class="text-[10.5px] text-slate-400 font-mono">
+            {{ interconsultaForm.get('resumenHC')?.value?.length || 0 }} / 5000
+          </span>
+        </div>
+        <textarea
+          id="txt-resumen-hc"
+          formControlName="resumenHC"
+          rows="3"
+          maxlength="5000"
+          placeholder="Ingrese un resumen clínico relevante del paciente (antecedentes, cuadro actual, motivo del pedido)..."
+          class="w-full border border-slate-300 rounded-md p-2.5 text-[12.5px] bg-white text-slate-800 placeholder:text-slate-400 focus:ring-1 focus:ring-slate-400 focus:outline-none resize-y min-h-[75px]"
+        ></textarea>
+        <app-error-mensaje [control]="interconsultaForm.get('resumenHC')"></app-error-mensaje>
       </div>
 
       @if (errorMessage()) {
@@ -151,27 +268,78 @@
           </ng-template>
 
           <ng-template appColumnaTemplate="especialidadCustom" let-ic>
-            <span class="font-medium text-slate-800">{{ obtenerNombreEspecialidad(ic.IdEspecialidad) }}</span>
+            <span class="font-medium text-slate-800">{{ ic.especialidad || obtenerNombreEspecialidad(ic.IdEspecialidad) }}</span>
           </ng-template>
 
           <ng-template appColumnaTemplate="motivoCustom" let-ic>
-            <div class="truncate max-w-[200px] text-slate-600" [title]="ic.motivo">{{ ic.motivo }}</div>
+            <div class="flex flex-col gap-1 py-1 min-w-[180px]">
+              @for (motivo of obtenerMotivos(ic.motivo); track $index) {
+                <div class="flex items-start gap-1.5 text-[12.5px] leading-snug text-slate-700">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0"></span>
+                  <span class="font-medium">{{ motivo }}</span>
+                </div>
+              }
+              @if (obtenerMotivos(ic.motivo).length === 0) {
+                <span class="text-[12px] text-slate-400 italic">—</span>
+              }
+            </div>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="diagnosticoCustom" let-ic>
+            <div class="flex flex-col gap-1 py-1 min-w-[200px]">
+              @for (dx of obtenerDiagnosticos(ic.motivo); track $index) {
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded shrink-0 shadow-xs">
+                    {{ dx.codigoCie10 }}
+                  </span>
+                  <span class="text-[12.5px] text-slate-800 font-medium">
+                    {{ dx.diagnostico }}
+                  </span>
+                </div>
+              }
+              @if (obtenerDiagnosticos(ic.motivo).length === 0) {
+                <span class="text-[12px] text-slate-400 italic">—</span>
+              }
+            </div>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="resumenCustom" let-ic>
+            @if (ic.resumenHC) {
+              <div class="flex flex-col items-start gap-1 py-1 max-w-[220px]">
+                <span class="text-[12px] text-slate-600 line-clamp-2 leading-snug" [title]="ic.resumenHC">
+                  {{ ic.resumenHC }}
+                </span>
+                <button
+                  type="button"
+                  (click)="abrirModalResumen(ic)"
+                  class="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-600 hover:text-teal-800 hover:underline cursor-pointer"
+                >
+                  <svg aria-hidden="true" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  Ver completo
+                </button>
+              </div>
+            } @else {
+              <span class="text-[12px] text-slate-400 italic">—</span>
+            }
           </ng-template>
 
           <ng-template appColumnaTemplate="estadoCustom" let-ic>
             <span class="px-2 py-0.5 rounded-md text-[10.5px] font-semibold border"
               [ngClass]="{
-                'bg-slate-100 text-slate-600 border-slate-200': ic.estado === 'Pendiente' || !ic.estado,
+                'bg-slate-100 text-slate-600 border-slate-200': ic.estado === 'Pendiente' || !ic.estado || ic.estado === 'SOLICITUD',
                 'bg-teal-100 text-teal-700 border-teal-200': ic.estado === 'Firmado',
                 'bg-amber-100 text-amber-700 border-amber-200': ic.estado === 'En Progreso',
-                'bg-teal-100 text-teal-800 border-teal-200': ic.estado === 'Completado'
+                'bg-teal-100 text-teal-800 border-teal-200': ic.estado === 'Completado' || ic.estado === 'RESPUESTA'
               }">
               {{ ic.estado || 'Pendiente' }}
             </span>
           </ng-template>
 
           <ng-template appColumnaTemplate="accionesCustom" let-ic>
-            @if (!ic.estado || ic.estado === 'Pendiente') {
+            @if (!ic.estado || ic.estado === 'Pendiente' || ic.estado === 'SOLICITUD') {
               <button
                 type="button"
                 (click)="atender(ic.idInterconsulta!)"
@@ -198,5 +366,62 @@
       }
     }
   </div>
+
+  @if (modalResumenAbierto() && interconsultaSeleccionada(); as ic) {
+    <div
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      (click)="cerrarModalResumen()"
+    >
+      <div
+        class="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center shrink-0">
+              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-[14px] font-bold text-slate-800">Resumen de Historia Clínica</h4>
+              <p class="text-[11.5px] text-slate-500">
+                Especialidad: <span class="font-medium text-slate-700">{{ ic.especialidad || obtenerNombreEspecialidad(ic.IdEspecialidad) }}</span>
+                &bull; {{ obtenerFechaHora(ic.fechaSolicitud) }}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarModalResumen()"
+            class="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            title="Cerrar ventana"
+          >
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-5 overflow-y-auto flex-1">
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+            <p class="text-[13px] text-slate-700 whitespace-pre-wrap leading-relaxed">
+              {{ ic.resumenHC }}
+            </p>
+          </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+          <button
+            type="button"
+            (click)="cerrarModalResumen()"
+            class="px-4 py-1.5 bg-white border border-slate-300 text-slate-700 text-[12.5px] font-semibold rounded-md hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
 </div>

@@ -9,9 +9,9 @@ Toda la arquitectura, interfaz de usuario y optimización del código deben esta
 Angular 22 standalone SPA. UI text, component/file naming, and code comments are in Spanish; Angular symbols (interfaces, DI, signals) use standard conventions. There is no NgModule anywhere — everything is standalone + `bootstrapApplication`.
 ## Commands
 
-- Dev server: `npm start` (`ng serve`, port 4200) -> **Regla Estricta para la IA:** NO debes ejecutar el servidor de desarrollo. Tu trabajo es realizar los cambios en el código, ejecutar el linter o build si es necesario, y luego notificar al usuario para que él mismo levante el servidor y valide visualmente.
-- Production build: `npm run build`
-- Tests: `npm test` (`ng test` via `@angular/build:unit-test` = Vitest, globals in `tsconfig.spec.json`; jsdom). No spec files exist yet — create `*.spec.ts` beside components.
+- Dev server: `bun run dev` (`ng serve`, port 4200) -> **Regla Estricta para la IA:** NO debes ejecutar el servidor de desarrollo. Tu trabajo es realizar los cambios en el código, ejecutar el linter o build si es necesario, y luego notificar al usuario para que él mismo levante el servidor y valide visualmente.
+- Production build: `bun run build`
+- Tests: `bun run test` (`ng test` via `@angular/build:unit-test` = Vitest, globals in `tsconfig.spec.json`; jsdom). No spec files exist yet — create `*.spec.ts` beside components.
 - There are **no** lint/typecheck npm scripts. Use `npx biome check .` para el linting y `npx tsc --noEmit` para verificar los tipos sin generar archivos compilados que luego Biome intente formatear.
 
 ## Formatting y Buenas Prácticas (Reglas Estrictas)

@@ -5,7 +5,6 @@ import type {
   ICatalogoDescripcion,
   ICatalogoNombre,
   IFilaBackend,
-  RegistroPacientePayload,
 } from '../../../../../../../compartido/tipos/api-tipos';
 import { ReniecMapper } from '../../../../../../../compartido/utilidades/reniec.mapper';
 import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
@@ -95,11 +94,24 @@ export class RegistroTriajeObstetricoService {
       subtitulo: 'Urgencia mayor (espera m�x. 10 minutos)',
       color: '#f97316',
       opciones: [
-        'Presi�n arterial = 140/90 con cefalea o visi�n borrosa (sospecha de preeclampsia)',
-        'Contracciones uterinas regulares en gestante pret�rmino (<37 semanas)',
-        'P�rdida de l�quido por v�a vaginal (sospecha de rotura prematura de membranas)',
+        'Presión arterial mayor o igual a 140/90 con cefalea o visión borrosa (sospecha de preeclampsia)',
+        'Contracciones uterinas regulares en gestante pretérmino (menor a 37 semanas)',
+        'Pérdida de líquido por vía vaginal (sospecha de rotura prematura de membranas)',
         'Sangrado vaginal moderado en gestante, con funciones vitales estables',
-        'Fiebre = 38�C asociada a dolor p�lvico (sospecha de proceso infeccioso)',
+        'Fiebre mayor o igual a 38°C asociada a dolor pélvico (sospecha de proceso infeccioso)',
+      ],
+    },
+    {
+      value: '3',
+      label: 'Prioridad III',
+      subtitulo:
+        'Urgencia menor (sin riesgo vital, espera mayor o igual a 20 minutos)',
+      color: '#eab308',
+      opciones: [
+        'Sangrado vaginal leve en no gestante, con funciones vitales estables',
+        'Secreción vaginal anormal sin fiebre asociada',
+        'Dolor pélvico leve, con funciones vitales estables',
+        'Control prenatal de rutina, sin signos de alarma',
       ],
     },
     // {
@@ -607,7 +619,7 @@ export class RegistroTriajeObstetricoService {
         const formComoPaciente = this
           .formulario as unknown as import('../../../../../../../compartido/ui/registro-paciente/registro-paciente.interfaces').FormRegistroPaciente;
         const mapeado = await this.reniecMapper.mapearDatos(
-          resultado.datos as unknown as Record<string, unknown>,
+          resultado.datos,
           formComoPaciente,
           this.tiposSexo,
           this.estadosCivil,
@@ -1345,42 +1357,9 @@ export class RegistroTriajeObstetricoService {
     this.guardando = true;
 
     try {
-      const idPacienteFinal = this.formulario.idPaciente;
-
       const fechaNacIso = this.formulario.fechaNacimiento
         ? `${this.formulario.fechaNacimiento}T00:00:00Z`
         : undefined;
-
-      const payloadPaciente = {
-        nroDocumento: this.formulario.nroDocumento,
-        idDocIdentidad: this.idDocIdentidadNumero(),
-        apellidoPaterno: this.formulario.apellidoPaterno,
-        apellidoMaterno: this.formulario.apellidoMaterno,
-        primerNombre: this.formulario.primerNombre,
-        segundoNombre: this.formulario.segundoNombre,
-        fechaNacimiento: fechaNacIso,
-        idTipoSexo: Number(this.formulario.idTipoSexo) || undefined,
-        idEstadoCivil: Number(this.formulario.idEstadoCivil) || undefined,
-        telefono: this.formulario.telefono,
-        direccionDomicilio: this.formulario.direccionDomicilio,
-        idDepartamentoDomicilio:
-          Number(this.formulario.idDepartamentoDomicilio) || undefined,
-        idProvinciaDomicilio:
-          Number(this.formulario.idProvinciaDomicilio) || undefined,
-        idDistritoDomicilio:
-          Number(this.formulario.idDistritoDomicilio) || undefined,
-        idCentroPobladoDomicilio:
-          Number(this.formulario.idCentroPobladoDomicilio) || undefined,
-      };
-
-      // if (
-      //   !idPacienteFinal &&
-      //   !this.formulario.pacienteNn
-      // ) {
-      //   await this.pacientesApi.registrar(
-      //     payloadPaciente as unknown as RegistroPacientePayload,
-      //   );
-      // }
 
       const payloadTriaje: RegistroTriajeObstetricoPayload = {
         idTriaje,

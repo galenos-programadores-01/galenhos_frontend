@@ -4,32 +4,26 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   selector: 'app-botones-filtro',
   standalone: true,
   template: `
-    <div class="flex gap-2 shrink-0">
-      <button type="button" 
-        (click)="buscar.emit()" 
-        class="shrink-0 inline-flex items-center justify-center w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm focus:ring-4 focus:ring-blue-100 disabled:opacity-50" 
-        title="Buscar" 
+    <div class="flex items-center gap-2 shrink-0">
+      <button
+        type="button"
+        (click)="buscar.emit()"
+        class="px-3 py-2 bg-[#07153a] hover:bg-[#0c2360] text-white text-xs font-semibold rounded transition-colors disabled:opacity-50 cursor-pointer"
         [disabled]="cargando">
         @if (cargando) {
-          <svg aria-hidden="true" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-          </svg>
+          Buscando...
         } @else {
-          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
+          Buscar
         }
       </button>
-      
+
       @if (mostrarLimpiar) {
-        <button type="button" 
-          (click)="limpiar.emit()" 
-          class="shrink-0 inline-flex items-center justify-center w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border border-slate-200 focus:ring-4 focus:ring-slate-100 disabled:opacity-50" 
-          title="Limpiar filtros" 
+        <button
+          type="button"
+          (click)="limpiar.emit()"
+          class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded border border-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
           [disabled]="cargando">
-          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
+          Limpiar
         </button>
       }
     </div>

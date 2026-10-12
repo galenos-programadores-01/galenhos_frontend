@@ -1,0 +1,90 @@
+@if (visible()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="modal-lotes-titulo">
+    <div class="bg-white rounded border border-slate-300 w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
+      
+      <!-- Cabecera -->
+      <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-[#07153a] text-white">
+        <div>
+          <h2 id="modal-lotes-titulo" class="text-sm font-bold uppercase tracking-wide">Lotes y Vencimientos</h2>
+          @if (producto()) {
+            <p class="text-xs text-slate-300 mt-0.5">{{ producto()?.codigo }} - {{ producto()?.nombre }}</p>
+          }
+        </div>
+        <button
+          type="button"
+          (click)="alCerrar()"
+          class="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+          aria-label="Cerrar modal de lotes">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- Contenido -->
+      <div class="p-4 overflow-y-auto flex-1">
+        @if (cargando()) {
+          <div class="text-center py-10 text-slate-500 text-xs">
+            Consultando lotes detallados en almacén...
+          </div>
+        } @else if (lotes().length === 0) {
+          <div class="text-center py-10 text-slate-500 text-xs">
+            <p class="text-sm font-semibold text-slate-700">Sin lotes registrados</p>
+            <p class="text-slate-400 mt-1">Este producto no cuenta con stock activo por lotes en el almacén seleccionado.</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto rounded border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                <tr>
+                  <th class="px-3 py-2.5">Lote</th>
+                  <th class="px-3 py-2.5">Fecha Venc.</th>
+                  <th class="px-3 py-2.5">Estado / Días</th>
+                  <th class="px-3 py-2.5 text-right">Cantidad</th>
+                  <th class="px-3 py-2.5 text-right">Precio Ref.</th>
+                  <th class="px-3 py-2.5">Marca / Lab.</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (lote of lotes(); track lote.lote) {
+                  <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-3 py-2 font-semibold text-slate-800">
+                      {{ lote.lote }}
+                    </td>
+                    <td class="px-3 py-2 text-slate-600">
+                      {{ lote.fechaVencimiento }}
+                    </td>
+                    <td class="px-3 py-2">
+                      <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold border"
+                            [ngClass]="obtenerClaseBadgeVencimiento(lote.estadoVencimiento)">
+                        {{ obtenerTextoEstado(lote.estadoVencimiento, lote.diasParaVencer) }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2 text-right font-bold text-teal-700">
+                      {{ lote.cantidad | number:'1.0-2' }}
+                    </td>
+                    <td class="px-3 py-2 text-right text-slate-600">
+                      S/ {{ lote.precio | number:'1.2-2' }}
+                    </td>
+                    <td class="px-3 py-2 text-slate-500">
+                      {{ lote.nombreMarca || 'N/A' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Pie -->
+      <div class="px-4 py-2.5 border-t border-slate-200 flex justify-end bg-slate-50">
+        <button
+          type="button"
+          (click)="alCerrar()"
+          class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold transition-colors">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

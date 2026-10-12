@@ -18,22 +18,30 @@ import { ApiClientService } from '../../../../compartido/api-client/api-client.s
 import { ModalGlobalService } from '../../../../compartido/ui/modal-global/modal-global.service';
 import { ValidadoresGalenos } from '../../../../compartido/utilidades/validadores';
 import { AuthService } from '../../../auth/aplicacion/auth.service';
+import {
+  GRUPO_DE_PANEL,
+  type ItemResumenVerificacion,
+  ORDEN_PANELES,
+  type RegistroAuditoria,
+} from '../../constantes/formulario-soap.constantes';
 import { EvolucionService } from '../../servicios/evolucion.service';
+import { FormularioSoapFirmaService } from '../../servicios/formulario-soap-firma.service';
 import { MotivoService } from '../../servicios/motivo.service';
 import {
   type SintomaCatalogo,
   type SintomaSeleccionado,
   SintomaService,
 } from '../../servicios/sintoma.service';
+import { crearFormularioSoap } from '../../utilidades/formulario-soap.builder';
+import { calcularResumenVerificacion } from '../../utilidades/formulario-soap-resumen.util';
+import {
+  type ErrorValidacionSoap,
+  obtenerErroresValidacion,
+  validarPasoActual,
+} from '../../validadores/formulario-soap.validador';
 import { AdjuntosComponent } from './adjuntos/adjuntos';
 import { CabeceraEvolucionComponent } from './cabecera-evolucion/cabecera-evolucion';
 import { CierreFirmaComponent } from './cierre-firma/cierre-firma';
-import {
-  GRUPO_DE_PANEL,
-  type ItemResumenVerificacion,
-  ORDEN_PANELES,
-  type RegistroAuditoria,
-} from './constantes/formulario-soap.constantes';
 import { EvaluacionComponent } from './evaluacion/evaluacion';
 import { ExamenFisicoComponent } from './examen-fisico/examen-fisico';
 import { InformacionGeneralComponent } from './informacion-general/informacion-general';
@@ -42,16 +50,8 @@ import { NavegacionSidebarComponent } from './navegacion-sidebar/navegacion-side
 import { OrdenesMedicasComponent } from './ordenes-medicas/ordenes-medicas';
 import { PlanTratamientoComponent } from './plan-tratamiento/plan-tratamiento';
 import { ResultadosComponent } from './resultados/resultados';
-import { FormularioSoapFirmaService } from './servicios/formulario-soap-firma.service';
 import { SignosVitalesComponent } from './signos-vitales/signos-vitales';
 import { SubjetivoComponent } from './subjetivo/subjetivo';
-import { crearFormularioSoap } from './utilidades/formulario-soap.builder';
-import { calcularResumenVerificacion } from './utilidades/formulario-soap-resumen.util';
-import {
-  type ErrorValidacionSoap,
-  obtenerErroresValidacion,
-  validarPasoActual,
-} from './validadores/formulario-soap.validador';
 
 @Component({
   selector: 'app-formulario-soap',

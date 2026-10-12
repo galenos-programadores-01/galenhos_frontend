@@ -383,7 +383,7 @@ export class AdmisionesComponent implements OnInit {
       return;
     }
     this.medicosFiltrados = this.medicosDisponibles.filter((m) =>
-      String(m['nombreCompleto'] ?? '')
+      String(m.nombreCompleto ?? '')
         .toLowerCase()
         .includes(texto),
     );
@@ -391,8 +391,8 @@ export class AdmisionesComponent implements OnInit {
   }
 
   seleccionarMedico(medico: IFilaBackend) {
-    this.formAdmision.idMedico = Number(medico['idMedico']) || '';
-    this.medicoBusqueda = String(medico['nombreCompleto'] ?? '');
+    this.formAdmision.idMedico = Number(medico.idMedico) || '';
+    this.medicoBusqueda = String(medico.nombreCompleto ?? '');
     this.mostrarSugerenciasMedico = false;
     this.medicosFiltrados = [];
   }

@@ -66,7 +66,7 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
   }
 
   ngOnChanges(cambios: SimpleChanges): void {
-    if (cambios['abierto']?.currentValue === true && this.idTriajeEditar) {
+    if (cambios.abierto?.currentValue === true && this.idTriajeEditar) {
       void this.precargarTriaje(this.idTriajeEditar);
     }
   }
@@ -245,7 +245,6 @@ export class RegistroTriajeModal implements OnInit, OnChanges {
   onPacienteSeleccionado(paciente: IPaciente): void {
     this.buscarAbierto = false;
 
-    // Autocompleta tipo de documento y número de documento del formulario de triaje.
     const idTipo = (paciente as unknown as Record<string, unknown>)
       .docIdentityId;
     if (idTipo !== undefined && idTipo !== null) {

@@ -1,0 +1,679 @@
+<div class="flex flex-col gap-4">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded p-3.5 shadow-xs">
+    <div>
+      <h1 class="text-base font-bold text-[#07153a] uppercase tracking-wide">
+        Disponibilidad de Medicamentos y Salidas
+      </h1>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Monitoreo de existencias, canastas oficiales SIS / DIGEMID y control de caducidad
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="actualizarTodo()"
+      [disabled]="cargandoKpis() || cargandoProductos() || cargandoEstadisticas()"
+      title="Actualizar datos completos"
+      aria-label="Actualizar datos completos"
+      class="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition-colors cursor-pointer text-xs font-semibold shrink-0 disabled:opacity-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" [class.animate-spin]="cargandoKpis() || cargandoProductos() || cargandoEstadisticas()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <title>Actualizar datos completos</title>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <span>Actualizar Tablero</span>
+    </button>
+  </div>
+
+  <app-filtros-global titulo="Filtros Generales del Tablero">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+      <div class="lg:col-span-5">
+        <label for="almacen-selector" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+          Almacén / Farmacia
+        </label>
+        <app-select-global
+          id="almacen-selector"
+          [ngModel]="idAlmacenSeleccionado()"
+          (ngModelChange)="alCambiarAlmacen(+$event)"
+          customClass="w-full">
+          <option [value]="0">TODOS LOS ALMACENES (CONSOLIDADO)</option>
+          @for (almacen of almacenes(); track almacen.idAlmacen) {
+            <option [value]="almacen.idAlmacen">{{ almacen.descripcion }}</option>
+          }
+        </app-select-global>
+      </div>
+
+      <div class="lg:col-span-4">
+        <div class="flex items-center justify-between mb-1">
+          <label for="filtro-fecha-desde" class="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+            Rango de Fechas
+          </label>
+          <span class="text-[10px] text-slate-500 font-medium">Análisis y evolución en gráficos</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <input
+            id="filtro-fecha-desde"
+            type="date"
+            [ngModel]="fechaInicioGraficos()"
+            (ngModelChange)="alCambiarFechaInicioGraficos($event)"
+            class="w-1/2 bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded px-2 py-1.5 outline-none focus:border-blue-500" />
+          <span class="text-xs text-slate-400 font-bold">-</span>
+          <input
+            id="filtro-fecha-hasta"
+            type="date"
+            [ngModel]="fechaFinGraficos()"
+            (ngModelChange)="alCambiarFechaFinGraficos($event)"
+            class="w-1/2 bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded px-2 py-1.5 outline-none focus:border-blue-500" />
+        </div>
+      </div>
+
+      <div class="lg:col-span-3 flex items-center justify-end gap-2">
+        <app-botones-filtro
+          [cargando]="cargandoEstadisticas() || cargandoKpis()"
+          (buscar)="alAplicarFiltrosGraficos()"
+          (limpiar)="alLimpiarFiltrosGraficos()">
+        </app-botones-filtro>
+      </div>
+    </div>
+  </app-filtros-global>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">
+          Canasta {{ canastaSeleccionada() }}
+        </span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+          {{ canastaSeleccionada() === 'DIGEMID' ? '300 ítems' : canastaSeleccionada() === 'SIS' ? '476 ítems' : '483 ítems' }}
+        </span>
+      </div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold text-slate-900">
+          {{ (kpis()?.pctDisponibilidadEsenciales ?? kpis()?.porcentajeOptimo) | number:'1.1-1' }}%
+        </span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium">
+        {{ (kpis()?.esencialesDisponibles ?? kpis()?.disponibles) | number }} de {{ (kpis()?.totalEsenciales ?? kpis()?.totalProductos) | number }} disponibles
+      </p>
+      <div class="mt-2 w-full bg-slate-100 h-1.5 rounded overflow-hidden">
+        <div class="h-full rounded bg-[#07153a] transition-all duration-300"
+             [style.width.%]="(kpis()?.pctDisponibilidadEsenciales ?? kpis()?.porcentajeOptimo) || 0"></div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Normostock</span>
+        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Óptimo</span>
+      </div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold text-emerald-700">
+          {{ (kpis()?.normostock ?? kpis()?.disponibles) | number }}
+        </span>
+        <span class="text-xs font-medium text-slate-500">ítems</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium">Cobertura entre 1 y 6 meses</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Substock</span>
+        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Riesgo</span>
+      </div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold text-amber-600">
+          {{ (kpis()?.substock ?? kpis()?.enRiesgo) | number }}
+        </span>
+        <span class="text-xs font-medium text-slate-500">ítems</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium">Menor a 1 mes de demanda</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Sobrestock</span>
+        <span class="text-xs font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Exceso</span>
+      </div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold text-purple-700">
+          {{ (kpis()?.sobrestock ?? 0) | number }}
+        </span>
+        <span class="text-xs font-medium text-slate-500">ítems</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium">Mayor a 6 meses de demanda</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Agotados</span>
+        <span class="text-xs font-bold text-red-700 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">Quiebre</span>
+      </div>
+      <div class="mt-2 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold text-red-600">
+          {{ kpis()?.enQuiebre | number }}
+        </span>
+        <span class="text-xs font-medium text-slate-500">ítems</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 font-medium">Stock en 0 unidades físicas</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded p-4 flex flex-col justify-between shadow-xs hover:border-orange-300 transition-colors">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Vencimientos</span>
+        <button
+          type="button"
+          (click)="abrirModalLotesPorVencer(60)"
+          class="text-xs font-bold text-orange-700 hover:text-orange-900 underline cursor-pointer">
+          Detalle
+        </button>
+      </div>
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <div>
+          <span class="text-base font-bold text-orange-600">{{ kpis()?.lotesPorVencer30 | number }}</span>
+          <span class="text-[10px] font-medium text-slate-500 block">Hasta 30 días</span>
+        </div>
+        <div class="text-right">
+          <span class="text-base font-bold text-amber-600">{{ kpis()?.lotesPorVencer60 | number }}</span>
+          <span class="text-[10px] font-medium text-slate-500 block">De 31 a 60 días</span>
+        </div>
+      </div>
+      <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+        <p class="text-[10px] text-slate-500 font-medium">Control preventivo</p>
+        <button
+          type="button"
+          (click)="abrirModalLotesPorVencer(30)"
+          class="text-[10px] font-bold text-orange-700 hover:text-orange-800 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+          Urgentes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+    <div class="lg:col-span-6 h-full">
+      <app-grafico-barras
+        [titulo]="tituloAlmacenes()"
+        [subtitulo]="subtituloAlmacenes()"
+        [categorias]="almacenesComparativaCategorias()"
+        [series]="almacenesComparativaSeries()"
+        [cargando]="cargandoEstadisticas()"
+        [horizontal]="false"
+        [unidad]="unidadAlmacenes()">
+      </app-grafico-barras>
+    </div>
+
+    <div class="lg:col-span-6 flex flex-col bg-white border border-slate-200 rounded p-4 h-full shadow-xs justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold text-[#07153a] uppercase tracking-wide">
+            Medicamentos Esenciales
+            @if (tieneRangoFechasGraficos()) {
+              <span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded ml-1 lowercase first-letter:uppercase">
+                (período activo)
+              </span>
+            }
+          </h2>
+          <div class="inline-flex rounded-md p-0.5 bg-slate-100 border border-slate-200 text-xs font-semibold">
+            <button
+              type="button"
+              (click)="alCambiarCanasta('DIGEMID')"
+              class="px-2 py-0.5 rounded transition-all cursor-pointer"
+              [ngClass]="canastaSeleccionada() === 'DIGEMID' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+              DIGEMID (300)
+            </button>
+            <button
+              type="button"
+              (click)="alCambiarCanasta('SIS')"
+              class="px-2 py-0.5 rounded transition-all cursor-pointer"
+              [ngClass]="canastaSeleccionada() === 'SIS' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+              SIS (476)
+            </button>
+            <button
+              type="button"
+              (click)="alCambiarCanasta('TODOS')"
+              class="px-2 py-0.5 rounded transition-all cursor-pointer"
+              [ngClass]="canastaSeleccionada() === 'TODOS' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+              Ambas (483)
+            </button>
+          </div>
+        </div>
+
+        <div class="inline-flex rounded-md p-0.5 bg-slate-100 border border-slate-200 text-xs font-semibold">
+          <button
+            type="button"
+            (click)="cambiarVistaEsenciales('INDIVIDUAL')"
+            class="px-2.5 py-1 rounded transition-all cursor-pointer"
+            [ngClass]="vistaEsenciales() === 'INDIVIDUAL' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+            Por Medicamento
+          </button>
+          <button
+            type="button"
+            (click)="cambiarVistaEsenciales('GAUGE')"
+            class="px-2.5 py-1 rounded transition-all cursor-pointer"
+            [ngClass]="vistaEsenciales() === 'GAUGE' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+            Medidor MINSA
+          </button>
+          <button
+            type="button"
+            (click)="cambiarVistaEsenciales('DONA')"
+            class="px-2.5 py-1 rounded transition-all cursor-pointer"
+            [ngClass]="vistaEsenciales() === 'DONA' ? 'bg-[#07153a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'">
+            Cumplimiento
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded mt-2.5 text-xs">
+        @if (tieneRangoFechasGraficos()) {
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Dispensados en período:</span>
+            <span class="font-bold text-blue-700">{{ totalDispensadosEsenciales() | number }} und</span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-500 font-medium">Fármacos con salidas:</span>
+            <span class="font-bold text-slate-900">{{ conteoEsencialesConSalida() }} de {{ esencialesItems().length }}</span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-500 font-medium">Agotados:</span>
+            <span class="font-bold text-red-600">{{ ((kpis()?.totalEsenciales ?? 0) - (kpis()?.esencialesDisponibles ?? 0)) | number }}</span>
+          </div>
+        } @else {
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Evaluados:</span>
+            <span class="font-bold text-[#07153a]">{{ (kpis()?.totalEsenciales ?? 0) | number }} ítems</span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-500 font-medium">Disponibilidad:</span>
+            <span class="font-bold text-slate-900">{{ (kpis()?.pctDisponibilidadEsenciales ?? 0) | number:'1.1-1' }}%</span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-500 font-medium">Agotados:</span>
+            <span class="font-bold text-red-600">{{ ((kpis()?.totalEsenciales ?? 0) - (kpis()?.esencialesDisponibles ?? 0)) | number }}</span>
+          </div>
+        }
+        <div class="flex items-center gap-2">
+          <span class="text-slate-500 text-[11px]">Cumplimiento MINSA:</span>
+          <span class="px-2 py-0.5 rounded text-[11px] font-bold"
+            title="Meta institucional: Mínimo 85% de fármacos abastecidos"
+            [ngClass]="obtenerEstadoDisponibilidadClase(kpis()?.pctDisponibilidadEsenciales)">
+            {{ obtenerEstadoDisponibilidadTexto(kpis()?.pctDisponibilidadEsenciales) }}
+          </span>
+          <button
+            type="button"
+            (click)="filtrarAgotadosCanasta()"
+            class="ml-1 px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded font-semibold text-[11px] transition-colors cursor-pointer"
+            title="Ver los fármacos agotados de la canasta en la tabla inferior">
+            Ver Agotados
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 w-full min-h-[360px] mt-2">
+        @if (cargandoCanasta() || cargandoEstadisticas()) {
+          <div class="flex items-center justify-center h-full min-h-[350px] text-slate-400 text-sm font-medium">
+            Cargando visualización de la canasta {{ canastaSeleccionada() }}...
+          </div>
+        } @else if (vistaEsenciales() === 'INDIVIDUAL') {
+          <div class="h-[360px] w-full">
+            <app-grafico-esenciales-detalle
+              [items]="esencialesItems()"
+              [fechaInicio]="fechaInicioGraficos()"
+              [fechaFin]="fechaFinGraficos()"
+              [cargando]="cargandoCanasta() || cargandoEstadisticas()">
+            </app-grafico-esenciales-detalle>
+          </div>
+        } @else if (vistaEsenciales() === 'GAUGE') {
+          <div class="h-[360px] w-full">
+            <app-grafico-gauge
+              [sinContenedor]="true"
+              [porcentaje]="kpis()?.pctDisponibilidadEsenciales ?? 0"
+              etiqueta="Canasta {{ canastaSeleccionada() }}">
+            </app-grafico-gauge>
+          </div>
+        } @else if (vistaEsenciales() === 'DONA') {
+          <div class="h-[360px] w-full">
+            <app-grafico-dona
+              [sinContenedor]="true"
+              [datos]="esencialesDonaDatos()"
+              radioInterno="48%"
+              radioExterno="72%">
+            </app-grafico-dona>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="lg:col-span-6 h-full">
+      <app-grafico-barras
+        [titulo]="tituloTopStock()"
+        [subtitulo]="subtituloTopStock()"
+        [categorias]="topCategorias()"
+        [datos]="topValores()"
+        [cargando]="cargandoEstadisticas()"
+        [horizontal]="true"
+        color="#07153a"
+        [unidad]="unidadTopStock()">
+      </app-grafico-barras>
+    </div>
+
+    <div class="lg:col-span-6 h-full">
+      <app-grafico-barras
+        titulo="Lotes de Medicamentos Próximos a Vencer"
+        [subtitulo]="subtituloVencimientos()"
+        [categorias]="vencimientosCategorias()"
+        [datos]="vencimientosValores()"
+        [coloresBarras]="vencimientosColores()"
+        [cargando]="cargandoEstadisticas()"
+        [horizontal]="false"
+        unidad="lotes">
+      </app-grafico-barras>
+    </div>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded p-4 shadow-xs flex flex-col gap-3">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+      <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
+        <div class="flex-1 min-w-[220px]">
+          <label for="buscador-tabla-farmacia" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+            Buscar Fármaco / Insumo en la Lista
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <title>Buscar fármaco</title>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              id="buscador-tabla-farmacia"
+              type="text"
+              placeholder="Código SISMED, nombre o concentración..."
+              [ngModel]="filtroTexto()"
+              (ngModelChange)="filtroTexto.set($event)"
+              (keyup.enter)="alBuscarTexto()"
+              class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded pl-8 pr-3 py-2 focus:ring-1 focus:ring-[#07153a] focus:border-[#07153a] outline-none" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div>
+            <label for="tabla-fecha-desde" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+              Desde
+            </label>
+            <input
+              id="tabla-fecha-desde"
+              type="date"
+              [ngModel]="fechaInicioTabla()"
+              (ngModelChange)="alCambiarFechaInicioTabla($event)"
+              class="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded px-2 py-1.5 focus:ring-1 focus:ring-[#07153a] focus:border-[#07153a] outline-none" />
+          </div>
+          <div>
+            <label for="tabla-fecha-hasta" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+              Hasta
+            </label>
+            <input
+              id="tabla-fecha-hasta"
+              type="date"
+              [ngModel]="fechaFinTabla()"
+              (ngModelChange)="alCambiarFechaFinTabla($event)"
+              class="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded px-2 py-1.5 focus:ring-1 focus:ring-[#07153a] focus:border-[#07153a] outline-none" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 self-end shrink-0">
+          <button
+            type="button"
+            (click)="alBuscarTexto()"
+            [disabled]="cargandoProductos()"
+            class="px-4 py-2 bg-[#07153a] hover:bg-[#0c225c] text-white text-xs font-semibold rounded transition-colors cursor-pointer shrink-0 disabled:opacity-50">
+            Buscar
+          </button>
+          @if (filtroTexto() || fechaInicioTabla() || fechaFinTabla()) {
+            <button
+              type="button"
+              (click)="alLimpiarFiltrosTabla()"
+              title="Limpiar búsqueda y fechas"
+              class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded border border-slate-300 transition-colors cursor-pointer">
+              Limpiar
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5 self-start lg:self-end pb-0.5">
+        <label class="flex items-center gap-1.5 text-xs text-slate-700 font-medium cursor-pointer select-none">
+          <input
+            type="checkbox"
+            [ngModel]="soloConStock()"
+            (ngModelChange)="alCambiarSoloConStock($event)"
+            class="rounded border-slate-300 text-[#07153a] focus:ring-[#07153a] h-3.5 w-3.5" />
+          <span>Solo con existencias</span>
+        </label>
+        <label class="flex items-center gap-1.5 text-xs text-[#07153a] font-bold cursor-pointer select-none bg-blue-50 px-2.5 py-1.5 rounded border border-blue-200">
+          <input
+            type="checkbox"
+            [ngModel]="soloEsenciales()"
+            (ngModelChange)="alCambiarSoloEsenciales($event)"
+            class="rounded border-blue-300 text-[#07153a] focus:ring-[#07153a] h-3.5 w-3.5" />
+          <span>Solo Canasta {{ canastaSeleccionada() }}</span>
+        </label>
+        @if (tieneRangoFechasTabla()) {
+          <label class="flex items-center gap-1.5 text-xs text-blue-900 font-bold cursor-pointer select-none bg-blue-50 px-2.5 py-1.5 rounded border border-blue-300">
+            <input
+              type="checkbox"
+              [ngModel]="soloConMovimiento()"
+              (ngModelChange)="alCambiarSoloConMovimiento($event)"
+              class="rounded border-blue-400 text-blue-800 focus:ring-blue-600 h-3.5 w-3.5" />
+            <span>Solo con salidas en fecha</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100 text-xs">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="text-slate-500 font-semibold uppercase text-[11px] mr-1">Filtrar por Stock:</span>
+        <button
+          type="button"
+          (click)="alFiltrarSemaforo('')"
+          class="px-2.5 py-1 rounded border transition-colors cursor-pointer font-medium"
+          [ngClass]="estadoSemaforo() === '' ? 'bg-[#07153a] text-white border-[#07153a]' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'">
+          Todos
+        </button>
+        <button
+          type="button"
+          (click)="alFiltrarSemaforo('NORMAL')"
+          class="px-2.5 py-1 rounded border transition-colors cursor-pointer font-medium"
+          [ngClass]="estadoSemaforo() === 'NORMAL' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-800 border-slate-300 hover:bg-emerald-50'">
+          Con Stock
+        </button>
+        <button
+          type="button"
+          (click)="alFiltrarSemaforo('RIESGO')"
+          class="px-2.5 py-1 rounded border transition-colors cursor-pointer font-medium"
+          [ngClass]="estadoSemaforo() === 'RIESGO' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-amber-800 border-slate-300 hover:bg-amber-50'">
+          Por Agotarse
+        </button>
+        <button
+          type="button"
+          (click)="alFiltrarSemaforo('QUIEBRE')"
+          class="px-2.5 py-1 rounded border transition-colors cursor-pointer font-medium"
+          [ngClass]="estadoSemaforo() === 'QUIEBRE' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-red-800 border-slate-300 hover:bg-red-50'">
+          Agotados
+        </button>
+      </div>
+
+      <div class="text-xs font-bold text-slate-700">
+        Total: {{ totalRegistros() | number }} fármacos encontrados
+      </div>
+    </div>
+  </div>
+
+  <div id="tabla-disponibilidad-farmacia" class="bg-white border border-slate-200 rounded overflow-hidden flex flex-col">
+    @if (tieneRangoFechasTabla()) {
+      <div class="flex flex-wrap items-center justify-between bg-blue-50/70 border-b border-blue-200 px-4 py-2 text-xs text-blue-950">
+        <div class="flex items-center gap-2">
+          <span class="font-bold uppercase tracking-wider bg-blue-700 text-white px-2 py-0.5 rounded text-[10px]">
+            Período Activo
+          </span>
+          <span>Analizando salidas y dispensaciones entre <strong>{{ fechaInicioTabla() }}</strong> y <strong>{{ fechaFinTabla() }}</strong></span>
+        </div>
+        @if (soloConMovimiento()) {
+          <span class="text-[11px] font-bold text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-200">
+            Filtrando solo fármacos con salidas en este rango
+          </span>
+        }
+      </div>
+    }
+    @if (soloEsenciales()) {
+      <div class="flex items-center justify-between bg-blue-50 border-b border-blue-200 px-4 py-2 text-xs text-blue-900">
+        <div class="flex items-center gap-2">
+          <span class="font-bold uppercase tracking-wider bg-[#07153a] text-white px-2 py-0.5 rounded text-[10px]">
+            Filtro Activo
+          </span>
+          <span>Mostrando únicamente los fármacos de la <strong>Canasta {{ canastaSeleccionada() }}</strong></span>
+        </div>
+        <button
+          type="button"
+          (click)="alCambiarSoloEsenciales(false)"
+          class="font-semibold text-blue-700 hover:text-blue-900 underline cursor-pointer">
+          Mostrar todos los productos
+        </button>
+      </div>
+    }
+    @if (cargandoProductos()) {
+      <div class="text-center py-16 text-slate-600 text-sm font-medium">
+        Cargando existencias y saldos de almacén...
+      </div>
+    } @else if (productos().length === 0) {
+      <div class="text-center py-16 text-slate-600">
+        <p class="text-base font-bold text-slate-800">No se encontraron productos</p>
+        <p class="text-sm text-slate-500 mt-1">Verifique los filtros aplicados o el almacén seleccionado.</p>
+      </div>
+    } @else {
+      <div class="w-full overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm table-auto">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-xs">
+            <tr>
+              <th class="px-3 py-3 w-28">Código</th>
+              <th class="px-3 py-3 min-w-[220px]">Medicamento / Insumo</th>
+              <th class="px-3 py-3 w-32">Presentación</th>
+              <th class="px-3 py-3 text-center w-20">Petitorio</th>
+              @if (tieneRangoFechasTabla()) {
+                <th class="px-3 py-3 text-right w-32 bg-blue-100/60 text-blue-950 font-extrabold border-l border-r border-blue-200"
+                    title="Total de unidades dispensadas o despachadas en el rango de fechas seleccionado">
+                  Salidas Período
+                </th>
+              }
+              <th class="px-3 py-3 text-right w-28">Saldo Actual</th>
+              <th class="px-3 py-3 text-right w-24">Stock Mín.</th>
+              <th class="px-3 py-3 text-center w-28">Estado</th>
+              <th class="px-3 py-3 text-center w-24">Lotes</th>
+              <th class="px-3 py-3 text-center w-24">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (item of productos(); track item.idProducto + '-' + item.idAlmacen + '-' + $index) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-3 py-2.5 font-mono font-bold text-[#07153a] text-xs whitespace-nowrap">
+                  {{ item.codigo }}
+                </td>
+                <td class="px-3 py-2.5 break-words">
+                  <span class="font-bold text-slate-900 block text-sm">{{ item.nombre }}</span>
+                  <span class="text-xs text-slate-600">{{ item.concentracion }}</span>
+                </td>
+                <td class="px-3 py-2.5 text-slate-700 break-words text-xs font-medium">
+                  {{ item.formaFarmaceutica || 'N/A' }}
+                </td>
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  @if (item.petitorio) {
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      SÍ
+                    </span>
+                  } @else {
+                    <span class="text-slate-500 font-medium text-xs">NO</span>
+                  }
+                </td>
+                @if (tieneRangoFechasTabla()) {
+                  <td class="px-3 py-2.5 text-right font-mono font-bold text-xs whitespace-nowrap bg-blue-50/40 border-l border-r border-blue-100"
+                      [ngClass]="(item.salidasPeriodo || 0) > 0 ? 'text-blue-700' : 'text-slate-400'">
+                    {{ (item.salidasPeriodo || 0) | number }} und
+                  </td>
+                }
+                <td class="px-3 py-2.5 text-right font-bold font-mono text-sm whitespace-nowrap"
+                    [ngClass]="{
+                      'text-red-600': item.estadoSemaforo === 'QUIEBRE',
+                      'text-amber-600': item.estadoSemaforo === 'RIESGO',
+                      'text-emerald-700': item.estadoSemaforo === 'NORMAL'
+                    }">
+                  {{ item.cantidad | number }}
+                </td>
+                <td class="px-3 py-2.5 text-right font-mono text-slate-600 text-xs font-semibold whitespace-nowrap">
+                  {{ item.stockMinimo | number }}
+                </td>
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  <span
+                    class="inline-block px-2.5 py-0.5 rounded text-xs font-bold border"
+                    [ngClass]="obtenerClaseSemaforo(item.estadoSemaforo)">
+                    {{ item.estadoSemaforo === 'NORMAL' ? 'EN STOCK' : item.estadoSemaforo === 'RIESGO' ? 'POR AGOTARSE' : 'AGOTADO' }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  @if (item.totalLotes > 0) {
+                    <button
+                      type="button"
+                      (click)="abrirModalLotes(item)"
+                      class="px-2.5 py-1 rounded text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 cursor-pointer">
+                      {{ item.totalLotes }} Lote{{ item.totalLotes > 1 ? 's' : '' }}
+                    </button>
+                  } @else {
+                    <span class="text-xs text-slate-500 font-medium">Sin lotes</span>
+                  }
+                </td>
+                <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                  <button
+                    type="button"
+                    (click)="abrirModalKardex(item)"
+                    class="px-3 py-1 rounded text-xs font-bold bg-[#07153a] hover:bg-blue-900 text-white cursor-pointer shadow-xs">
+                    Kardex
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="px-4 py-3 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 bg-white text-sm">
+        <span class="font-medium text-slate-700">
+          Página {{ paginaActual() }} de {{ totalPaginas() }} (Total: {{ totalRegistros() | number }} productos)
+        </span>
+        <app-paginacion
+          [page]="paginaActual()"
+          [totalPages]="totalPaginas()"
+          [totalItems]="totalRegistros()"
+          (pageChange)="alCambiarPagina($event)">
+        </app-paginacion>
+      </div>
+    }
+  </div>
+
+  <app-lotes-modal
+    [visible]="lotesModalVisible()"
+    [producto]="productoSeleccionadoLotes()"
+    [lotes]="lotes()"
+    [cargando]="cargandoLotes()"
+    (cerrarModal)="cerrarModalLotes()" />
+
+  <app-kardex-modal
+    [visible]="kardexModalVisible()"
+    [producto]="productoSeleccionadoKardex()"
+    [movimientos]="movimientosKardex()"
+    [cargando]="cargandoKardex()"
+    (filtrarRango)="consultarKardexRango($event)"
+    (cerrarModal)="cerrarModalKardex()" />
+
+  <app-lotes-vencimiento-modal
+    [visible]="lotesPorVencerModalVisible()"
+    [lotes]="lotesPorVencer()"
+    [cargando]="cargandoLotesPorVencer()"
+    [filtroDias]="filtroDiasLotesPorVencer()"
+    [almacenNombre]="obtenerNombreAlmacenSeleccionado()"
+    (cambiarFiltroDias)="cambiarFiltroDiasLotesPorVencer($event)"
+    (cerrarModal)="cerrarModalLotesPorVencer()" />
+</div>

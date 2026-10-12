@@ -269,7 +269,7 @@ export class RegistroPacienteService {
       }
 
       const mapeado = await this.reniecMapper.mapearDatos(
-        datos as unknown as Record<string, unknown>,
+        datos,
         this.form,
         this.tiposSexo,
         this.estadosCivil,

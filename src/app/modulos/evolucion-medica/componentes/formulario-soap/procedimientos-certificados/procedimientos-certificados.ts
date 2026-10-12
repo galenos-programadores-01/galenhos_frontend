@@ -4,6 +4,7 @@ import {
   Component,
   Input,
   inject,
+  signal,
 } from '@angular/core';
 import {
   type FormArray,
@@ -16,8 +17,14 @@ import {
   type ColumnaTabla,
   TablaComponent,
 } from '../../../../../compartido/componentes/tabla/tabla.component';
+import { PaginacionComponent } from '../../../../../compartido/ui/paginacion/paginacion';
 import { ErrorMensajeComponent } from '../../../../../compartido/ui/validacion/error-mensaje.component';
 import { AuthService } from '../../../../auth/aplicacion/auth.service';
+
+export interface ItemProcedimientoPaginado {
+  control: FormGroup;
+  indiceOriginal: number;
+}
 
 @Component({
   selector: 'app-procedimientos-certificados',
@@ -28,6 +35,7 @@ import { AuthService } from '../../../../auth/aplicacion/auth.service';
     ErrorMensajeComponent,
     TablaComponent,
     ColumnaTemplateDirective,
+    PaginacionComponent,
   ],
   templateUrl: './procedimientos-certificados.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +45,9 @@ export class ProcedimientosCertificadosComponent {
   public readonly authService = inject(AuthService);
 
   private readonly fb = inject(FormBuilder);
+
+  public readonly paginaActual = signal<number>(1);
+  public readonly elementosPorPagina = 5;
 
   columnasProcedimientos: ColumnaTabla[] = [
     { campo: 'cie10cxCustom', cabecera: 'CIE-10 CX', alineacion: 'center' },
@@ -57,6 +68,25 @@ export class ProcedimientosCertificadosComponent {
     return this.formGroup.get('certificados') as FormGroup;
   }
 
+  get totalPaginas(): number {
+    return (
+      Math.ceil(
+        this.procedimientosArray.controls.length / this.elementosPorPagina,
+      ) || 1
+    );
+  }
+
+  get procedimientosPaginados(): ItemProcedimientoPaginado[] {
+    const inicio = (this.paginaActual() - 1) * this.elementosPorPagina;
+    const fin = inicio + this.elementosPorPagina;
+    return this.procedimientosArray.controls
+      .slice(inicio, fin)
+      .map((control, indice) => ({
+        control: control as FormGroup,
+        indiceOriginal: inicio + indice,
+      }));
+  }
+
   agregarProcedimiento() {
     this.procedimientosArray.push(
       this.fb.group({
@@ -65,10 +95,14 @@ export class ProcedimientosCertificadosComponent {
         complicaciones: [''],
       }),
     );
+    this.paginaActual.set(this.totalPaginas);
   }
 
   removerProcedimiento(index: number) {
     this.procedimientosArray.removeAt(index);
+    if (this.paginaActual() > this.totalPaginas) {
+      this.paginaActual.set(Math.max(1, this.totalPaginas));
+    }
   }
 
   getProcedimientoGroup(index: number): FormGroup {

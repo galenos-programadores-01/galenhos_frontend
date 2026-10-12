@@ -34,6 +34,7 @@ import {
         [disabled]="disabled"
         [ngModel]="value"
         (ngModelChange)="onValueChange($event)"
+        [ngModelOptions]="{ standalone: true }"
         (blur)="onTouched()"
         [ngClass]="customClass"
         class="w-full bg-slate-50/80 hover:bg-slate-50 border border-slate-200 focus:bg-white text-slate-800 text-[12px] font-semibold rounded-md focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 block py-1.5 px-2.5 outline-none transition-all appearance-none pr-8 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer truncate shadow-2xs"

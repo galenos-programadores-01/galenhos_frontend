@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
     "@dimforge/rapier3d-compat": "^0.20.0",
+    "echarts": "^6.1.0",
     "file-saver": "^2.0.5",
     "jspdf": "^4.2.1",
     "rxjs": "~7.8.0",

@@ -83,10 +83,10 @@
         <textarea
           id="motivo-descripcion"
           formControlName="descripcion"
-          rows="3"
+          rows="10"
           maxlength="1000"
           placeholder="Describa el motivo de la consulta con el mayor detalle clínico posible..."
-          class="w-full border border-slate-200 rounded-md p-2.5 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-y"
+          class="w-full border border-slate-200 rounded-md p-3 text-[13.3px] bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-y min-h-[260px]"
           [class.border-red-300]="formGroup.get('descripcion')?.invalid && (formGroup.get('descripcion')?.touched || formGroup.get('descripcion')?.dirty)">
         </textarea>
         <app-error-mensaje [control]="formGroup.get('descripcion')"></app-error-mensaje>

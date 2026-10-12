@@ -1,0 +1,846 @@
+@if (visible) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="relative w-full max-w-4xl bg-white border border-slate-300 rounded shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <!-- Cabecera del Modal -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-[#07153a] text-white">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wide">
+            {{ soloLectura ? 'Consultar Bien e Insumo' : (esEdicion ? 'Modificar Bien e Insumo' : 'Nuevo Bien e Insumo') }}
+          </h3>
+          <p class="text-xs text-slate-300 mt-0.5">
+            {{ soloLectura ? 'Consulta institucional: especificaciones técnicas, precios oficiales por plan y clasificaciones' : (esEdicion ? 'Actualice datos generales, presupuesto, clasificaciones y tarifario por plan' : 'Registre un nuevo producto en el catálogo institucional del HNSEB') }}
+          </p>
+        </div>
+
+        <button 
+          type="button" 
+          (click)="cerrar()"
+          aria-label="Cerrar ventana"
+          class="text-xs font-semibold text-slate-300 hover:text-white px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- Navegación de Pestañas -->
+      <div class="flex border-b border-slate-200 bg-slate-50 px-5 gap-3 pt-2">
+        <button 
+          type="button"
+          (click)="cambiarPestana('identificacion')"
+          [class.text-blue-700]="pestanaActiva() === 'identificacion'"
+          [class.border-blue-700]="pestanaActiva() === 'identificacion'"
+          [class.font-bold]="pestanaActiva() === 'identificacion'"
+          [class.text-slate-600]="pestanaActiva() !== 'identificacion'"
+          [class.border-transparent]="pestanaActiva() !== 'identificacion'"
+          class="py-2.5 px-3 text-xs border-b-2 transition-colors cursor-pointer flex items-center gap-1">
+          <span>1. Identificación & Composición</span>
+          <span class="text-red-500 font-bold">*</span>
+        </button>
+
+        <button 
+          type="button"
+          (click)="cambiarPestana('clasificacion')"
+          [class.text-blue-700]="pestanaActiva() === 'clasificacion'"
+          [class.border-blue-700]="pestanaActiva() === 'clasificacion'"
+          [class.font-bold]="pestanaActiva() === 'clasificacion'"
+          [class.text-slate-600]="pestanaActiva() !== 'clasificacion'"
+          [class.border-transparent]="pestanaActiva() !== 'clasificacion'"
+          class="py-2.5 px-3 text-xs border-b-2 transition-colors cursor-pointer flex items-center gap-1">
+          <span>2. Presupuesto & Catálogo</span>
+          <span class="text-red-500 font-bold">*</span>
+        </button>
+
+        <button 
+          type="button"
+          (click)="cambiarPestana('precios')"
+          [class.text-blue-700]="pestanaActiva() === 'precios'"
+          [class.border-blue-700]="pestanaActiva() === 'precios'"
+          [class.font-bold]="pestanaActiva() === 'precios'"
+          [class.text-slate-600]="pestanaActiva() !== 'precios'"
+          [class.border-transparent]="pestanaActiva() !== 'precios'"
+          class="py-2.5 px-3 text-xs border-b-2 transition-colors cursor-pointer flex items-center gap-1">
+          <span>3. Precios & Tarifario por Plan</span>
+          <span class="text-red-500 font-bold">*</span>
+        </button>
+      </div>
+
+      <!-- Contenido de Formulario con Scroll Interno -->
+      <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+        
+        @if (errorMensaje) {
+          <div class="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            {{ errorMensaje }}
+          </div>
+        }
+
+        @if (erroresValidacion().length > 0) {
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded text-xs space-y-1">
+            @for (error of erroresValidacion(); track error) {
+              <p class="font-semibold text-amber-800 flex items-start gap-1.5">
+                <span class="shrink-0 font-black">•</span>{{ error }}
+              </p>
+            }
+          </div>
+        }
+
+        <!-- Pestaña 1: Identificación & Composición Asistencial -->
+        @if (pestanaActiva() === 'identificacion') {
+          <div class="space-y-4">
+
+            <!-- Desglose de Composición Farmacéutica -->
+            <div class="bg-blue-50/50 border border-blue-200/80 rounded p-3.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                    Composición Farmacológica Asistencial
+                  </span>
+                  <p class="text-[11px] text-slate-500">
+                    Especifique los componentes para autogenerar la nomenclatura oficial
+                  </p>
+                </div>
+                @if (!soloLectura) {
+                  <button 
+                    type="button" 
+                    (click)="componerNombreOficial()"
+                    title="Une denominación, concentración, forma y presentación en el nombre oficial"
+                    class="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs">
+                    <svg class="w-3.5 h-3.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Generar Nombre Oficial</span>
+                  </button>
+                }
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="md:col-span-2">
+                  <label for="input-denominacion" class="block font-bold text-slate-700 mb-1">
+                    Denominación Común / Genérico (DCI)
+                  </label>
+                  <input 
+                    id="input-denominacion"
+                    type="text" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.denominacion"
+                    (blur)="componerNombreOficial()"
+                    placeholder="Ej. PARACETAMOL"
+                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-concentracion" class="block font-bold text-slate-700 mb-1">
+                    Concentración
+                  </label>
+                  <input 
+                    id="input-concentracion"
+                    type="text" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.concentracion"
+                    (blur)="componerNombreOficial()"
+                    placeholder="Ej. 500 mg"
+                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-forma-farmaceutica" class="block font-bold text-slate-700 mb-1">
+                    Forma Farmacéutica
+                  </label>
+                  <input 
+                    id="input-forma-farmaceutica"
+                    type="text" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.formaFarmaceutica"
+                    (blur)="componerNombreOficial()"
+                    placeholder="Ej. TABLETA"
+                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div class="md:col-span-4">
+                  <label for="input-presentacion" class="block font-bold text-slate-700 mb-1">
+                    Presentación / Envase
+                  </label>
+                  <input 
+                    id="input-presentacion"
+                    type="text" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.presentacion"
+                    (blur)="componerNombreOficial()"
+                    placeholder="Ej. CAJA X 100 TABLETAS"
+                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Nombre Completo Oficial -->
+            <div>
+              <label for="input-nombre-oficial" class="block font-bold text-slate-700 mb-1">
+                Nombre Oficial en Catálogo <span class="text-red-600">*</span>
+              </label>
+              <input 
+                id="input-nombre-oficial"
+                type="text" 
+                [disabled]="soloLectura"
+                [(ngModel)]="formulario.nombre"
+                placeholder="Ej. PARACETAMOL 500 mg TABLETA"
+                class="w-full px-3 py-2 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-900 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="md:col-span-2">
+                <label for="input-nombre-comercial" class="block font-bold text-slate-700 mb-1">
+                  Nombre Comercial (Opcional)
+                </label>
+                <input 
+                  id="input-nombre-comercial"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.nombreComercial"
+                  placeholder="Ej. PANADOL FORTE"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="select-tipo-producto" class="block font-bold text-slate-700 mb-1">
+                  Tipo de Producto
+                </label>
+                <app-select-global 
+                  id="select-tipo-producto"
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.tipoProducto">
+                  <option [ngValue]="1">Medicamento</option>
+                  <option [ngValue]="2">Material Médico / Insumo</option>
+                  <option [ngValue]="3">Reactivo de Laboratorio</option>
+                  <option [ngValue]="4">Nutrición / Fórmula</option>
+                  <option [ngValue]="0">Otro Insumo</option>
+                </app-select-global>
+              </div>
+
+              <div>
+                <label for="input-codigo-interno" class="block font-bold text-slate-700 mb-1">
+                  Código Interno / SISMED
+                </label>
+                <input 
+                  id="input-codigo-interno"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.codigo"
+                  placeholder="Ej. 05335"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="input-codigo-siga" class="block font-bold text-slate-700 mb-1">
+                  Código SIGA
+                </label>
+                <input 
+                  id="input-codigo-siga"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.codigoSiga"
+                  placeholder="Ej. 580200460011"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="input-codigo-sunat" class="block font-bold text-slate-700 mb-1">
+                  Código SUNAT
+                </label>
+                <input 
+                  id="input-codigo-sunat"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.codigoSunat"
+                  placeholder="Ej. 0"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="input-fabricante" class="block font-bold text-slate-700 mb-1">
+                  Laboratorio Fabricante
+                </label>
+                <input 
+                  id="input-fabricante"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.fabricante"
+                  placeholder="Ej. LAB. PHARMA S.A."
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="select-pais-origen" class="block font-bold text-slate-700 mb-1">
+                  País de Origen
+                </label>
+                <app-select-global 
+                  id="select-pais-origen"
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.idPaisOrigen">
+                  <option [ngValue]="0">-- Seleccione País --</option>
+                  @for (pais of auxiliares?.paises; track pais.idPais) {
+                    <option [ngValue]="pais.idPais">{{ pais.nombre }}</option>
+                  }
+                </app-select-global>
+              </div>
+
+              <div>
+                <label for="select-prefijo" class="block font-bold text-slate-700 mb-1">
+                  Prefijo / Clasificación
+                </label>
+                <app-select-global 
+                  id="select-prefijo"
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.idTipoPrefijo">
+                  <option [ngValue]="0">-- Seleccione Prefijo --</option>
+                  @for (pref of auxiliares?.prefijos; track pref.idTipoSufijos) {
+                    <option [ngValue]="pref.idTipoSufijos">{{ pref.descripcion }}</option>
+                  }
+                </app-select-global>
+              </div>
+
+              <div>
+                <label for="input-material-envase" class="block font-bold text-slate-700 mb-1">
+                  Material de Envase
+                </label>
+                <input 
+                  id="input-material-envase"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.materialEnvase"
+                  placeholder="Ej. BLISTER PVC / ALUMINIO"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="input-presentacion-envase" class="block font-bold text-slate-700 mb-1">
+                  Presentación de Envase
+                </label>
+                <input 
+                  id="input-presentacion-envase"
+                  type="text" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.presentacionEnvase"
+                  placeholder="Ej. CAJA X 10 BLISTERS"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+              <div>
+                <label for="select-estado-digemid" class="block font-bold text-slate-700 mb-1">
+                  Estado DIGEMID
+                </label>
+                <app-select-global 
+                  id="select-estado-digemid"
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.estadoDigemid">
+                  <option [ngValue]="1">Activo</option>
+                  <option [ngValue]="0">Inactivo / Observado</option>
+                </app-select-global>
+              </div>
+
+              <div>
+                <label for="input-politica-canje" class="block font-bold text-slate-700 mb-1">
+                  Políticas de Canje (Meses / Días)
+                </label>
+                <input 
+                  id="input-politica-canje"
+                  type="number" 
+                  [disabled]="soloLectura"
+                  [(ngModel)]="formulario.politicaCanje"
+                  placeholder="Ej. 5"
+                  class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+              </div>
+
+            </div>
+          </div>
+        }
+
+        <!-- Pestaña 2: Presupuesto & Catálogo -->
+        @if (pestanaActiva() === 'clasificacion') {
+          <div class="space-y-4">
+
+            <!-- Clasificación Farmacológica -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-3">
+              <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                Clasificación Farmacológica
+              </span>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label for="select-grupo-farmacologico" class="block font-bold text-slate-700 mb-1">
+                    Grupo Farmacológico
+                  </label>
+                  <app-select-global 
+                    id="select-grupo-farmacologico"
+                    [disabled]="soloLectura"
+                    [ngModel]="formulario.idGrupoFarmacologico"
+                    (ngModelChange)="onGrupoSeleccionado($event)">
+                    <option [ngValue]="0">-- Seleccione Grupo --</option>
+                    @for (grupo of auxiliares?.grupos; track grupo.idGrupoFarmacologico) {
+                      <option [ngValue]="grupo.idGrupoFarmacologico">{{ grupo.descripcion }}</option>
+                    }
+                  </app-select-global>
+                </div>
+
+                <div>
+                  <label for="select-subgrupo-farmacologico" class="block font-bold text-slate-700 mb-1">
+                    Subgrupo Farmacológico
+                  </label>
+                  <app-select-global 
+                    id="select-subgrupo-farmacologico"
+                    [disabled]="soloLectura || subgrupos.length === 0"
+                    [(ngModel)]="formulario.idSubGrupoFarmacologico">
+                    <option [ngValue]="0">{{ subgrupos.length === 0 ? 'Sin subgrupos disponibles' : '-- Seleccione Subgrupo --' }}</option>
+                    @for (subgrupo of subgrupos; track subgrupo.idSubGrupoFarmacologico) {
+                      <option [ngValue]="subgrupo.idSubGrupoFarmacologico">{{ subgrupo.descripcion }}</option>
+                    }
+                  </app-select-global>
+                </div>
+              </div>
+            </div>
+
+            <!-- Presupuesto Hospitalario -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-3">
+              <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                Presupuesto Hospitalario
+              </span>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label for="select-centro-costo" class="block font-bold text-slate-700 mb-1">
+                    Centro de Costo <span class="text-red-600">*</span>
+                  </label>
+                  <app-select-global 
+                    id="select-centro-costo"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.idCentroCosto">
+                    <option [ngValue]="0">-- Seleccione Centro de Costo --</option>
+                    @for (centro of auxiliares?.centrosCosto; track centro.idCentroCosto) {
+                      <option [ngValue]="centro.idCentroCosto">{{ centro.codigo }} - {{ centro.descripcion }}</option>
+                    }
+                  </app-select-global>
+                </div>
+
+                <div>
+                  <label for="select-partida" class="block font-bold text-slate-700 mb-1">
+                    Partida Presupuestal <span class="text-red-600">*</span>
+                  </label>
+                  <app-select-global 
+                    id="select-partida"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.idPartida">
+                    <option [ngValue]="0">-- Seleccione Partida --</option>
+                    @for (partida of auxiliares?.partidas; track partida.idPartidaPresupuestal) {
+                      <option [ngValue]="partida.idPartidaPresupuestal">{{ partida.codigo }} - {{ partida.descripcion }}</option>
+                    }
+                  </app-select-global>
+                </div>
+              </div>
+            </div>
+
+            <!-- Banderas & Prioridades Asistenciales -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-3">
+              <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                Banderas & Prioridades Asistenciales
+              </span>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.petitorio"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="font-semibold text-slate-700">Petitorio SISMED</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.esVital"
+                    class="rounded border-slate-300 text-rose-600 focus:ring-rose-500" />
+                  <span class="font-semibold text-slate-700">Medicamento Vital</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.esEstrategico"
+                    class="rounded border-slate-300 text-amber-600 focus:ring-amber-500" />
+                  <span class="font-semibold text-slate-700">Estratégico</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.esOncologico"
+                    class="rounded border-slate-300 text-purple-600 focus:ring-purple-500" />
+                  <span class="font-semibold text-slate-700">Oncológico</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-teal-50/60 border border-teal-300 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.productoIndicadorGestion"
+                    class="rounded border-teal-300 text-teal-600 focus:ring-teal-500" />
+                  <span class="font-bold text-teal-900">Evaluado SIS / DIGEMID (Esencial)</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.petitorioIst"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="font-medium text-slate-700">Petitorio IST</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.comiteFarmacologico"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="font-medium text-slate-700">Comité Farmacológico</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.especializados"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="font-medium text-slate-700">Especializado</span>
+                </label>
+
+                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.comunes"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span class="font-medium text-slate-700">Comunes / General</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Estado Operativo & Tipo SISMED -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-3">
+              <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                Configuración de Catálogo & SISMED
+              </span>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label for="select-estado-catalogo" class="block font-bold text-slate-700 mb-1">
+                    Estado en el Catálogo
+                  </label>
+                  <app-select-global 
+                    id="select-estado-catalogo"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.estado">
+                    <option [ngValue]="1">Activo</option>
+                    <option [ngValue]="0">Inactivo / Descontinuado</option>
+                  </app-select-global>
+                </div>
+
+                <div>
+                  <label for="input-tipo-sismed" class="block font-bold text-slate-700 mb-1">
+                    Tipo Producto SISMED
+                  </label>
+                  <input 
+                    id="input-tipo-sismed"
+                    type="text" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.tipoProductoSismed"
+                    placeholder="Ej. S (Soporte) / V (Venta)"
+                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-200">
+                <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
+                  <input 
+                    type="checkbox" 
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.cargaEnFua"
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span>Carga automática en FUA (SIS)</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- Pestaña 3: Precios & Tarifario por Plan -->
+        @if (pestanaActiva() === 'precios') {
+          <div class="space-y-4">
+            
+            <!-- Precios Base de Adquisición -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-3">
+              <span class="font-bold text-slate-800 text-xs uppercase tracking-wide block">
+                Valores Base de Adquisición y Abastecimiento
+              </span>
+
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <label for="input-precio-compra" class="block font-bold text-slate-700 mb-1">
+                    Precio Compra (S/)
+                  </label>
+                  <input 
+                    id="input-precio-compra"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.0001"
+                    (keydown)="validarTeclaPrecio($event)"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.precioCompra"
+                    class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-precio-distribucion" class="block font-bold text-slate-700 mb-1">
+                    Pr. Distribución (S/)
+                  </label>
+                  <input 
+                    id="input-precio-distribucion"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.0001"
+                    (keydown)="validarTeclaPrecio($event)"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.precioDistribucion"
+                    class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-precio-donacion" class="block font-bold text-slate-700 mb-1">
+                    Pr. Donación (S/)
+                  </label>
+                  <input 
+                    id="input-precio-donacion"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.0001"
+                    (keydown)="validarTeclaPrecio($event)"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.precioDonacion"
+                    class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-precio-ult-compra" class="block font-bold text-slate-700 mb-1">
+                    Última Compra (S/)
+                  </label>
+                  <input 
+                    id="input-precio-ult-compra"
+                    type="number" 
+                    min="0"
+                    max="999999.99"
+                    step="0.0001"
+                    (keydown)="validarTeclaPrecio($event)"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.precioUltimaCompra"
+                    class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+
+                <div>
+                  <label for="input-stock-minimo" class="block font-bold text-slate-700 mb-1">
+                    Stock Mínimo
+                  </label>
+                  <input 
+                    id="input-stock-minimo"
+                    type="number" 
+                    min="0"
+                    max="999999"
+                    step="1"
+                    (keydown)="validarTeclaPrecio($event)"
+                    [disabled]="soloLectura"
+                    [(ngModel)]="formulario.stockMinimo"
+                    class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Precios por Producto/Plan -->
+            <div class="border border-slate-200 rounded overflow-hidden">
+              <div class="flex items-center justify-between px-3.5 py-2.5 bg-slate-100 border-b border-slate-200">
+                <div>
+                  <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">
+                    Tarifario por Financiador / Plan
+                  </h4>
+                  <p class="text-[11px] text-slate-500">
+                    Precios oficiales de venta por seguro institucional (SIS, SOAT, SALUDPOL, CTA CTES, etc.)
+                  </p>
+                </div>
+
+                @if (!soloLectura) {
+                  <button 
+                    type="button" 
+                    (click)="igualarPrecios()"
+                    title="Aplica el precio base o primer valor cargado a todos los planes de financiamiento"
+                    class="px-3 py-1.5 text-xs font-semibold text-white bg-[#07153a] hover:bg-blue-900 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                    <svg class="w-3.5 h-3.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span>Copiar Precio a Todos los Planes</span>
+                  </button>
+                }
+              </div>
+
+              @if (mensajeExitoPrecios()) {
+                <div class="p-2 bg-emerald-50 text-emerald-700 border-b border-emerald-200 text-xs font-semibold">
+                  {{ mensajeExitoPrecios() }}
+                </div>
+              }
+
+              <div class="max-h-64 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-600 font-bold sticky top-0 border-b border-slate-200">
+                    <tr>
+                      <th class="px-3 py-2">Producto / Plan</th>
+                      <th class="px-3 py-2 text-right">Pr. Venta (S/)</th>
+                      <th class="px-3 py-2 text-right text-slate-400">Pr. Distribución</th>
+                      <th class="px-3 py-2 text-right text-slate-400">Pr. Compra</th>
+                      <th class="px-3 py-2 text-right text-slate-400">Pr. Donación</th>
+                      <th class="px-3 py-2 text-center">Activo</th>
+                      @if (!soloLectura) {
+                        <th class="px-3 py-2 text-center">Acción</th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (plan of formulario.preciosPorPlan; track plan.idTipoFinanciamiento) {
+                      <tr class="hover:bg-blue-50/40 transition-colors">
+                        <td class="px-3 py-2 font-semibold text-slate-800">
+                          {{ plan.plan }}
+                        </td>
+                        <td class="px-3 py-1.5 text-right">
+                          <input 
+                            type="number" 
+                            min="0"
+                            max="999999.99"
+                            step="0.0001"
+                            (keydown)="validarTeclaPrecio($event)"
+                            [disabled]="soloLectura"
+                            [(ngModel)]="plan.precioUnitario"
+                            class="w-24 px-2 py-1 text-right bg-white border border-slate-300 rounded text-xs font-bold text-blue-900 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100" />
+                        </td>
+                        <td class="px-3 py-2 text-right text-slate-500">
+                          {{ formatearMoneda(formulario.precioDistribucion) }}
+                        </td>
+                        <td class="px-3 py-2 text-right text-slate-500">
+                          {{ formatearMoneda(formulario.precioCompra) }}
+                        </td>
+                        <td class="px-3 py-2 text-right text-slate-500">
+                          {{ formatearMoneda(formulario.precioDonacion) }}
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <input 
+                            type="checkbox" 
+                            [disabled]="soloLectura"
+                            [(ngModel)]="plan.activo"
+                            class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                        </td>
+                        @if (!soloLectura) {
+                          <td class="px-3 py-1.5 text-center">
+                            <button 
+                              type="button" 
+                              (click)="igualarPrecios(plan.precioUnitario)"
+                              title="Copiar este precio a todos los demás planes"
+                              class="text-[11px] font-semibold text-blue-700 hover:text-blue-900 px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer">
+                              Replicar
+                            </button>
+                          </td>
+                        }
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="px-4 py-6 text-center text-slate-400">
+                          No se han cargado planes de financiamiento.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        }
+
+      </div>
+
+      <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-slate-200 bg-slate-50">
+        <div>
+          @if (esEdicion && !soloLectura) {
+            <button
+              type="button"
+              (click)="eliminar()"
+              [disabled]="guardando"
+              class="px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded border border-red-200 transition-colors cursor-pointer disabled:opacity-50"
+              title="Dar de baja este bien o insumo">
+              Eliminar / Dar de Baja
+            </button>
+          }
+        </div>
+        
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            (click)="cerrar()"
+            [disabled]="guardando"
+            class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer">
+            {{ soloLectura ? 'Cerrar' : 'Cancelar' }}
+          </button>
+
+          @if (!soloLectura) {
+            @if (pestanaActiva() !== 'identificacion') {
+              <button
+                type="button"
+                (click)="retrocederPaso()"
+                [disabled]="guardando"
+                class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded border border-slate-300 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Anterior</span>
+              </button>
+            }
+
+            @if (pestanaActiva() === 'identificacion' || pestanaActiva() === 'clasificacion') {
+              <button
+                type="button"
+                (click)="avanzarPaso()"
+                [disabled]="guardando"
+                class="px-4 py-1.5 text-xs font-semibold text-white bg-[#07153a] hover:bg-blue-900 rounded transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <span>Siguiente</span>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="guardar()"
+                [disabled]="guardando"
+                class="px-4 py-1.5 text-xs font-semibold text-white bg-[#07153a] hover:bg-blue-900 rounded transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-xs">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>{{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar Producto' : 'Registrar Producto') }}</span>
+              </button>
+            }
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+}
