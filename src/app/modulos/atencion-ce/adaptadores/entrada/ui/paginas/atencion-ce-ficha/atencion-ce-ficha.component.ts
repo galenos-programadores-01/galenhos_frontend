@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
 import { SelectGlobalComponent } from '../../../../../../../compartido/ui/select-global/select-global';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { AtencionCeEstadoService } from '../../../../../aplicacion/atencion-ce-estado.service';
 import type {
   AtencionCEGuardarPayload,
@@ -23,12 +24,23 @@ import type {
   OrdenApoyoDiagnosticoItem,
   OrdenProcedimientoCEItem,
   PacienteDatosAdicionalesCE,
+  PacienteHistorialTriajeItem,
   TriajeConsultaSignosVitales,
 } from '../../../../../tipos/atencion-ce.tipos';
 import { AtencionCEApiService } from '../../../../salida/http/atencion-ce.api.service';
 import { DiagnosticosCeSeccionComponent } from '../../componentes/diagnosticos-ce-seccion/diagnosticos-ce-seccion.component';
+import {
+  HistorialAtencionesModalComponent,
+  type PacienteHistorialDatos,
+} from '../../componentes/historial-atenciones-modal/historial-atenciones-modal.component';
 import { OrdenesMedicasCeSeccionComponent } from '../../componentes/ordenes-medicas-ce-seccion/ordenes-medicas-ce-seccion.component';
 import { TriajeCeModalComponent } from '../../componentes/triaje-ce-modal/triaje-ce-modal.component';
+import {
+  imprimirPdfDescansoMedico,
+  imprimirPdfOrdenesApoyo,
+  imprimirPdfRecetaMedica,
+  imprimirPdfResumenConsulta,
+} from '../../../../../utilidades/pdf/historial-atencion-pdf.util';
 
 @Component({
   selector: 'app-atencion-ce-ficha',
@@ -37,9 +49,10 @@ import { TriajeCeModalComponent } from '../../componentes/triaje-ce-modal/triaje
     CommonModule,
     FormsModule,
     DiagnosticosCeSeccionComponent,
+    HistorialAtencionesModalComponent,
     OrdenesMedicasCeSeccionComponent,
     SelectGlobalComponent,
-    TriajeCeModalComponent,
+    TriajeCeModalComponent
   ],
   templateUrl: './atencion-ce-ficha.component.html',
 })
@@ -49,6 +62,7 @@ export class AtencionCeFichaComponent implements OnInit {
   private readonly apiService = inject(AtencionCEApiService);
   private readonly estadoService = inject(AtencionCeEstadoService);
   private readonly modalGlobal = inject(ModalGlobalService);
+  private readonly authService = inject(AuthService);
 
   readonly idAtencion = signal<number>(0);
   readonly ficha = signal<FichaAtencionCEDetalle | null>(null);
@@ -90,10 +104,11 @@ export class AtencionCeFichaComponent implements OnInit {
   readonly interconsultas = signal<InterconsultaCEItem[]>([]);
   readonly ordenesProcedimientos = signal<OrdenProcedimientoCEItem[]>([]);
 
-  // Modales adicionales
   readonly modalTriajeVisible = signal<boolean>(false);
   readonly modalHistorialAtencionesVisible = signal<boolean>(false);
   readonly modalHistorialTriajeVisible = signal<boolean>(false);
+  readonly historialTriajes = signal<readonly PacienteHistorialTriajeItem[]>([]);
+  readonly cargandoHistorialTriaje = signal<boolean>(false);
 
   // Destino de Atención y Próxima Cita (HNSEB)
   readonly celularPaciente = signal<string>('');
@@ -102,6 +117,21 @@ export class AtencionCeFichaComponent implements OnInit {
   readonly programacionCita = signal<string>('0');
   readonly horarioCita = signal<string>('0');
   readonly fechaPropuestaCita = signal<string>('');
+  readonly fechaConsulta = signal<string>('');
+  readonly fechaConsultaFormateada = computed<string>(() => {
+    const valorOriginal = this.fechaConsulta() || this.ficha()?.fechaAtencion || this.ficha()?.fechaIngreso || this.estadoService.fechaSeleccionada() || '';
+    if (!valorOriginal) {
+      const fechaActual = new Date();
+      return `${String(fechaActual.getDate()).padStart(2, '0')}/${String(fechaActual.getMonth() + 1).padStart(2, '0')}/${fechaActual.getFullYear()}`;
+    }
+    if (valorOriginal.includes('-')) {
+      const partes = valorOriginal.split('-');
+      if (partes.length === 3) {
+        return `${partes[2].padStart(2, '0')}/${partes[1].padStart(2, '0')}/${partes[0]}`;
+      }
+    }
+    return valorOriginal;
+  });
 
   readonly opcionesProgramacion: readonly {
     readonly id: string;
@@ -137,6 +167,66 @@ export class AtencionCeFichaComponent implements OnInit {
     '16:20 - 16:40',
     '16:40 - 17:00',
   ];
+
+  // Descanso Médico / Certificado de Incapacidad Temporal
+  readonly otorgarDescansoMedico = signal<boolean>(false);
+  readonly diasDescanso = signal<number>(3);
+  readonly fechaInicioDescanso = signal<string>('');
+  readonly diagnosticoDescansoId = signal<number>(0);
+  readonly tipoReposo = signal<'ABSOLUTO' | 'RELATIVO'>('ABSOLUTO');
+  readonly observacionesDescanso = signal<string>('');
+
+  readonly fechaFinDescanso = computed<string>(() => {
+    const inicioStr = this.fechaInicioDescanso() || this.fechaConsulta() || this.ficha()?.fechaAtencion || '';
+    const dias = Math.max(1, this.diasDescanso());
+    if (!inicioStr) return '';
+    const partes = inicioStr.split('-');
+    if (partes.length !== 3) return '';
+    const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+    fecha.setDate(fecha.getDate() + (dias - 1));
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+  });
+
+  // Alertas clínicas de signos vitales (Semáforo de triaje)
+  readonly alertaPresionArterial = computed<string | null>(() => {
+    const pa = this.triaje()?.presionArterial;
+    if (!pa) return null;
+    const partes = pa.split('/');
+    if (partes.length === 2) {
+      const sistolica = parseInt(partes[0], 10);
+      const diastolica = parseInt(partes[1], 10);
+      if (sistolica >= 140 || diastolica >= 90) return 'Hipertensión / Cifras Elevadas';
+      if (sistolica < 90 || diastolica < 60) return 'Hipotensión';
+    }
+    return null;
+  });
+
+  readonly alertaSaturacion = computed<string | null>(() => {
+    const sat = this.triaje()?.saturacion;
+    if (!sat) return null;
+    if (sat < 95) return 'Hipoxemia';
+    return null;
+  });
+
+  readonly alertaTemperatura = computed<string | null>(() => {
+    const temp = this.triaje()?.temperatura;
+    if (!temp) return null;
+    if (temp >= 38.0) return 'Fiebre';
+    if (temp >= 37.5) return 'Febrícula';
+    if (temp < 35.5) return 'Hipotermia';
+    return null;
+  });
+
+  readonly alertaFrecuenciaCardiaca = computed<string | null>(() => {
+    const fc = this.triaje()?.frecuenciaCardiaca;
+    if (!fc) return null;
+    if (fc > 100) return 'Taquicardia';
+    if (fc < 60) return 'Bradicardia';
+    return null;
+  });
 
   readonly esDestinoCitado = computed<boolean>(() => {
     const id = this.ficha()?.idDestinoAtencion;
@@ -199,12 +289,31 @@ export class AtencionCeFichaComponent implements OnInit {
     };
   });
 
+  readonly pacienteParaHistorial = computed<PacienteHistorialDatos | null>(() => {
+    const f = this.ficha();
+    if (!f) return null;
+    return {
+      idPaciente: f.idPaciente,
+      idAtencion: f.idAtencion,
+      pacienteNombre: f.pacienteNombre,
+      nroHistoriaClinica: f.nroHistoriaClinica,
+      nroDocumento: f.nroDocumento,
+      edad: f.edad,
+      sexo: f.sexo,
+    };
+  });
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = Number(idParam);
     if (!id || id <= 0) {
       this.navegarACola();
       return;
+    }
+
+    const fechaQuery = this.route.snapshot.queryParamMap.get('fecha');
+    if (fechaQuery) {
+      this.fechaConsulta.set(fechaQuery);
     }
 
     this.idAtencion.set(id);
@@ -459,8 +568,21 @@ export class AtencionCeFichaComponent implements OnInit {
     this.modalHistorialAtencionesVisible.set(false);
   }
 
-  abrirHistorialTriaje(): void {
+  async abrirHistorialTriaje(): Promise<void> {
     this.modalHistorialTriajeVisible.set(true);
+    const idPaciente = this.ficha()?.idPaciente;
+    if (idPaciente && idPaciente > 0) {
+      this.cargandoHistorialTriaje.set(true);
+      try {
+        const registros =
+          await this.apiService.obtenerHistorialTriajePaciente(idPaciente);
+        this.historialTriajes.set(registros);
+      } catch {
+        this.historialTriajes.set([]);
+      } finally {
+        this.cargandoHistorialTriaje.set(false);
+      }
+    }
   }
 
   cerrarHistorialTriaje(): void {
@@ -485,6 +607,22 @@ export class AtencionCeFichaComponent implements OnInit {
         errores.push(
           'Debe seleccionar una "Fecha Propuesta" válida para generar la próxima cita del paciente.',
         );
+      } else {
+        const fechaActual = new Date();
+        fechaActual.setHours(0, 0, 0, 0);
+        const partes = fechaCita.split('-');
+        if (partes.length === 3) {
+          const fechaSeleccionada = new Date(
+            Number(partes[0]),
+            Number(partes[1]) - 1,
+            Number(partes[2]),
+          );
+          if (fechaSeleccionada < fechaActual) {
+            errores.push(
+              'La "Fecha Propuesta" para la próxima cita no puede ser una fecha anterior al día de hoy.',
+            );
+          }
+        }
       }
     }
     const celular = this.celularPaciente().trim();
@@ -551,8 +689,31 @@ export class AtencionCeFichaComponent implements OnInit {
         : '[ALTA DEFINITIVA: SÍ]';
     }
 
+    if (this.otorgarDescansoMedico()) {
+      const dias = Math.max(1, this.diasDescanso());
+      const fechaInicio = this.fechaInicioDescanso() || this.fechaConsultaFormateada();
+      const fechaFin = this.fechaFinDescanso() || this.fechaConsultaFormateada();
+      const dxDescanso =
+        (fichaActual.diagnosticos || []).find(
+          (d) => d.idDiagnostico === this.diagnosticoDescansoId(),
+        ) || (fichaActual.diagnosticos || [])[0];
+      const dxTexto = dxDescanso ? ` [CIE-10: ${dxDescanso.codigoCIE10}]` : '';
+      const lineaDescanso = `[DESCANSO MÉDICO]: ${dias} DÍA(S) (DEL ${fechaInicio} AL ${fechaFin}) - REPOSO ${this.tipoReposo()}${dxTexto}`;
+      if (!observacionesConsolidadas.includes('[DESCANSO MÉDICO]')) {
+        observacionesConsolidadas = observacionesConsolidadas
+          ? `${observacionesConsolidadas}\n${lineaDescanso}`
+          : lineaDescanso;
+      }
+    }
+
+    const identificadorUsuario =
+      this.authService.getIdEmpleado() ||
+      this.authService.userProfile()?.idEmpleado ||
+      1;
+
     const payload: AtencionCEGuardarPayload = {
       idAtencion: Number(fichaActual.idAtencion) || 0,
+      idUsuario: identificadorUsuario,
       motivo: fichaActual.motivo || '',
       examenClinico: fichaActual.examenClinico || '',
       antecedente: antecedenteConsolidado,
@@ -564,15 +725,15 @@ export class AtencionCeFichaComponent implements OnInit {
         this.fechaPropuestaCita().trim() || fichaActual.fechaProxCita || '',
       idDestinoAtencion: Number(fichaActual.idDestinoAtencion) || 0,
       cerrarAtencion: true,
-      diagnosticos: fichaActual.diagnosticos.map((dx) => ({
-        idDiagnostico: Number(dx.idDiagnostico) || 0,
-        idClasificacionDx: Number(dx.idClasificacionDx) || 1,
-        idSubclasificacionDx: Number(dx.idSubclasificacionDx) || 1,
-        clasificacion: dx.clasificacion || 'D',
-        labConfHIS: dx.labConfHIS || '',
-        labConfHIS1: dx.labConfHIS1 || '',
-        labConfHIS2: dx.labConfHIS2 || '',
-        labConfHIS3: dx.labConfHIS3 || '',
+      diagnosticos: fichaActual.diagnosticos.map((diagnostico) => ({
+        idDiagnostico: Number(diagnostico.idDiagnostico) || 0,
+        idClasificacionDx: Number(diagnostico.idClasificacionDx) || 1,
+        idSubclasificacionDx: Number(diagnostico.idSubclasificacionDx) || 1,
+        clasificacion: diagnostico.clasificacion || 'D',
+        labConfHIS: diagnostico.labConfHIS || '',
+        labConfHIS1: diagnostico.labConfHIS1 || '',
+        labConfHIS2: diagnostico.labConfHIS2 || '',
+        labConfHIS3: diagnostico.labConfHIS3 || '',
       })),
       procedimientos: this.procedimientos(),
       ordenesApoyoDiagnostico: this.ordenesApoyo(),
@@ -581,10 +742,8 @@ export class AtencionCeFichaComponent implements OnInit {
     };
 
     try {
-      // Guardar cabecera de atención y diagnósticos
       await this.apiService.guardarFicha(payload);
 
-      // Guardar antecedentes estructurados y comorbilidades del paciente
       if (fichaActual.idPaciente && fichaActual.idPaciente > 0) {
         const datosAdicionalesPayload: PacienteDatosAdicionalesCE = {
           idPaciente: fichaActual.idPaciente,
@@ -624,6 +783,141 @@ export class AtencionCeFichaComponent implements OnInit {
       );
     } finally {
       this.guardando.set(false);
+    }
+  }
+
+  irASiguientePestana(): void {
+    const actual = this.pestanaActiva();
+    if (actual === '3.1') this.cambiarPestana('3.3');
+    else if (actual === '3.3') this.cambiarPestana('3.4');
+    else if (actual === '3.4') this.cambiarPestana('3.5');
+    else if (actual === '3.5') this.cambiarPestana('3.6');
+  }
+
+  irAPestanaAnterior(): void {
+    const actual = this.pestanaActiva();
+    if (actual === '3.6') this.cambiarPestana('3.5');
+    else if (actual === '3.5') this.cambiarPestana('3.4');
+    else if (actual === '3.4') this.cambiarPestana('3.3');
+    else if (actual === '3.3') this.cambiarPestana('3.1');
+  }
+
+  async imprimirReceta(): Promise<void> {
+    const fichaActual = this.ficha();
+    if (!fichaActual) return;
+    try {
+      await imprimirPdfRecetaMedica({
+        pacienteNombre: fichaActual.pacienteNombre || '',
+        nroHistoriaClinica: fichaActual.nroHistoriaClinica || '',
+        nroDocumento: fichaActual.nroDocumento || '',
+        edad: fichaActual.edad || 0,
+        sexo: fichaActual.sexo || '',
+        tipoFinanciador: fichaActual.iafa || 'SIS',
+        fechaAtencion: this.fechaConsultaFormateada(),
+        servicioNombre: fichaActual.especialidadNombre || 'CONSULTA EXTERNA',
+        medicoNombre: this.authService.userProfile()?.nombreCompleto || 'MÉDICO TRATANTE',
+        diagnosticos: (fichaActual.diagnosticos || []).map((diagnostico) => ({
+          codigoCIE10: diagnostico.codigoCIE10 || '',
+          descripcion: diagnostico.descripcion || '',
+          clasificacion: diagnostico.clasificacion || 'D',
+        })),
+        itemsReceta: this.itemsReceta(),
+        indicacionesGenerales: fichaActual.planTratamiento || fichaActual.tratamiento || '',
+        fechaProximaCita: this.fechaPropuestaCita() || fichaActual.fechaProxCita || '',
+      });
+    } catch {
+      this.modalGlobal.error(
+        'No se pudo generar la receta médica en formato PDF.',
+        'Error de Impresión',
+      );
+    }
+  }
+
+  async imprimirOrdenesApoyo(): Promise<void> {
+    const fichaActual = this.ficha();
+    if (!fichaActual) return;
+    try {
+      await imprimirPdfOrdenesApoyo({
+        pacienteNombre: fichaActual.pacienteNombre || '',
+        nroHistoriaClinica: fichaActual.nroHistoriaClinica || '',
+        nroDocumento: fichaActual.nroDocumento || '',
+        edad: fichaActual.edad || 0,
+        sexo: fichaActual.sexo || '',
+        tipoFinanciador: fichaActual.iafa || 'SIS',
+        fechaAtencion: this.fechaConsultaFormateada(),
+        servicioNombre: fichaActual.especialidadNombre || 'CONSULTA EXTERNA',
+        medicoNombre: this.authService.userProfile()?.nombreCompleto || 'MÉDICO TRATANTE',
+        diagnosticos: (fichaActual.diagnosticos || []).map((diagnostico) => ({
+          codigoCIE10: diagnostico.codigoCIE10 || '',
+          descripcion: diagnostico.descripcion || '',
+        })),
+        ordenesApoyo: this.ordenesApoyo(),
+        indicacionesGenerales: fichaActual.planTratamiento || '',
+      });
+    } catch {
+      this.modalGlobal.error(
+        'No se pudo generar la orden de exámenes en formato PDF.',
+        'Error de Impresión',
+      );
+    }
+  }
+
+  async imprimirResumenConsulta(): Promise<void> {
+    const fichaActual = this.ficha();
+    if (!fichaActual) return;
+    try {
+      await imprimirPdfResumenConsulta({
+        ficha: fichaActual,
+        triaje: this.triaje(),
+        itemsReceta: this.itemsReceta(),
+        fechaConsultaFormateada: this.fechaConsultaFormateada(),
+        medicoNombre: this.authService.userProfile()?.nombreCompleto || 'MÉDICO TRATANTE',
+      });
+    } catch {
+      this.modalGlobal.error(
+        'No se pudo generar el resumen de la atención médica en formato PDF.',
+        'Error de Impresión',
+      );
+    }
+  }
+
+  async imprimirDescansoMedico(): Promise<void> {
+    const fichaActual = this.ficha();
+    if (!fichaActual) return;
+    const diagnosticos = fichaActual.diagnosticos || [];
+    const diagnosticoSeleccionado =
+      diagnosticos.find((d) => d.idDiagnostico === this.diagnosticoDescansoId()) ||
+      diagnosticos[0];
+    if (!diagnosticoSeleccionado) {
+      this.modalGlobal.info(
+        'Debe registrar al menos un diagnóstico para emitir un descanso médico.',
+        'Diagnóstico Requerido',
+      );
+      return;
+    }
+    try {
+      await imprimirPdfDescansoMedico({
+        pacienteNombre: fichaActual.pacienteNombre || '',
+        nroHistoriaClinica: fichaActual.nroHistoriaClinica || '',
+        nroDocumento: fichaActual.nroDocumento || '',
+        edad: fichaActual.edad || 0,
+        sexo: fichaActual.sexo || '',
+        fechaAtencion: this.fechaConsultaFormateada(),
+        servicioNombre: fichaActual.especialidadNombre || 'CONSULTA EXTERNA',
+        medicoNombre: this.authService.userProfile()?.nombreCompleto || 'MÉDICO TRATANTE',
+        diagnosticoPrincipal: diagnosticoSeleccionado.descripcion || '',
+        codigoCIE10: diagnosticoSeleccionado.codigoCIE10 || '',
+        diasDescanso: Math.max(1, this.diasDescanso()),
+        fechaInicio: this.fechaInicioDescanso() || this.fechaConsultaFormateada(),
+        fechaFin: this.fechaFinDescanso() || this.fechaConsultaFormateada(),
+        tipoReposo: this.tipoReposo(),
+        observaciones: this.observacionesDescanso() || '',
+      });
+    } catch {
+      this.modalGlobal.error(
+        'No se pudo generar el certificado de descanso médico.',
+        'Error de Impresión',
+      );
     }
   }
 

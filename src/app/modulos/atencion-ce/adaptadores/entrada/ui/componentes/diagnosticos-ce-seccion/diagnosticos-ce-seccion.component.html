@@ -1,15 +1,9 @@
 <div class="space-y-6">
 
-  <!-- ========================================== -->
-  <!-- SECCIÓN 1: REGISTRO Y LISTA DE DIAGNÓSTICOS -->
-  <!-- ========================================== -->
+  
   <div class="space-y-3">
-    
-    <!-- Fila de Selección y Registro de Diagnóstico -->
     <div class="bg-slate-50 p-3 rounded border border-slate-200">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-        
-        <!-- DIAGNÓSTICO (Buscador / Autocomplete) -->
         <div class="md:col-span-5 relative">
           <label for="input-diagnostico-cie10" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
             Diagnóstico (CIE-10):
@@ -29,24 +23,22 @@
               </div>
             }
           </div>
-
-          <!-- Dropdown de Sugerencias CIE-10 -->
           @if (dropdownAbierto() && resultadosBusqueda().length > 0) {
-            <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100">
+            <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded-md shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-0 zoom-in-95 duration-100 ease-out">
               @for (item of resultadosBusqueda(); track item.idDiagnostico) {
                 <button
                   type="button"
                   (click)="seleccionarDiagnostico(item)"
-                  class="w-full text-left p-2.5 hover:bg-emerald-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
+                  class="w-full text-left p-2.5 hover:bg-blue-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
                   <div class="flex items-center gap-2">
-                    <span class="font-mono font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-[11px]">
+                    <span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-xs">
                       {{ item.codigoCIE10 }}
                     </span>
                     <span class="font-medium text-slate-800">
                       {{ item.descripcion }}
                     </span>
                   </div>
-                  <span class="text-[11px] font-bold text-emerald-700 uppercase">
+                  <span class="text-xs font-bold text-blue-700 uppercase">
                     Elegir
                   </span>
                 </button>
@@ -54,8 +46,6 @@
             </div>
           }
         </div>
-
-        <!-- TIPO (Presuntivo, Definitivo, Repetido) -->
         <div class="md:col-span-2">
           <label for="select-tipo-dx" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
             Tipo:
@@ -70,8 +60,6 @@
             <option value="R">REPETIDO</option>
           </app-select-global>
         </div>
-
-        <!-- LAB 1 -->
         <div class="md:col-span-1">
           <label for="input-lab1" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Lab 1:
@@ -84,10 +72,8 @@
             placeholder="--"
             [ngModel]="lab1Seleccionado()"
             (ngModelChange)="lab1Seleccionado.set($event ? $event.toUpperCase().trim() : '')"
-            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase font-mono shadow-2xs" />
+            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase shadow-2xs" />
         </div>
-
-        <!-- LAB 2 -->
         <div class="md:col-span-1">
           <label for="input-lab2" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Lab 2:
@@ -100,10 +86,8 @@
             placeholder="--"
             [ngModel]="lab2Seleccionado()"
             (ngModelChange)="lab2Seleccionado.set($event ? $event.toUpperCase().trim() : '')"
-            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase font-mono shadow-2xs" />
+            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase shadow-2xs" />
         </div>
-
-        <!-- LAB 3 -->
         <div class="md:col-span-1">
           <label for="input-lab3" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Lab 3:
@@ -116,17 +100,13 @@
             placeholder="--"
             [ngModel]="lab3Seleccionado()"
             (ngModelChange)="lab3Seleccionado.set($event ? $event.toUpperCase().trim() : '')"
-            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase font-mono shadow-2xs" />
+            class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase shadow-2xs" />
         </div>
-
-        <!-- Catálogo de Sugerencias de LABs HIS -->
         <datalist id="lista-catalogo-labs">
           @for (opcion of catalogoLabs(); track opcion.codigo) {
             <option [value]="opcion.valor">{{ opcion.valor }} - {{ opcion.descripcion }}</option>
           }
         </datalist>
-
-        <!-- PROCESO (Botón Registrar) -->
         <div class="md:col-span-2">
           <span class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Proceso:
@@ -135,18 +115,16 @@
             type="button"
             (click)="registrarDiagnostico()"
             [disabled]="!diagnosticoSeleccionado()"
-            class="w-full h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition-colors disabled:opacity-40 cursor-pointer uppercase shadow-xs">
+            class="w-full h-9 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-md text-xs font-bold transition-all disabled:opacity-40 cursor-pointer uppercase shadow-xs">
             Registrar
           </button>
         </div>
 
       </div>
-
-      <!-- Banner de Aviso Normativo HIS / MINSA -->
       @if (reglaDiagnosticoActivo(); as regla) {
         <div class="mt-2.5 p-2 bg-blue-50/90 border border-blue-200 rounded text-xs flex items-center justify-between gap-2 text-blue-900">
           <div class="flex items-center gap-2">
-            <span class="px-1.5 py-0.5 rounded bg-blue-700 text-white font-bold text-[10px] uppercase">
+            <span class="px-1.5 py-0.5 rounded bg-blue-700 text-white font-bold text-xs uppercase">
               HIS / MINSA
             </span>
             <span class="font-medium text-slate-800">
@@ -154,15 +132,13 @@
             </span>
           </div>
           @if (regla.esObligatorio) {
-            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] uppercase tracking-wide shrink-0">
+            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs uppercase tracking-wide shrink-0">
               Lab Requerido
             </span>
           }
         </div>
       }
     </div>
-
-    <!-- Tabla de Diagnósticos Registrados (Estilo SIGH / Galenhos) -->
     <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
       <table class="w-full text-left border-collapse text-xs">
         <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
@@ -185,29 +161,25 @@
           } @else {
             @for (dx of diagnosticos(); track dx.idDiagnostico; let indice = $index) {
               <tr class="hover:bg-slate-50 transition-colors">
-                
-                <!-- Botón Quitar (Rojo) -->
                 <td class="px-3 py-2 text-center">
                   <button
                     type="button"
                     (click)="eliminarDiagnostico(indice)"
-                    class="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded text-[11px] font-bold cursor-pointer transition-colors"
+                    class="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded text-xs font-semibold font-bold cursor-pointer transition-colors"
                     title="Eliminar diagnóstico">
                     Quitar
                   </button>
                 </td>
-
-                <!-- Diagnóstico (Código CIE-10 = Descripción) -->
                 <td class="px-3 py-2">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <strong class="font-mono text-slate-900 text-xs shrink-0">
+                    <strong class="font-bold text-slate-900 text-xs shrink-0">
                       {{ dx.codigoCIE10 }} =
                     </strong>
                     <span class="text-slate-800 font-semibold uppercase text-xs">
                       {{ dx.descripcion }}
                     </span>
                     @if (dx.idSubclasificacionDx === 1) {
-                      <span class="ml-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#07153a] text-white inline-flex items-center gap-1 shadow-2xs">
+                      <span class="ml-1 px-2 py-0.5 rounded text-xs font-bold bg-[#07153a] text-white inline-flex items-center gap-1 shadow-2xs">
                         <svg aria-hidden="true" class="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                         </svg>
@@ -217,7 +189,7 @@
                       <button
                         type="button"
                         (click)="marcarComoPrincipal(indice)"
-                        class="ml-1 px-2 py-0.5 rounded text-[10px] font-bold text-slate-500 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                        class="ml-1 px-2 py-0.5 rounded text-xs font-bold text-slate-500 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1"
                         title="Establecer este diagnóstico como el Principal de la atención médica">
                         <svg aria-hidden="true" class="w-2.5 h-2.5 text-slate-400 hover:text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
@@ -227,8 +199,6 @@
                     }
                   </div>
                 </td>
-
-                <!-- LAB 1 -->
                 <td class="px-1.5 py-1 text-center">
                   <input
                     type="text"
@@ -236,11 +206,9 @@
                     list="lista-catalogo-labs"
                     [ngModel]="dx.labConfHIS"
                     (ngModelChange)="actualizarLabFila(indice, 'labConfHIS', $event)"
-                    class="w-14 h-7 text-center font-mono font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
+                    class="w-14 h-7 text-center font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
                     placeholder="--" />
                 </td>
-
-                <!-- LAB 2 -->
                 <td class="px-1.5 py-1 text-center">
                   <input
                     type="text"
@@ -248,11 +216,9 @@
                     list="lista-catalogo-labs"
                     [ngModel]="dx.labConfHIS1"
                     (ngModelChange)="actualizarLabFila(indice, 'labConfHIS1', $event)"
-                    class="w-14 h-7 text-center font-mono font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
+                    class="w-14 h-7 text-center font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
                     placeholder="--" />
                 </td>
-
-                <!-- LAB 3 -->
                 <td class="px-1.5 py-1 text-center">
                   <input
                     type="text"
@@ -260,15 +226,13 @@
                     list="lista-catalogo-labs"
                     [ngModel]="dx.labConfHIS2"
                     (ngModelChange)="actualizarLabFila(indice, 'labConfHIS2', $event)"
-                    class="w-14 h-7 text-center font-mono font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
+                    class="w-14 h-7 text-center font-bold text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-400 rounded outline-none uppercase transition-colors"
                     placeholder="--" />
                 </td>
-
-                <!-- TIPO -->
                 <td class="px-3 py-2 text-center font-bold">
                   <span
-                    class="px-2 py-0.5 rounded text-[11px] uppercase tracking-wide border"
-                    [ngClass]="dx.clasificacion === 'D' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : (dx.clasificacion === 'R' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-amber-50 text-amber-800 border-amber-200')">
+                    class="px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide border"
+                    [ngClass]="dx.clasificacion === 'D' ? 'bg-slate-100 text-slate-800 border-slate-300 font-bold' : (dx.clasificacion === 'R' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-amber-50 text-amber-800 border-amber-200')">
                     {{ dx.clasificacion === 'D' ? 'DEFINITIVO' : (dx.clasificacion === 'R' ? 'REPETIDO' : 'PRESUNTIVO') }}
                   </span>
                 </td>
@@ -282,9 +246,7 @@
 
   </div>
 
-  <!-- ============================================================== -->
-  <!-- SECCIÓN 2: INFORMACIÓN COMPLEMENTARIA AL DIAGNÓSTICO           -->
-  <!-- ============================================================== -->
+  
   <div>
     <label for="campo-infor-comp-dx" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
       Información Complementaria al Diagnóstico:
@@ -299,16 +261,10 @@
     </textarea>
   </div>
 
-  <!-- ============================================================== -->
-  <!-- SECCIÓN 3: PROCEDIMIENTOS MÉDICOS ASOCIADOS (CPMS / CPT)       -->
-  <!-- ============================================================== -->
+  
   <div class="space-y-3 pt-2">
-    
-    <!-- Fila de Inserción de Procedimiento CPMS -->
     <div class="bg-slate-50 p-3 rounded border border-slate-200">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-        
-        <!-- Diagnóstico Asociado -->
         <div class="md:col-span-4">
           <label for="select-proc-dx-asoc" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
             Diagnóstico Asociado:
@@ -329,8 +285,6 @@
             }
           </app-select-global>
         </div>
-
-        <!-- Buscador CPMS -->
         <div class="md:col-span-5 relative">
           <label for="input-buscador-cpms" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
             Buscar Procedimiento (CPMS / CPT):
@@ -350,8 +304,6 @@
               </div>
             }
           </div>
-
-          <!-- Dropdown de Procedimientos Encontrados -->
           @if (dropdownProcedimientosAbierto() && resultadosProcedimientos().length > 0) {
             <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded shadow-xl max-h-52 overflow-y-auto divide-y divide-slate-100">
               @for (proc of resultadosProcedimientos(); track proc.idProducto) {
@@ -360,14 +312,14 @@
                   (click)="seleccionarProcedimiento(proc)"
                   class="w-full text-left p-2.5 hover:bg-blue-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
                   <div class="flex items-center gap-2">
-                    <span class="font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200 text-[11px]">
+                    <span class="font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200 text-xs">
                       {{ proc.cpt || proc.codigo }}
                     </span>
                     <span class="font-medium text-slate-800">
                       {{ proc.nombre }}
                     </span>
                   </div>
-                  <span class="text-[11px] font-bold text-blue-700 uppercase">
+                  <span class="text-xs font-semibold font-bold text-blue-700 uppercase">
                     Elegir
                   </span>
                 </button>
@@ -375,8 +327,6 @@
             </div>
           }
         </div>
-
-        <!-- Cantidad (con validación de teclas y rangos) -->
         <div class="md:col-span-1">
           <label for="input-proc-cant" class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Cant:
@@ -390,8 +340,6 @@
             (ngModelChange)="actualizarCantidad($event)"
             class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none" />
         </div>
-
-        <!-- Botón Registrar Procedimiento -->
         <div class="md:col-span-2">
           <span class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 text-center">
             Proceso:
@@ -400,15 +348,13 @@
             type="button"
             (click)="registrarProcedimiento()"
             [disabled]="!procedimientoSeleccionado() || diagnosticos().length === 0"
-            class="w-full h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition-colors disabled:opacity-40 cursor-pointer uppercase shadow-xs">
+            class="w-full h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-colors disabled:opacity-40 cursor-pointer uppercase shadow-xs">
             Registrar
           </button>
         </div>
 
       </div>
     </div>
-
-    <!-- Tabla de Procedimientos Vinculados (Estilo SIGH) -->
     <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
       <table class="w-full text-left border-collapse text-xs">
         <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
@@ -433,22 +379,18 @@
           } @else {
             @for (proc of procedimientos(); track proc.idProducto; let idx = $index) {
               <tr class="hover:bg-slate-50 transition-colors">
-                
-                <!-- Botón Quitar -->
                 <td class="px-3 py-2 text-center">
                   <button
                     type="button"
                     (click)="eliminarProcedimiento(idx)"
-                    class="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded text-[11px] font-bold cursor-pointer transition-colors"
+                    class="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded text-xs font-semibold font-bold cursor-pointer transition-colors"
                     title="Eliminar procedimiento">
                     Quitar
                   </button>
                 </td>
-
-                <!-- CPMS (Código - Descripción) -->
                 <td class="px-3 py-2">
                   <div class="flex items-center gap-2">
-                    <span class="font-mono font-bold text-slate-900 text-xs">
+                    <span class="font-bold text-slate-900 text-xs">
                       {{ proc.codigoCPT }} -
                     </span>
                     <span class="text-slate-800 font-semibold uppercase text-xs">
@@ -456,28 +398,20 @@
                     </span>
                   </div>
                 </td>
-
-                <!-- CIE-10 Vinculado -->
-                <td class="px-3 py-2 text-center font-mono font-bold text-blue-900">
+                <td class="px-3 py-2 text-center font-bold text-blue-900">
                   {{ proc.codigoCIE10Asociado || '--' }}
                 </td>
-
-                <!-- Labs -->
-                <td class="px-3 py-2 text-center font-mono text-slate-500">--</td>
-                <td class="px-3 py-2 text-center font-mono text-slate-500">--</td>
-                <td class="px-3 py-2 text-center font-mono text-slate-500">--</td>
-
-                <!-- Cantidad -->
+                <td class="px-3 py-2 text-center text-slate-500 font-medium">--</td>
+                <td class="px-3 py-2 text-center text-slate-500 font-medium">--</td>
+                <td class="px-3 py-2 text-center text-slate-500 font-medium">--</td>
                 <td class="px-3 py-2 text-center font-bold text-slate-900">
                   {{ proc.cantidad }}
                 </td>
-
-                <!-- Ver Detalle (Botón Amarillo) -->
                 <td class="px-3 py-2 text-center">
                   <button
                     type="button"
                     (click)="verDetalleProcedimiento(proc)"
-                    class="px-2.5 py-0.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold rounded text-[11px] transition-colors cursor-pointer uppercase shadow-xs">
+                    class="px-2.5 py-0.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold rounded text-xs font-semibold transition-colors cursor-pointer uppercase shadow-xs">
                     Ver
                   </button>
                 </td>
@@ -490,8 +424,6 @@
     </div>
 
   </div>
-
-  <!-- Modal Emergente de Detalle de Procedimiento -->
   @if (modalDetalleVisible() && procedimientoDetalle()) {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div class="bg-white rounded-lg shadow-2xl border border-slate-200 w-full max-w-md p-5 space-y-4">
@@ -510,26 +442,26 @@
 
         <div class="space-y-2.5 text-xs text-slate-700">
           <div>
-            <span class="font-bold text-slate-400 uppercase text-[10px] block">Código CPMS:</span>
-            <strong class="font-mono text-sm text-[#07153a]">{{ procedimientoDetalle()?.codigoCPT }}</strong>
+            <span class="font-bold text-slate-400 uppercase text-xs block">Código CPMS:</span>
+            <strong class="text-sm font-bold text-[#07153a]">{{ procedimientoDetalle()?.codigoCPT }}</strong>
           </div>
           <div>
-            <span class="font-bold text-slate-400 uppercase text-[10px] block">Descripción:</span>
+            <span class="font-bold text-slate-400 uppercase text-xs block">Descripción:</span>
             <p class="font-medium text-slate-800">{{ procedimientoDetalle()?.nombreProcedimiento }}</p>
           </div>
           <div>
-            <span class="font-bold text-slate-400 uppercase text-[10px] block">Diagnóstico CIE-10 Asociado:</span>
+            <span class="font-bold text-slate-400 uppercase text-xs block">Diagnóstico CIE-10 Asociado:</span>
             <p class="font-medium text-blue-900">
               [{{ procedimientoDetalle()?.codigoCIE10Asociado }}] {{ procedimientoDetalle()?.diagnosticoDescripcionAsociado }}
             </p>
           </div>
           <div class="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <span class="font-bold text-slate-400 uppercase text-[10px] block">Cantidad:</span>
+              <span class="font-bold text-slate-400 uppercase text-xs block">Cantidad:</span>
               <strong class="text-slate-900 text-sm">{{ procedimientoDetalle()?.cantidad }}</strong>
             </div>
             <div>
-              <span class="font-bold text-slate-400 uppercase text-[10px] block">Tarifa Ref.:</span>
+              <span class="font-bold text-slate-400 uppercase text-xs block">Tarifa Ref.:</span>
               <strong class="text-slate-900 text-sm">S/ {{ (procedimientoDetalle()?.precio || 0).toFixed(2) }}</strong>
             </div>
           </div>

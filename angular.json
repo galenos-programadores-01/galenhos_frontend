@@ -26,7 +26,15 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": ["src/styles.css"],
+            "allowedCommonJsDependencies": [
+              "canvg",
+              "html2canvas",
+              "jspdf",
+              "core-js",
+              "rgbcolor",
+              "raf"
+            ]
           },
           "configurations": {
             "production": {

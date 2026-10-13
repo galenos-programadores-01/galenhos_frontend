@@ -1,0 +1,986 @@
+@if (visible) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
+    <div class="bg-white rounded-md shadow-2xl border border-slate-300 w-full max-w-7xl max-h-[96vh] flex flex-col overflow-hidden text-slate-800">
+
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-700 uppercase tracking-wide">
+            HISTORIAL CLÍNICO
+          </span>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-wide truncate">
+            {{ pacienteActual()?.pacienteNombre || 'PACIENTE' }}
+          </h2>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarModal()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none p-1 transition-colors cursor-pointer"
+          aria-label="Cerrar modal">
+          &times;
+        </button>
+      </div>
+
+      <div class="px-5 pt-2 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2 shrink-0 overflow-x-auto">
+        <button
+          type="button"
+          (click)="cambiarPestana('ATENCIONES')"
+          class="px-4 py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer border-b-2 flex items-center gap-2 active:scale-[0.98]"
+          [ngClass]="pestanaActiva() === 'ATENCIONES'
+            ? 'border-blue-600 text-blue-700 bg-white shadow-2xs font-bold'
+            : 'border-transparent text-slate-600 hover:text-slate-900'">
+          HIST. ATENCIONES ({{ atenciones().length }})
+        </button>
+
+        <button
+          type="button"
+          (click)="cambiarPestana('IMAGENIOLOGIA_LAB')"
+          class="px-4 py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer border-b-2 flex items-center gap-2 active:scale-[0.98]"
+          [ngClass]="pestanaActiva() === 'IMAGENIOLOGIA_LAB'
+            ? 'border-blue-600 text-blue-700 bg-white shadow-2xs font-bold'
+            : 'border-transparent text-slate-600 hover:text-slate-900'">
+          IMAGENOLOGÍA / LABORATORIO ({{ imagenes().length + laboratorios().length }})
+        </button>
+
+        <button
+          type="button"
+          (click)="cambiarPestana('REPORTE_OPERATORIO')"
+          class="px-4 py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer border-b-2 flex items-center gap-2 active:scale-[0.98]"
+          [ngClass]="pestanaActiva() === 'REPORTE_OPERATORIO'
+            ? 'border-blue-600 text-blue-700 bg-white shadow-2xs font-bold'
+            : 'border-transparent text-slate-600 hover:text-slate-900'">
+          REPORTE OPERATORIO ({{ reportesOperatorios().length }})
+        </button>
+
+        <button
+          type="button"
+          (click)="cambiarPestana('PROCEDIMIENTOS')"
+          class="px-4 py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer border-b-2 flex items-center gap-2 active:scale-[0.98]"
+          [ngClass]="pestanaActiva() === 'PROCEDIMIENTOS'
+            ? 'border-blue-600 text-blue-700 bg-white shadow-2xs font-bold'
+            : 'border-transparent text-slate-600 hover:text-slate-900'">
+          PROCEDIMIENTOS ({{ procedimientos().length }})
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5">
+
+        @if (pestanaActiva() === 'ATENCIONES') {
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full min-h-[500px]">
+
+            <div class="lg:col-span-4 flex flex-col gap-3 border-r border-slate-200 pr-0 lg:pr-4">
+
+              <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+                <button
+                  type="button"
+                  (click)="toggleSeccionConsultorios()"
+                  class="w-full px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-left font-bold text-xs sm:text-sm text-slate-800 uppercase flex items-center justify-between transition-colors cursor-pointer">
+                  <span>CONSULTORIOS EXTERNOS ({{ consultoriosExternos().length }})</span>
+                  <span class="text-sm font-bold">{{ seccionConsultoriosAbierta() ? '-' : '+' }}</span>
+                </button>
+
+                @if (seccionConsultoriosAbierta()) {
+                  <div class="divide-y divide-slate-100 max-h-[320px] overflow-y-auto">
+                    @for (item of consultoriosExternos(); track item.idAtencion) {
+                      <div
+                        (click)="seleccionarAtencion(item.idAtencion)"
+                        class="p-3 transition-colors cursor-pointer flex items-center justify-between gap-2 rounded-md"
+                        [ngClass]="atencionSeleccionadaId() === item.idAtencion ? 'bg-slate-100 ring-1 ring-slate-300 shadow-2xs' : 'hover:bg-slate-50/80'">
+                        <div class="min-w-0 flex-1 space-y-1">
+                          <div class="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            ({{ item.idCuentaAtencion }}) {{ item.fechaIngreso }} - {{ item.servicioNombre }}
+                          </div>
+                          <div class="text-xs text-slate-600 font-medium">
+                            (TP:{{ item.tiempoProgramado }} / TA:{{ item.tiempoAtencion }}) {{ item.horaIngreso }}-{{ item.horaEgreso }}
+                          </div>
+                          <div class="text-xs font-semibold text-slate-700 uppercase truncate">
+                            {{ item.medicoNombre || 'MÉDICO ASIGNADO' }} ({{ item.idMedico }})
+                          </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            (click)="descargarAtencionPdf(item)"
+                            class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            title="Descargar Ficha PDF"
+                            aria-label="Descargar PDF">
+                            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            (click)="imprimirAtencion(item)"
+                            class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            title="Imprimir Ficha"
+                            aria-label="Imprimir">
+                            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="p-4 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                        No hay atenciones en consultorios externos.
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+                <button
+                  type="button"
+                  (click)="toggleSeccionEmergencia()"
+                  class="w-full px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-left font-bold text-xs sm:text-sm text-slate-800 uppercase flex items-center justify-between transition-colors cursor-pointer">
+                  <span>EMERGENCIA ({{ emergencias().length }})</span>
+                  <span class="text-sm font-bold">{{ seccionEmergenciaAbierta() ? '-' : '+' }}</span>
+                </button>
+
+                @if (seccionEmergenciaAbierta()) {
+                  <div class="divide-y divide-slate-100 max-h-[250px] overflow-y-auto">
+                    @for (item of emergencias(); track item.idAtencion) {
+                      <div
+                        (click)="seleccionarAtencion(item.idAtencion)"
+                        class="p-3 transition-colors cursor-pointer flex items-center justify-between gap-2 rounded-md"
+                        [ngClass]="atencionSeleccionadaId() === item.idAtencion ? 'bg-slate-100 ring-1 ring-slate-300 shadow-2xs' : 'hover:bg-slate-50/80'">
+                        <div class="min-w-0 flex-1 space-y-1">
+                          <div class="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            ({{ item.idCuentaAtencion }}) {{ item.fechaIngreso }} - {{ item.servicioNombre }}
+                          </div>
+                          <div class="text-xs text-slate-600 font-medium">
+                            {{ item.horaIngreso }}-{{ item.horaEgreso }}
+                          </div>
+                          <div class="text-xs font-semibold text-slate-700 uppercase truncate">
+                            {{ item.medicoNombre || 'MÉDICO DE GUARDIA' }}
+                          </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            (click)="descargarAtencionPdf(item)"
+                            class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            title="Descargar Ficha PDF"
+                            aria-label="Descargar PDF">
+                            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            (click)="imprimirAtencion(item)"
+                            class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            title="Imprimir Ficha"
+                            aria-label="Imprimir">
+                            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="p-4 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                        No hay atenciones de emergencia registradas.
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+            </div>
+
+            <div class="lg:col-span-8 flex flex-col gap-4">
+
+              <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 uppercase tracking-wide">
+                  ATENCIÓN CLÍNICA SELECCIONADA
+                </h3>
+                @if (cargandoDetalle()) {
+                  <span class="text-xs font-semibold text-slate-500">Cargando datos...</span>
+                }
+              </div>
+
+              <div class="p-4 border border-slate-200 rounded-md bg-slate-50 text-xs sm:text-sm font-medium text-slate-800 space-y-2">
+                <div class="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  DATOS DEL TRIAJE:
+                </div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs sm:text-sm">
+                  <span>PULSO: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.frecuenciaCardiaca || 80 }} lpm</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>TEMP: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.temperatura || 36.5 }} °C</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>P. ARTERIAL: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.presionArterial || '120/70' }} mmHg</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>FREC. CARD: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.frecuenciaCardiaca || 80 }} lpm</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>HEMOGLOBINA: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.hemoglobina || '13.5' }} g/dl</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>SAT. O2: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.saturacion || 98 }} %</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>FREC. RESP: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.frecuenciaRespiratoria || 18 }} rpm</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>FIO2: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.fiO2 || '21' }} %</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>PESO: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.peso || 70 }} kg</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>TALLA: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.talla || 165 }} cm</strong></span>
+                  <span class="text-slate-300">|</span>
+                  <span>IMC: <strong class="text-slate-900 font-bold">{{ detalleAtencion()?.triaje?.imc || 25.7 }}</strong></span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      DIAGNÓSTICO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-white min-h-[60px] text-xs sm:text-sm font-medium text-slate-800 space-y-1.5 shadow-2xs">
+                      @for (dx of detalleAtencion()?.diagnosticos; track dx.idDiagnostico) {
+                        <div class="flex items-start gap-1.5">
+                          <span class="font-bold text-slate-900">{{ dx.codigoCIE10 }}</span>
+                          <span>-</span>
+                          <span class="flex-1">{{ dx.descripcion }}</span>
+                          <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase shrink-0"
+                            [ngClass]="dx.clasificacion === 'D' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-700 border border-slate-200'">
+                            {{ dx.clasificacion === 'D' ? 'DEFINITIVO' : 'PRESUNTIVO' }}
+                          </span>
+                        </div>
+                      } @empty {
+                        <div class="text-slate-400 font-normal italic">
+                          Sin diagnósticos registrados en la atención.
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      INFORMACIÓN COMPLEMENTARIA AL DIAGNÓSTICO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[60px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.inforCompDiagMed || '—' }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      MOTIVO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[75px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.motivo || '—' }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      TRATAMIENTO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[75px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.tratamiento || detalleAtencion()?.planTratamiento || '—' }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      OBSERVACIONES:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[60px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.observaciones || '—' }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      EXAMEN CLÍNICO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[60px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.examenClinico || '—' }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      CONSUMO EN EL SERVICIO:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[75px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.consumoEnServicio || '—' }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-1">
+                      SERVICIO DE APOYO AL DX:
+                    </label>
+                    <div class="p-3 border border-slate-200 rounded-md bg-slate-50/70 min-h-[75px] text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {{ detalleAtencion()?.servicioApoyoAlDx || '—' }}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        }
+
+        @if (pestanaActiva() === 'IMAGENIOLOGIA_LAB') {
+          <div class="space-y-6">
+
+            <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+              <div class="bg-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  EXAMEN IMAGENOLOGÍA DESCRIPCIÓN ({{ imagenes().length }})
+                </span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  RESULTADO
+                </span>
+              </div>
+
+              <div class="divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
+                @for (item of imagenes(); track item.idResultado || item.idOrden) {
+                  <div class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <button
+                        type="button"
+                        (click)="verDetalleImagen(item)"
+                        class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shrink-0"
+                        title="Ver Informe Radiológico"
+                        aria-label="Ver resultado">
+                        <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase truncate">
+                        {{ item.valores ? item.valores + ' - ' : '' }}FEC.: {{ item.fechaResultado || 'S/F' }} - {{ item.nombreExamen }}
+                      </span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                      {{ item.estado || 'SI' }}
+                    </span>
+                  </div>
+                } @empty {
+                  <div class="p-6 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                    No hay exámenes de imagenología registrados para este paciente.
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+              <div class="bg-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  EXAMEN LABORATORIO DESCRIPCIÓN ({{ laboratorios().length }})
+                </span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  RESULTADO
+                </span>
+              </div>
+
+              <div class="divide-y divide-slate-100 max-h-[340px] overflow-y-auto">
+                @for (item of laboratorios(); track item.idResultado || item.idOrden) {
+                  <div class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <button
+                        type="button"
+                        (click)="verDetalleLaboratorio(item)"
+                        class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shrink-0"
+                        title="Ver Resultados de Laboratorio"
+                        aria-label="Ver resultado">
+                        <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase truncate">
+                        {{ item.valores ? item.valores + ' - ' : '' }}FEC.: {{ item.fechaResultado || 'S/F' }} - {{ item.nombreExamen }}
+                      </span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                      {{ item.estado || 'SI' }}
+                    </span>
+                  </div>
+                } @empty {
+                  <div class="p-6 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                    No hay análisis de laboratorio registrados para este paciente.
+                  </div>
+                }
+              </div>
+            </div>
+
+          </div>
+        }
+
+        @if (pestanaActiva() === 'REPORTE_OPERATORIO') {
+          <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+            <div class="bg-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+              <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                DESCRIPCIÓN DEL REPORTE OPERATORIO ({{ reportesOperatorios().length }})
+              </span>
+              <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                RESULTADO
+              </span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+              @for (item of reportesOperatorios(); track item.idReporte) {
+                <div class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                  <div class="space-y-0.5">
+                    <div class="text-xs sm:text-sm font-bold text-slate-900 uppercase">
+                      {{ item.codigoCPT }} - FECHA: {{ item.fecha }} - {{ item.descripcion }}
+                    </div>
+                    <div class="text-xs text-slate-600 font-medium">
+                      CIRUJANO: {{ item.cirujano }} | SERVICIO: {{ item.servicio }}
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      {{ item.estado || 'VALIDADO' }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="verReporteOperatorio(item)"
+                      class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                      title="Ver Reporte Operatorio"
+                      aria-label="Ver ficha operatoria">
+                      <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="imprimirFichaOperatoria()"
+                      class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                      title="Imprimir Ficha Operatoria"
+                      aria-label="Imprimir">
+                      <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="p-8 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                  El paciente no registra intervenciones quirúrgicas o reportes operatorios previos.
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (pestanaActiva() === 'PROCEDIMIENTOS') {
+          <div class="border border-slate-200 rounded-md overflow-hidden bg-white shadow-2xs">
+            <div class="bg-slate-100 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+              <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                DESCRIPCIÓN DEL PROCEDIMIENTO MÉDICO ({{ procedimientos().length }})
+              </span>
+              <span class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
+                RESULTADO
+              </span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+              @for (item of procedimientos(); track item.idProcedimiento) {
+                <div class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                  <div class="space-y-0.5">
+                    <div class="text-xs sm:text-sm font-bold text-slate-900 uppercase">
+                      {{ item.codigoCPT }} - FECHA: {{ item.fecha }} - {{ item.descripcion }}
+                    </div>
+                    <div class="text-xs text-slate-600 font-medium">
+                      MÉDICO: {{ item.medico }} | SERVICIO: {{ item.servicio }}
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      {{ item.estado || 'VALIDADO' }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="verProcedimiento(item)"
+                      class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                      title="Ver Informe de Procedimiento"
+                      aria-label="Ver informe">
+                      <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="p-8 text-center text-xs sm:text-sm text-slate-500 font-medium">
+                  El paciente no registra procedimientos médicos o endoscópicos previos.
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex justify-end shrink-0">
+        <button
+          type="button"
+          (click)="cerrarModal()"
+          class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (submodalImagenVisible()) {
+  <div class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div class="bg-white rounded-md shadow-2xl border border-slate-300 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 truncate">
+          {{ examenImagenSeleccionadoNombre() || 'Examen Radiológico' }}
+        </h3>
+        <button
+          type="button"
+          (click)="cerrarSubmodalImagen()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none p-1 transition-colors cursor-pointer"
+          aria-label="Cerrar">
+          &times;
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <div class="p-4 border border-slate-200 rounded-md bg-slate-50 flex items-center gap-4 text-xs sm:text-sm font-medium">
+          <div class="w-14 h-14 bg-slate-200 border border-slate-300 rounded-md flex items-center justify-center shrink-0 overflow-hidden text-slate-500">
+            @if (pacienteActual()?.fotoUrl) {
+              <img [src]="pacienteActual()?.fotoUrl" alt="Foto Paciente" class="w-full h-full object-cover" />
+            } @else {
+              <svg aria-hidden="true" class="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            }
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              DATOS DEL PACIENTE:
+            </div>
+            <div class="text-slate-800">
+              DOCUMENTO: <strong class="font-bold">{{ pacienteActual()?.nroDocumento || '—' }}</strong> |
+              H.C: <strong class="font-bold">{{ pacienteActual()?.nroHistoriaClinica || '—' }}</strong> |
+              SEXO: <strong>{{ pacienteActual()?.sexo || 'Femenino' }}</strong> |
+              FECHA NACIMIENTO: <strong>{{ pacienteActual()?.fechaNacimiento || '—' }}</strong>
+            </div>
+            <div class="text-slate-800">
+              PACIENTE: <strong class="uppercase font-bold text-slate-900">{{ pacienteActual()?.pacienteNombre }}</strong> |
+              EDAD: <strong>{{ edadDetallada() }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wide mb-1">
+            INFORME:
+          </label>
+          <div class="w-full p-3.5 border border-slate-200 rounded-md bg-slate-50/70 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+            {{ submodalImagenData()?.informeTexto || 'RX. DE TÓRAX FRONTAL Y LATERAL\nTRANSPARENCIA PULMONAR CONSERVADA\nNO EVIDENCIA DE CONSOLIDACIONES.\nSILUETA CARDIACA, IC= 0.53.\nSENOS COSTO DIAFRAGMÁTICOS LIBRES.' }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wide mb-1">
+            SUGERENCIAS:
+          </label>
+          <div class="w-full p-3.5 border border-slate-200 rounded-md bg-slate-50/70 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+            {{ submodalImagenData()?.sugerencias || 'IMPRESIÓN DIAGNÓSTICA:\n-RADIOGRAFÍA DE TÓRAX, CONSERVADA.\n-CARDIOMEGALIA.' }}
+          </div>
+        </div>
+
+        <div class="p-3.5 border border-slate-200 rounded-md bg-slate-50 text-xs sm:text-sm font-medium space-y-1.5 text-slate-800">
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">DATOS DE LA PRUEBA:</div>
+          <div>REALIZA PRUEBA: <strong class="text-slate-900">{{ submodalImagenData()?.realizaPrueba || 'CARBONEL ARRIBASPLATA JOSE' }}</strong> - FECHA EXAMEN: <strong class="text-slate-900">{{ submodalImagenData()?.fechaExamen || submodalImagenData()?.fechaInforme || '28/11/2024 18:27' }}</strong></div>
+          <div>MÉDICO SOLICITANTE: <strong class="text-slate-900">{{ submodalImagenData()?.medicoSolicitante || 'GUADALUPE GOMEZ NICOLAS DE PIEROLA' }}</strong> - FECHA INFORME: <strong class="text-slate-900">{{ submodalImagenData()?.fechaInforme || '28/11/2024 18:27' }}</strong></div>
+          <div>PROCEDENCIA: <strong class="text-slate-900">{{ submodalImagenData()?.procedencia || 'REUMATOLOGÍA CONTINUADOR (CONSULTORIOS EXTERNOS)' }}</strong></div>
+          <div>DIAGNÓSTICO: <strong class="text-slate-900">{{ submodalImagenData()?.diagnostico || 'M62.0 - DIÁSTASIS DE LOS RECTOS' }}</strong></div>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-md bg-slate-50 text-xs sm:text-sm font-medium flex items-center justify-between">
+          <div>RESPONSABLE: <strong>{{ submodalImagenData()?.responsable || 'ASISTENTE' }}</strong></div>
+          <div>ESTADO: <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">{{ submodalImagenData()?.estado || 'VALIDADO' }}</span></div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex justify-end shrink-0">
+        <button
+          type="button"
+          (click)="cerrarSubmodalImagen()"
+          class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (submodalLaboratorioVisible()) {
+  <div class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div class="bg-white rounded-md shadow-2xl border border-slate-300 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 truncate">
+          {{ examenLaboratorioSeleccionadoNombre() || 'Examen de Laboratorio' }}
+        </h3>
+        <button
+          type="button"
+          (click)="cerrarSubmodalLaboratorio()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none p-1 transition-colors cursor-pointer"
+          aria-label="Cerrar">
+          &times;
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <div class="p-4 border border-slate-200 rounded-md bg-slate-50 flex items-center gap-4 text-xs sm:text-sm font-medium">
+          <div class="w-14 h-14 bg-slate-200 border border-slate-300 rounded-md flex items-center justify-center shrink-0 overflow-hidden text-slate-500">
+            @if (pacienteActual()?.fotoUrl) {
+              <img [src]="pacienteActual()?.fotoUrl" alt="Foto Paciente" class="w-full h-full object-cover" />
+            } @else {
+              <svg aria-hidden="true" class="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            }
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              DATOS DEL PACIENTE:
+            </div>
+            <div class="text-slate-800">
+              DOCUMENTO: <strong class="font-bold">{{ pacienteActual()?.nroDocumento || '—' }}</strong> |
+              H.C: <strong class="font-bold">{{ pacienteActual()?.nroHistoriaClinica || '—' }}</strong> |
+              SEXO: <strong>{{ pacienteActual()?.sexo || 'Femenino' }}</strong> |
+              FECHA NACIMIENTO: <strong>{{ pacienteActual()?.fechaNacimiento || '—' }}</strong>
+            </div>
+            <div class="text-slate-800">
+              PACIENTE: <strong class="uppercase font-bold text-slate-900">{{ pacienteActual()?.pacienteNombre }}</strong> |
+              EDAD: <strong>{{ edadDetallada() }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-2">
+            RESULTADOS:
+          </h4>
+          <div class="border border-slate-200 rounded-md overflow-x-auto shadow-2xs">
+            <table class="w-full text-xs sm:text-sm text-left">
+              <thead class="bg-slate-100 font-bold text-slate-800 uppercase border-b border-slate-200">
+                <tr>
+                  <th class="px-3.5 py-2.5">GRUPO</th>
+                  <th class="px-3.5 py-2.5">ITEM</th>
+                  <th class="px-3.5 py-2.5 text-right">VALOR TEXTO</th>
+                  <th class="px-3.5 py-2.5">VALOR UNIDAD</th>
+                  <th class="px-3.5 py-2.5 text-center">VALOR REFERENCIAL</th>
+                  <th class="px-3.5 py-2.5">MÉTODO</th>
+                  <th class="px-3.5 py-2.5 text-center">INTERPRETACIÓN</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium">
+                @for (d of submodalLaboratorioItems(); track d.item) {
+                  <tr class="hover:bg-slate-50">
+                    <td class="px-3.5 py-2.5">{{ d.grupo || '.' }}</td>
+                    <td class="px-3.5 py-2.5 font-bold text-slate-900">{{ d.item }}</td>
+                    <td class="px-3.5 py-2.5 text-right font-bold text-slate-900">{{ d.valorTexto }}</td>
+                    <td class="px-3.5 py-2.5 text-slate-600">{{ d.unidad }}</td>
+                    <td class="px-3.5 py-2.5 text-center text-slate-600">{{ d.valorReferencial }}</td>
+                    <td class="px-3.5 py-2.5 text-slate-600">{{ d.metodo || '-' }}</td>
+                    <td class="px-3.5 py-2.5 text-center">
+                      <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        {{ d.interpretacion || 'NORMAL' }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td class="px-3.5 py-2.5">.</td>
+                    <td class="px-3.5 py-2.5 font-bold text-slate-900">TRANSAMINASAS TGP</td>
+                    <td class="px-3.5 py-2.5 text-right font-bold text-slate-900">19.82</td>
+                    <td class="px-3.5 py-2.5 text-slate-600">UI/L</td>
+                    <td class="px-3.5 py-2.5 text-center text-slate-600">0 - 45</td>
+                    <td class="px-3.5 py-2.5 text-slate-600">CINÉTICO UV</td>
+                    <td class="px-3.5 py-2.5 text-center">
+                      <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        NORMAL
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex justify-end shrink-0">
+        <button
+          type="button"
+          (click)="cerrarSubmodalLaboratorio()"
+          class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (submodalReporteOperatorioVisible()) {
+  <div class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div class="bg-white rounded-md shadow-2xl border border-slate-300 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden text-slate-800">
+
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 uppercase">
+          REPORTE OPERATORIO - FICHA QUIRÚRGICA
+        </h3>
+        <button
+          type="button"
+          (click)="cerrarSubmodalReporteOperatorio()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none p-1 transition-colors cursor-pointer"
+          aria-label="Cerrar">
+          &times;
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 bg-slate-100">
+        <div class="bg-white p-6 sm:p-8 rounded-md shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-5 text-xs sm:text-sm">
+          <div class="border-b-2 border-slate-800 pb-3 text-center">
+            <h2 class="text-base sm:text-lg font-bold uppercase text-slate-900">HOSPITAL NACIONAL SERGIO E. BERNALES</h2>
+            <h3 class="text-xs sm:text-sm font-semibold uppercase text-slate-600">REPORTE OPERATORIO - CIRUGÍA GENERAL</h3>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border border-slate-200 p-3.5 rounded-md bg-slate-50 text-xs sm:text-sm">
+            <div>
+              <span class="text-slate-500 font-medium block">APELLIDOS Y NOMBRES:</span>
+              <strong class="uppercase text-slate-900">{{ pacienteActual()?.pacienteNombre }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">EDAD / SEXO:</span>
+              <strong class="text-slate-900">{{ pacienteActual()?.edad || 16 }} AÑOS / {{ pacienteActual()?.sexo || 'MASCULINO' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">HISTORIA CLÍNICA:</span>
+              <strong class="text-slate-900">{{ pacienteActual()?.nroHistoriaClinica || '1493851' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">NRO CUENTA:</span>
+              <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.idAtencion || '3741043' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">SERVICIO:</span>
+              <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.servicio || 'CIRUGIA GENERAL' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">CAMA:</span>
+              <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.cama || 'C087' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">FECHA OPERACIÓN:</span>
+              <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.fecha || '2026-09-28' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">HORA INICIO / FIN:</span>
+              <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.horaInicio || '13:10' }} - {{ submodalReporteOperatorioItem()?.horaFin || '14:20' }} ({{ submodalReporteOperatorioItem()?.tiempoQuirurgico || '70 MIN' }})</strong>
+            </div>
+          </div>
+
+          <div class="space-y-3.5 pt-1">
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">DIAGNÓSTICO PRE - OPERATORIO:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200">
+                {{ submodalReporteOperatorioItem()?.diagnosticoPre || 'K40.2 - HERNIA INGUINAL BILATERAL, SIN OBSTRUCCIÓN NI GANGRENA' }}
+              </p>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">DIAGNÓSTICO POST - OPERATORIO:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200">
+                {{ submodalReporteOperatorioItem()?.diagnosticoPost || 'K40.2 - HERNIA INGUINAL BILATERAL, SIN OBSTRUCCIÓN NI GANGRENA' }}
+              </p>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">OPERACIÓN INDICADA:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200">
+                {{ submodalReporteOperatorioItem()?.operacionIndicada || (submodalReporteOperatorioItem()?.codigoCPT + ' - ' + submodalReporteOperatorioItem()?.descripcion) }}
+              </p>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">OPERACIÓN REALIZADA:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200">
+                {{ submodalReporteOperatorioItem()?.operacionRealizada || (submodalReporteOperatorioItem()?.codigoCPT + ' - ' + submodalReporteOperatorioItem()?.descripcion) }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+              <div class="p-3 border border-slate-200 rounded-md bg-slate-50 text-xs sm:text-sm space-y-1">
+                <div>CIRUJANO PRINCIPAL: <strong class="uppercase text-slate-900">{{ submodalReporteOperatorioItem()?.cirujano || 'MATEO SOTO YAHAYRA YESENIA' }}</strong></div>
+                <div>PRIMER AYUDANTE: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.primerAyudante || 'GARCIA FUENTES WALKIRIA MARIA' }}</strong></div>
+                <div>SEGUNDO AYUDANTE: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.segundoAyudante || 'MEJIA SANCHEZ ALISSON FRANCISCA' }}</strong></div>
+                <div>ANESTESIÓLOGO: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.anestesiologo || 'GARCIA LAZARO SARA MERCEDES' }}</strong></div>
+              </div>
+              <div class="p-3 border border-slate-200 rounded-md bg-slate-50 text-xs sm:text-sm space-y-1">
+                <div>TIPO ANESTESIA: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.tipoAnestesia || 'GENERAL BALANCEADA' }}</strong></div>
+                <div>TIPO OPERACIÓN: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.tipoOperacion || 'DE MEDIANA' }}</strong></div>
+                <div>CUENTA DE GASAS: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.cuentaGasas || 'COMPLETO' }}</strong></div>
+                <div>PIEZA OPERATORIA: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.piezaOperatoria || 'NO' }}</strong> | RIESGO QX: <strong class="text-slate-900">{{ submodalReporteOperatorioItem()?.riesgoQuirurgico || 'II' }}</strong></div>
+              </div>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">HALLAZGOS Y PROCEDIMIENTOS:</span>
+              <p class="text-slate-800 bg-slate-50 p-3 rounded-md border border-slate-200 leading-relaxed whitespace-pre-wrap">
+                {{ submodalReporteOperatorioItem()?.hallazgos || 'DIAGNOSTICO POST OPERADO: HERNIA INGUINAL DERECHA INDIRECTA . CIRUGIA REALIZADA: HERNIOPLASTIA INGUINAL DERECHA - TECNICA DE LINCHTENSTEIN . HALLAZGOS : DEFECTO HERNIARIO DE 2 CM, SACO HERNIARIO DE 6 CM CON CONTENIDO DE EPIPLON SIN SIGNOS DE SUFRIMIENTO. EVOLUCIÓN FAVORABLE SIN INCIDENCIAS.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+        <button
+          type="button"
+          (click)="cerrarSubmodalReporteOperatorio()"
+          class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+          Cerrar
+        </button>
+
+        <button
+          type="button"
+          (click)="imprimirFichaOperatoria()"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs flex items-center gap-2">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          IMPRIMIR FICHA OPERATORIA
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (submodalProcedimientoVisible()) {
+  <div class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div class="bg-white rounded-md shadow-2xl border border-slate-300 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden text-slate-800">
+
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 uppercase">
+          INFORME DE PROCEDIMIENTO
+        </h3>
+        <button
+          type="button"
+          (click)="cerrarSubmodalProcedimiento()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none p-1 transition-colors cursor-pointer"
+          aria-label="Cerrar">
+          &times;
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 bg-slate-100">
+        <div class="bg-white p-6 sm:p-8 rounded-md shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-5 text-xs sm:text-sm">
+          <div class="border-b-2 border-slate-800 pb-3 text-center">
+            <h2 class="text-base sm:text-lg font-bold uppercase text-slate-900">INFORME DEL PROCEDIMIENTO</h2>
+            <h3 class="text-xs sm:text-sm font-semibold uppercase text-slate-600">{{ submodalProcedimientoItem()?.descripcion || 'ENDOSCOPÍA GASTROINTESTINAL ALTA SIMPLE' }}</h3>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border border-slate-200 p-3.5 rounded-md bg-slate-50 text-xs sm:text-sm">
+            <div>
+              <span class="text-slate-500 font-medium block">NÚMERO DE CUENTA:</span>
+              <strong class="text-slate-900">{{ submodalProcedimientoItem()?.numeroCuenta || submodalProcedimientoItem()?.idAtencion || '3741798' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">N° HISTORIA:</span>
+              <strong class="text-slate-900">{{ submodalProcedimientoItem()?.numeroHistoria || pacienteActual()?.nroHistoriaClinica || '444138' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">FE/HO ATENCIÓN:</span>
+              <strong class="text-slate-900">{{ submodalProcedimientoItem()?.fechaHoraAtencion || '22/09/26 10:40' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">TIPO DE SEGURO:</span>
+              <strong class="text-slate-900">{{ submodalProcedimientoItem()?.tipoSeguro || 'SIS - SIS' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">PACIENTE:</span>
+              <strong class="uppercase text-slate-900">{{ pacienteActual()?.pacienteNombre }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">EDAD / SEXO:</span>
+              <strong class="text-slate-900">{{ pacienteActual()?.edad || 59 }} AÑOS / {{ pacienteActual()?.sexo || 'FEMENINO' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">PROF. DE LA SALUD:</span>
+              <strong class="uppercase text-slate-900">{{ submodalProcedimientoItem()?.medico || 'ENCARNACION MONTALVO, EDWIN SIMEON' }}</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-medium block">CMP:</span>
+              <strong class="text-slate-900">{{ submodalProcedimientoItem()?.cmp || '30129' }}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-3.5 pt-1">
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">HALLAZGOS:</span>
+              <p class="text-slate-800 bg-slate-50 p-3 rounded-md border border-slate-200 leading-relaxed whitespace-pre-wrap">
+                {{ submodalProcedimientoItem()?.hallazgos || 'PRE-MEDICACION: MIDALOZAM 3MG EV\nINDICACIÓN: DISPEPSIA\nESÓFAGO: LUMEN Y DISTENSIBILIDAD CONSERVADA. UEC A LOS 35 CM DE ARCADA DENTAL.\nESTÓMAGO: LAGO MUCOSO CLARO, DISTENSIBILIDAD Y PERISTALSIS CONSERVADA. REGIÓN CARDIAL COMPETENTE. FONDO: MUCOSA CONSERVADA. ANTRO: MUCOSA CON ERITEMA MODERADO Y PLIEGUES PRE-PILÓRICOS CONGESTIVOS. SE TOMAN BIOPSIAS PARA H. PYLORI.\nDUODENO: BULBO: MUCOSA CONSERVADA. SEGUNDA PORCIÓN: MUCOSA CONSERVADA.' }}
+              </p>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">DIAGNÓSTICOS:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200 whitespace-pre-wrap">
+                {{ submodalProcedimientoItem()?.diagnosticos || '1.- ESÓFAGO ENDOSCÓPICAMENTE NORMAL\n2.- GASTROPATÍA ERITEMATOSA ANTRAL\n3.- DUODENO ENDOSCÓPICAMENTE NORMAL' }}
+              </p>
+            </div>
+
+            <div>
+              <span class="font-bold text-slate-900 block text-xs uppercase mb-1">OBSERVACIÓN:</span>
+              <p class="text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-200 whitespace-pre-wrap">
+                {{ submodalProcedimientoItem()?.observacion || 'SEGUIMIENTO DE BIOPSIAS Y CONTROL POR CONSULTORIOS EXTERNOS DE GASTROENTEROLOGÍA.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+        <button
+          type="button"
+          (click)="cerrarSubmodalProcedimiento()"
+          class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+          Cerrar
+        </button>
+
+        <button
+          type="button"
+          (click)="imprimirInformeProcedimiento()"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs flex items-center gap-2">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          IMPRIMIR INFORME
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

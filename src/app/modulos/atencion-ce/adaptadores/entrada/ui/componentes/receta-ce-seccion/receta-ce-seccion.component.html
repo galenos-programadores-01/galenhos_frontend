@@ -44,7 +44,7 @@
               (click)="seleccionarMedicamento(med)"
               class="w-full text-left px-3.5 py-2.5 text-sm hover:bg-slate-100 flex items-center justify-between gap-3 transition-colors cursor-pointer">
               <div>
-                <span class="font-mono font-bold text-[#07153a] mr-2">[{{ med.codigo }}]</span>
+                <span class="font-bold text-[#07153a] mr-2">[{{ med.codigo }}]</span>
                 <span class="font-bold text-slate-900">{{ med.nombre }}</span>
                 <span class="text-xs text-slate-600 ml-1.5 font-medium">({{ med.concentracion }} - {{ med.formaFarmaceutica }})</span>
               </div>
@@ -164,7 +164,7 @@
           <tbody class="divide-y divide-slate-100">
             @for (item of itemsReceta(); track item.idProducto; let indice = $index) {
               <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-3 py-2.5 font-mono font-bold text-[#07153a] text-xs whitespace-nowrap">
+                <td class="px-3 py-2.5 font-bold text-[#07153a] text-xs whitespace-nowrap">
                   {{ item.codigo }}
                 </td>
                 <td class="px-3 py-2.5">

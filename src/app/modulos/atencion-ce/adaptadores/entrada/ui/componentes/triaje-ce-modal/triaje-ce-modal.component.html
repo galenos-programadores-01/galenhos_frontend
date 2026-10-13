@@ -1,21 +1,20 @@
 @if (visible()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="modal-triaje-titulo">
-    <div class="bg-white rounded-xl border border-slate-300 w-full max-w-6xl overflow-hidden flex flex-col max-h-[94vh] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="modal-triaje-titulo">
+    <div class="bg-white rounded-md border border-slate-300 w-full max-w-6xl overflow-hidden flex flex-col max-h-[94vh] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
       
-      <!-- Cabecera del Paciente Formal Hospitalaria -->
-      <div class="px-6 py-4 border-b border-slate-300 bg-[#07153a] text-white flex items-center justify-between">
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <div class="w-11 h-11 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-200 font-bold text-sm shrink-0">
+          <div class="w-10 h-10 rounded-md bg-white/10 border border-white/20 flex items-center justify-center text-blue-200 font-bold text-sm shrink-0">
             TR
           </div>
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
               @if (esModoLectura()) {
-                <span class="px-2.5 py-0.5 rounded bg-emerald-500/25 text-emerald-200 text-xs font-bold tracking-wider border border-emerald-400/40 uppercase">
+                <span class="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-200 text-xs font-semibold tracking-wider border border-slate-700 uppercase">
                   Triaje — Consulta (Solo Lectura)
                 </span>
               } @else {
-                <span class="px-2.5 py-0.5 rounded bg-blue-500/25 text-blue-200 text-xs font-bold tracking-wider border border-blue-400/40 uppercase">
+                <span class="px-2.5 py-0.5 rounded-md bg-blue-600/30 text-blue-200 text-xs font-semibold tracking-wider border border-blue-400/30 uppercase">
                   Triaje — Signos Vitales
                 </span>
               }
@@ -23,14 +22,14 @@
                 {{ paciente()?.pacienteNombre || 'Paciente' }}
               </h2>
             </div>
-            <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300 mt-1 flex-wrap font-mono">
+            <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300 mt-1 flex-wrap">
               <span>DNI: <strong class="text-white">{{ paciente()?.nroDocumento || '-' }}</strong></span>
               <span>•</span>
               <span>H.C.: <strong class="text-white">{{ paciente()?.nroHistoriaClinica || '-' }}</strong></span>
               <span>•</span>
               <span>Edad: <strong class="text-white">{{ paciente()?.edad || '-' }} AÑOS</strong></span>
               <span>•</span>
-              <span>Cuenta: <strong class="text-rose-300">{{ paciente()?.idCuentaAtencion || '-' }}</strong></span>
+              <span>Cuenta: <strong class="text-blue-300">{{ paciente()?.idCuentaAtencion || '-' }}</strong></span>
             </div>
           </div>
         </div>
@@ -38,13 +37,12 @@
           type="button"
           (click)="alCerrar()"
           [disabled]="guardando()"
-          class="text-xs sm:text-sm font-bold text-slate-200 hover:text-white px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition-colors cursor-pointer"
+          class="text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 transition-all active:scale-[0.98] cursor-pointer"
           aria-label="Cerrar modal de triaje">
           Cerrar
         </button>
       </div>
 
-      <!-- Cuerpo del Formulario Simétrico y Alineado -->
       <div class="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
         @if (cargandoDatos()) {
           <div class="text-center py-16 text-slate-600 text-sm font-medium">
@@ -52,32 +50,29 @@
           </div>
         } @else {
           
-          <!-- Alerta de Validación General -->
           @if (erroresValidacion()['general']) {
-            <div class="p-3.5 rounded-lg bg-red-50 border border-red-300 text-red-800 text-xs sm:text-sm font-bold flex items-center justify-between">
+            <div class="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold flex items-center justify-between">
               <span>{{ erroresValidacion()['general'] }}</span>
             </div>
           }
 
           @if (mensajeError()) {
-            <div class="p-3.5 rounded-lg bg-red-50 border border-red-300 text-red-800 text-xs sm:text-sm font-bold">
+            <div class="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold">
               {{ mensajeError() }}
             </div>
           }
 
-          <!-- SECCIÓN 1: Presión Arterial y Frecuencias Cardíacas (Alineación Cuádruple) -->
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+          <div class="bg-slate-50/80 p-4 rounded-md border border-slate-200">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
               1. Presión Arterial y Parámetros Cardíacos
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
-              <!-- P.A. Sistólica -->
               <div>
                 <label for="triaje-pa-sis" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   P.A. Sistólica <span class="text-slate-500 font-normal">(mmHg)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 93.0 a 127.0
                 </div>
                 <input
@@ -89,7 +84,7 @@
                   [ngModel]="paSistolica()"
                   (ngModelChange)="actualizarEntero('paSistolica', $event, 40, 260, 'mmHg')"
                   placeholder="Ej: 120"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['paSistolica'] ? 'border-red-500 bg-red-50/30' : ''
@@ -99,12 +94,11 @@
                 }
               </div>
 
-              <!-- P.A. Diastólica -->
               <div>
                 <label for="triaje-pa-dia" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   P.A. Diastólica <span class="text-slate-500 font-normal">(mmHg)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 47.0 a 85.0
                 </div>
                 <input
@@ -116,7 +110,7 @@
                   [ngModel]="paDiastolica()"
                   (ngModelChange)="actualizarEntero('paDiastolica', $event, 30, 160, 'mmHg')"
                   placeholder="Ej: 80"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['paDiastolica'] ? 'border-red-500 bg-red-50/30' : ''
@@ -126,12 +120,11 @@
                 }
               </div>
 
-              <!-- Pulso -->
               <div>
                 <label for="triaje-pulso" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Pulso <span class="text-slate-500 font-normal">(lpm)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 60.0 a 100.0
                 </div>
                 <input
@@ -143,7 +136,7 @@
                   [ngModel]="pulso()"
                   (ngModelChange)="actualizarEntero('pulso', $event, 30, 250, 'lpm')"
                   placeholder="Ej: 72"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['pulso'] ? 'border-red-500 bg-red-50/30' : ''
@@ -153,12 +146,11 @@
                 }
               </div>
 
-              <!-- Frecuencia Cardíaca -->
               <div>
                 <label for="triaje-fc" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Frec. Cardíaca <span class="text-slate-500 font-normal">(lpm)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 50.0 a 100.0
                 </div>
                 <input
@@ -170,7 +162,7 @@
                   [ngModel]="frecCardiaca()"
                   (ngModelChange)="actualizarEntero('frecCardiaca', $event, 30, 250, 'lpm')"
                   placeholder="Ej: 75"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['frecCardiaca'] ? 'border-red-500 bg-red-50/30' : ''
@@ -183,19 +175,17 @@
             </div>
           </div>
 
-          <!-- SECCIÓN 2: Temperatura y Parámetros Respiratorios / Oximetría -->
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+          <div class="bg-slate-50/80 p-4 rounded-md border border-slate-200">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
               2. Temperatura y Dinámica Respiratoria
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
-              <!-- Temperatura -->
               <div>
                 <label for="triaje-temp" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Temperatura <span class="text-slate-500 font-normal">(°C)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 36.0 a 37.0 °C
                 </div>
                 <input
@@ -207,7 +197,7 @@
                   [ngModel]="temperatura()"
                   (ngModelChange)="actualizarDecimal('temperatura', $event, 32.0, 43.0, 1, '°C')"
                   placeholder="Ej: 36.5"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['temperatura'] ? 'border-red-500 bg-red-50/30' : ''
@@ -217,12 +207,11 @@
                 }
               </div>
 
-              <!-- Saturación O2 -->
               <div>
                 <label for="triaje-sato2" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Sat. O₂ <span class="text-slate-500 font-normal">(%)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: Mayor a 94%
                 </div>
                 <input
@@ -234,7 +223,7 @@
                   [ngModel]="satO2()"
                   (ngModelChange)="actualizarEntero('satO2', $event, 40, 100, '%')"
                   placeholder="Ej: 98"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['satO2'] ? 'border-red-500 bg-red-50/30' : ''
@@ -244,12 +233,11 @@
                 }
               </div>
 
-              <!-- Frecuencia Respiratoria -->
               <div>
                 <label for="triaje-fr" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Frec. Respiratoria <span class="text-slate-500 font-normal">(rpm)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 12.0 a 16.0
                 </div>
                 <input
@@ -261,7 +249,7 @@
                   [ngModel]="frecRespiratoria()"
                   (ngModelChange)="actualizarEntero('frecRespiratoria', $event, 6, 60, 'rpm')"
                   placeholder="Ej: 16"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['frecRespiratoria'] ? 'border-red-500 bg-red-50/30' : ''
@@ -271,12 +259,11 @@
                 }
               </div>
 
-              <!-- FiO2 -->
               <div>
                 <label for="triaje-fio2" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   FiO₂ <span class="text-slate-500 font-normal">(Fracción)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 0.21 (Ambiente)
                 </div>
                 <input
@@ -288,7 +275,7 @@
                   [ngModel]="fiO2()"
                   (ngModelChange)="actualizarDecimal('fiO2', $event, 0.21, 1.0, 2, 'fracción')"
                   placeholder="Ej: 0.21"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['fiO2'] ? 'border-red-500 bg-red-50/30' : ''
@@ -301,19 +288,17 @@
             </div>
           </div>
 
-          <!-- SECCIÓN 3: Antropometría, Hemoglobina y Gestante (Alineación Perfecta) -->
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+          <div class="bg-slate-50/80 p-4 rounded-md border border-slate-200">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
               3. Antropometría, Bioquímica y Estado Nutricional
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               
-              <!-- Peso -->
               <div>
                 <label for="triaje-peso" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Peso <span class="text-slate-500 font-normal">(Kg)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-slate-500 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Balanza hospitalaria
                 </div>
                 <input
@@ -325,7 +310,7 @@
                   [ngModel]="peso()"
                   (ngModelChange)="actualizarDecimal('peso', $event, 1.0, 350.0, 2, 'Kg')"
                   placeholder="Ej: 68.5"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['peso'] ? 'border-red-500 bg-red-50/30' : ''
@@ -335,12 +320,11 @@
                 }
               </div>
 
-              <!-- Talla -->
               <div>
                 <label for="triaje-talla" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Talla <span class="text-slate-500 font-normal">(cm)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-slate-500 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Tallímetro
                 </div>
                 <input
@@ -352,7 +336,7 @@
                   [ngModel]="talla()"
                   (ngModelChange)="actualizarDecimal('talla', $event, 20.0, 250.0, 1, 'cm')"
                   placeholder="Ej: 168"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['talla'] ? 'border-red-500 bg-red-50/30' : ''
@@ -362,12 +346,11 @@
                 }
               </div>
 
-              <!-- IMC (Calculado) -->
               <div>
                 <label for="triaje-imc" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   IMC <span class="text-slate-500 font-normal">(kg/m²)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-slate-500 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Índice Quetelet
                 </div>
                 <div class="relative">
@@ -376,9 +359,9 @@
                     type="text"
                     [value]="imc() || '--'"
                     readonly
-                    class="w-full bg-slate-100 border border-slate-300 text-slate-900 text-sm font-bold rounded-lg px-3 py-2 outline-none font-mono cursor-not-allowed" />
+                    class="w-full bg-slate-100 border border-slate-300 text-slate-900 text-sm font-bold rounded-md px-3 py-2 outline-none cursor-not-allowed" />
                   @if (clasificacionImc()) {
-                    <span class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-xs font-bold uppercase border"
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-md text-xs font-bold uppercase border"
                           [ngClass]="clasificacionImc()?.clase">
                       {{ clasificacionImc()?.texto }}
                     </span>
@@ -386,12 +369,11 @@
                 </div>
               </div>
 
-              <!-- Hemoglobina -->
               <div>
                 <label for="triaje-hb" class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Hemoglobina <span class="text-slate-500 font-normal">(g/dL)</span>
                 </label>
-                <div class="text-[11px] font-mono font-bold text-rose-700 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Normal: 12.0 a 16.0
                 </div>
                 <input
@@ -403,7 +385,7 @@
                   [ngModel]="hemoglobina()"
                   (ngModelChange)="actualizarDecimal('hemoglobina', $event, 3.0, 25.0, 1, 'g/dL')"
                   placeholder="Ej: 13.5"
-                  class="w-full border text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none font-mono font-semibold transition-colors"
+                  class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                     erroresValidacion()['hemoglobina'] ? 'border-red-500 bg-red-50/30' : ''
@@ -413,18 +395,17 @@
                 }
               </div>
 
-              <!-- Gestante (Alineación uniforme en card) -->
               <div>
                 <span class="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">
                   Condición Especial
                 </span>
-                <div class="text-[11px] font-mono font-bold text-slate-500 mb-1.5 h-4">
+                <div class="text-xs font-medium text-slate-500 mb-1.5 h-4">
                   Gineco-Obstetricia
                 </div>
-                <label class="flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-colors h-[38px]"
+                <label class="flex items-center gap-2.5 px-3 py-2 rounded-md border transition-colors h-[38px]"
                        [ngClass]="[
-                         esModoLectura() ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-50 cursor-pointer border-slate-300',
-                         erroresValidacion()['esGestante'] ? 'border-red-500 bg-red-50/30' : ''
+                          esModoLectura() ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-50 cursor-pointer border-slate-300',
+                          erroresValidacion()['esGestante'] ? 'border-red-500 bg-red-50/30' : ''
                        ]">
                   <input
                     type="checkbox"
@@ -444,13 +425,12 @@
             </div>
           </div>
 
-          <!-- Observaciones Clínicas -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label for="triaje-observaciones" class="block text-xs font-bold text-slate-800 uppercase tracking-wide">
                 Observaciones del Triaje / Síntomas Referidos:
               </label>
-              <span class="text-xs font-mono font-semibold text-slate-500">
+              <span class="text-xs font-semibold text-slate-500">
                 {{ observaciones().length }} / 300 caracteres
               </span>
             </div>
@@ -462,7 +442,7 @@
               [ngModel]="observaciones()"
               (ngModelChange)="observaciones.set($event); limpiarErrorCampo('observaciones')"
               placeholder="Detalles clínicos relevantes, motivo aparente, síntomas referidos o hallazgos del paciente..."
-              class="w-full border text-slate-900 text-xs sm:text-sm rounded-lg p-3 focus:ring-1 focus:ring-blue-600 outline-none transition-colors resize-none"
+              class="w-full border text-slate-900 text-xs sm:text-sm rounded-md p-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors resize-none"
               [ngClass]="[
                 esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
                 erroresValidacion()['observaciones'] ? 'border-red-500 bg-red-50/30' : ''
@@ -475,23 +455,22 @@
         }
       </div>
 
-      <!-- Pie del Modal Formal con Botones de Solo Texto -->
-      <div class="px-6 py-4 border-t border-slate-300 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
-        <span class="text-xs sm:text-sm text-rose-700 font-bold tracking-tight">
-          * La información de color rojo define los valores NORMALES de los datos del triaje
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+        <span class="text-xs text-slate-500 font-semibold tracking-tight">
+          Valores referenciales estándar para pacientes adultos en reposo clínico.
         </span>
         <div class="flex items-center gap-3">
           @if (esModoLectura()) {
             <button
               type="button"
               (click)="alCerrar()"
-              class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer border border-slate-300">
+              class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer border border-slate-300">
               Cerrar
             </button>
             <button
               type="button"
               (click)="habilitarEdicion()"
-              class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-xs">
+              class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs">
               Modificar Signos Vitales
             </button>
           } @else {
@@ -499,14 +478,14 @@
               type="button"
               (click)="alCerrar()"
               [disabled]="guardando()"
-              class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer border border-slate-300">
+              class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer border border-slate-300">
               Cancelar
             </button>
             <button
               type="button"
               (click)="guardarTriaje()"
               [disabled]="guardando() || cargandoDatos()"
-              class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-xs disabled:opacity-50">
+              class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs disabled:opacity-50">
               {{ guardando() ? 'Guardando...' : (modoEdicionManual() ? 'Guardar Modificación' : 'Registrar') }}
             </button>
           }
