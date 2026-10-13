@@ -17,7 +17,12 @@
       <tr><td [attr.colspan]="columnas.length" style="padding: 20px 10px; color: #94a0bd; text-align: center;">{{ mensajeVacio }}</td></tr>
     } @else {
       @for (item of datos; track $index; let indiceFila = $index) {
-        <tr style="border-top: 1px solid #eef1f6;">
+        <tr style="border-top: 1px solid #eef1f6;"
+            [class.fila-clickeable]="filasClickeables"
+            [attr.tabindex]="filasClickeables ? 0 : null"
+            (click)="emitirFila(item)"
+            (keydown.enter)="emitirFila(item)"
+            (keydown.space)="emitirFila(item, $event)">
           @for (col of columnas; track col.campo) {
             <td [style.text-align]="col.alineacion || 'left'" style="padding: 12px 10px; vertical-align: middle;">
               @if (getTemplate(col.campo)) {

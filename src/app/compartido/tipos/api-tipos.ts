@@ -16,6 +16,7 @@ export interface IPaciente {
 export interface ICatalogoDescripcion {
   id: number;
   descripcion?: string;
+  codigo?: string;
 }
 
 export interface ICatalogoNombre {

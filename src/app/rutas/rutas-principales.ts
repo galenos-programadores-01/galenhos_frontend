@@ -13,6 +13,7 @@ import { TriajeComponent } from '../modulos/triaje/adaptadores/entrada/ui/pagina
 import { TriajeConsultaComponent } from '../modulos/triaje/adaptadores/entrada/ui/paginas/triaje-consulta/triaje-consulta.component';
 import { TriajeObstetricoComponent } from '../modulos/triaje-obstetrico/adaptadores/entrada/ui/paginas/triaje-obstetrico/triaje-obstetrico.component';
 import { TriajeObstetricoConsultaComponent } from '../modulos/triaje-obstetrico/adaptadores/entrada/ui/paginas/triaje-obstetrico-consulta/triaje-obstetrico-consulta.component';
+import { PrimeraAtencionComponent } from '../modulos/primera-atencion/adaptadores/entrada/ui/paginas/primera-atencion.component';
 
 export const rutasPrincipales: Routes = [
   {
@@ -61,6 +62,11 @@ export const rutasPrincipales: Routes = [
         path: 'admisionemergencia',
         component: AdmisionesComponent,
         data: { title: 'Admisiones' },
+      },
+      {
+        path: 'primeraatencionemergencia',
+        component: PrimeraAtencionComponent,
+        data: { title: 'Primera Atención' },
       },
       {
         path: 'sis',

@@ -14,6 +14,8 @@ export interface FirmaPeruOpciones {
   logoPngBase64?: string;
   positionX?: number;
   positionY?: number;
+  stampPage?: number;
+  stampTextSize?: number;
 }
 
 export interface FirmaPeruDocumento {
@@ -369,6 +371,12 @@ export async function iniciarFirmaDocumento(
   }
   if (typeof opciones.positionY === 'number') {
     formularioDatos.append('positiony', String(opciones.positionY));
+  }
+  if (typeof opciones.stampPage === 'number' && opciones.stampPage > 0) {
+    formularioDatos.append('stampPage', String(opciones.stampPage));
+  }
+  if (typeof opciones.stampTextSize === 'number' && opciones.stampTextSize > 0) {
+    formularioDatos.append('stampTextSize', String(opciones.stampTextSize));
   }
 
   const respuestaApi = await ejecutarPeticionApi<{
