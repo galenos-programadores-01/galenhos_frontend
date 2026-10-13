@@ -23,13 +23,13 @@ export class SignosVitalesBannerComponent {
     if (!temp) return 'text-slate-800 dark:text-slate-200';
     if (temp >= 38) return 'text-red-600 dark:text-red-400 font-bold';
     if (temp >= 37.3) return 'text-amber-600 dark:text-amber-400 font-bold';
-    return 'text-emerald-600 dark:text-emerald-400 font-bold';
+    return 'text-slate-800 dark:text-slate-200 font-bold';
   }
 
   obtenerClaseSaturacion(sat?: number): string {
     if (!sat) return 'text-slate-800 dark:text-slate-200';
     if (sat < 90) return 'text-red-600 dark:text-red-400 font-bold';
     if (sat < 95) return 'text-amber-600 dark:text-amber-400 font-bold';
-    return 'text-emerald-600 dark:text-emerald-400 font-bold';
+    return 'text-slate-800 dark:text-slate-200 font-bold';
   }
 }

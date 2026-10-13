@@ -1,59 +1,97 @@
-# FrontGalenos
+# Galenos Pro — Frontend (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.3.
+Aplicación web de gestión hospitalaria y atención médica desarrollada con Angular.
 
-## Development server
+---
 
-To start a local development server, run:
+## Requisitos Previos
 
-```bash
-ng serve
-```
+- Node.js (versión 20 o superior recomendada)
+- Gestor de paquetes npm
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## Cómo Compilar y Ejecutar
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### 1. Instalación de Dependencias
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Ejecuta este comando antes de compilar o arrancar por primera vez, o siempre que se actualicen las librerías:
 
 ```bash
-ng generate --help
+npm install
 ```
 
-## Building
+---
 
-To build the project run:
+### 2. Ejecutar en Modo Desarrollo
 
+#### En PowerShell:
+```powershell
+npm start
+```
+> [!NOTE]
+> Usar `npm start` evita el error de políticas de ejecución de scripts de Windows (`ExecutionPolicy Restricted`) que suele ocurrir al intentar ejecutar `ng serve` directamente. Si necesitas usar Angular CLI directamente, puedes usar `npx ng serve`.
+
+#### En Git Bash / Linux:
 ```bash
-ng build
+npm start
 ```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
+O alternativamente:
 ```bash
-ng test
+npx ng serve
 ```
 
-## Running end-to-end tests
+Una vez que el servidor compile y arranque, abre el navegador web en `http://localhost:4200/`. La aplicación se recargará automáticamente al guardar cambios en los archivos fuente.
 
-For end-to-end (e2e) testing, run:
+---
 
+### 3. Compilar para Producción
+
+Genera los archivos optimizados y empaquetados en la carpeta `dist/`:
+
+#### En PowerShell:
+```powershell
+npm run build
+```
+
+#### En Git Bash / Linux:
 ```bash
-ng e2e
+npm run build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Si deseas compilar en modo desarrollo con mapas de código fuente (`source maps`):
+```bash
+npm run watch
+```
 
-## Additional Resources
+---
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### 4. Pruebas Unitarias y Validación de Código
+
+- **Pruebas unitarias (Vitest):**
+  ```bash
+  npm test
+  ```
+- **Formateo de código (Biome):**
+  ```bash
+  npm run format
+  ```
+- **Revisión de calidad y linter (Biome):**
+  ```bash
+  npm run lint
+  ```
+
+---
+
+## Solución de Problemas Frecuentes
+
+### 1. Error de Política de Scripts en PowerShell
+- **Mensaje:** `ng.ps1 no se puede cargar porque la ejecución de scripts está deshabilitada en este sistema.`
+- **Solución:** Ejecutar siempre `npm start` o `npm run build`. Alternativamente, puedes habilitar temporalmente la ejecución para tu sesión actual de PowerShell con:
+  ```powershell
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+  ```
+
+### 2. Comando no encontrado (`command not found`)
+- **Mensaje:** `bash: ng: command not found` o `El término 'ng' no se reconoce...`
+- **Solución:** No es necesario tener Angular CLI instalado globalmente. Usa siempre los scripts de npm (`npm start`, `npm run build`) o invoca con `npx` (`npx ng serve`).

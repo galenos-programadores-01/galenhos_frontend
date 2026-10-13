@@ -7,7 +7,13 @@ import type {
   ColaPacienteCEItem,
   DestinoAtencionItem,
   FichaAtencionCEDetalle,
+  HistorialAtencionDetalle,
+  HistorialAtencionItem,
+  HistorialProcedimientoItem,
+  HistorialReporteOperatorioItem,
   PacienteDatosAdicionalesCE,
+  PacienteHistorialTriajeItem,
+  ServicioMedicoItem,
   TriajeConsultaSignosVitales,
 } from '../../../tipos/atencion-ce.tipos';
 
@@ -228,6 +234,98 @@ export class AtencionCEApiService {
           nombre: nombreFinal,
         };
       });
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialAtenciones(
+    idPaciente: number,
+  ): Promise<HistorialAtencionItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<HistorialAtencionItem[]>(
+        `/api/v1/atencion-ce/historial-paciente/${idPaciente}`,
+        { method: 'GET' },
+      );
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialAtencionDetalle(
+    idAtencion: number,
+  ): Promise<HistorialAtencionDetalle | null> {
+    try {
+      return await this.apiClient.request<HistorialAtencionDetalle>(
+        `/api/v1/atencion-ce/historial-atencion-detalle/${idAtencion}`,
+        { method: 'GET' },
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  async obtenerHistorialQuirurgico(
+    idPaciente: number,
+  ): Promise<HistorialReporteOperatorioItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        HistorialReporteOperatorioItem[]
+      >(`/api/v1/atencion-ce/historial-quirurgico-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialProcedimientos(
+    idPaciente: number,
+  ): Promise<HistorialProcedimientoItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        HistorialProcedimientoItem[]
+      >(`/api/v1/atencion-ce/historial-procedimientos-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialTriajePaciente(
+    idPaciente: number,
+  ): Promise<PacienteHistorialTriajeItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        PacienteHistorialTriajeItem[]
+      >(`/api/v1/atencion-ce/historial-triaje-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async listarServiciosMedico(
+    idEmpleado: number,
+    idTipoServicio: number = 1,
+  ): Promise<ServicioMedicoItem[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.set('idEmpleado', String(idEmpleado || -100));
+      queryParams.set('idTipoServicio', String(idTipoServicio || 1));
+      const respuesta = await this.apiClient.request<ServicioMedicoItem[]>(
+        `/api/v1/atencion-ce/servicios-medico?${queryParams.toString()}`,
+        {
+          method: 'GET',
+        },
+      );
+      return respuesta || [];
     } catch {
       return [];
     }

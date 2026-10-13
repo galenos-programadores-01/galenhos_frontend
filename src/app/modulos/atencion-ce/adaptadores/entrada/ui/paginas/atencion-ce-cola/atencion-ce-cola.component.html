@@ -1,6 +1,4 @@
 <div class="flex flex-col gap-4">
-  
-  <!-- Encabezado Institucional Formal -->
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-lg font-bold text-[#07153a] uppercase tracking-wide">
@@ -11,94 +9,99 @@
       </p>
     </div>
   </div>
-
-  <!-- Tarjetas de Resumen Clínico (Legibles, Alto Contraste) -->
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
     
-    <div class="bg-white p-3.5 rounded-lg border border-slate-300 shadow-xs">
+    <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs">
       <span class="text-xs font-bold text-slate-600 uppercase tracking-wider block">Total Citados</span>
       <div class="mt-2 flex items-baseline gap-2">
-        <span class="text-3xl font-black text-slate-900 font-mono">{{ totalCitados() }}</span>
+        <span class="text-3xl font-black text-slate-900">{{ totalCitados() }}</span>
         <span class="text-xs font-medium text-slate-500">programados</span>
       </div>
     </div>
 
-    <div class="bg-white p-3.5 rounded-lg border border-slate-300 shadow-xs">
+    <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Sin Triaje</span>
         <span class="text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-300 uppercase">Prioridad</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
-        <span class="text-3xl font-black text-rose-700 font-mono">{{ totalSinTriaje() }}</span>
+        <span class="text-3xl font-black text-rose-700">{{ totalSinTriaje() }}</span>
         <span class="text-xs font-medium text-slate-500">pendientes</span>
       </div>
     </div>
 
-    <div class="bg-white p-3.5 rounded-lg border border-slate-300 shadow-xs">
+    <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">En Espera</span>
         <span class="text-xs font-bold text-amber-800">Triados</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
-        <span class="text-3xl font-black text-amber-600 font-mono">{{ totalPendientes() }}</span>
+        <span class="text-3xl font-black text-amber-600">{{ totalPendientes() }}</span>
         <span class="text-xs font-medium text-slate-500">en sala</span>
       </div>
     </div>
 
-    <div class="bg-white p-3.5 rounded-lg border border-slate-300 shadow-xs">
+    <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">En Consulta</span>
         <span class="text-xs font-bold text-blue-800">Atendiendo</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
-        <span class="text-3xl font-black text-blue-700 font-mono">{{ totalEnAtencion() }}</span>
+        <span class="text-3xl font-black text-blue-700">{{ totalEnAtencion() }}</span>
         <span class="text-xs font-medium text-slate-500">en box</span>
       </div>
     </div>
 
-    <div class="bg-white p-3.5 rounded-lg border border-slate-300 shadow-xs col-span-2 sm:col-span-1">
+    <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs col-span-2 sm:col-span-1">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Atendidos</span>
-        <span class="text-xs font-bold text-emerald-800">Firmados</span>
+        <span class="text-xs font-bold text-slate-700">Firmados</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
-        <span class="text-3xl font-black text-emerald-700 font-mono">{{ totalAtendidos() }}</span>
+        <span class="text-3xl font-black text-slate-800">{{ totalAtendidos() }}</span>
         <span class="text-xs font-medium text-slate-500">cerrados</span>
       </div>
     </div>
 
   </div>
 
-  <!-- Barra de Filtros Hospitalaria -->
-  <div class="bg-white p-4 rounded-xl border border-slate-300 shadow-xs flex flex-col gap-3.5">
+  <div class="bg-white p-4 rounded-md border border-slate-300 shadow-xs flex flex-col gap-3.5">
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-end">
-      
-      <!-- Filtro Fecha -->
       <div>
         <label for="fecha-cola-ce" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
           Fecha de Atención:
         </label>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
           <input
+            #campoFecha
             id="fecha-cola-ce"
             type="date"
             [ngModel]="fechaSeleccionada()"
             (ngModelChange)="alCambiarFecha($event)"
-            class="bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none w-full" />
+            (click)="campoFecha.showPicker()"
+            class="bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-600 outline-none w-full cursor-pointer" />
+          <button
+            type="button"
+            (click)="campoFecha.showPicker()"
+            class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-md transition-colors cursor-pointer shrink-0"
+            title="Abrir calendario de atenciones"
+            aria-label="Abrir calendario">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </button>
           @if (!esFechaHoy()) {
             <button
               type="button"
               (click)="alIrAHoy()"
-              class="px-3 py-2 text-xs font-bold text-blue-800 hover:text-blue-950 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+              class="px-3 py-2 text-xs font-bold text-blue-800 hover:text-blue-950 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-md transition-colors cursor-pointer whitespace-nowrap"
               title="Restablecer filtro a la fecha de hoy">
               Hoy
             </button>
           }
         </div>
       </div>
-
-      <!-- Filtro Servicio / Consultorio -->
       <div>
         <label for="servicio-cola-ce" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
           Servicio / Consultorio:
@@ -108,13 +111,11 @@
           [ngModel]="servicioFiltro()"
           (ngModelChange)="alCambiarServicio($event)">
           <option [value]="0">TODOS LOS SERVICIOS</option>
-          @for (s of servicios(); track s.id) {
-            <option [value]="s.id">{{ s.nombre }}</option>
+          @for (servicio of servicios(); track servicio.idServicio) {
+            <option [value]="servicio.idServicio">{{ servicio.nombreServicio || servicio.descripcionHospitalaria }}</option>
           }
         </app-select-global>
       </div>
-
-      <!-- Filtro Turno -->
       <div>
         <label for="turno-cola-ce" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
           Turno:
@@ -128,8 +129,6 @@
           <option value="TARDE">TARDE</option>
         </app-select-global>
       </div>
-
-      <!-- Buscador de Texto -->
       <div>
         <label for="buscador-cola-ce" class="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
           Buscar Paciente:
@@ -154,8 +153,6 @@
       </div>
 
     </div>
-
-    <!-- Píldoras de Filtro por Estado -->
     <div class="pt-3 border-t border-slate-200 flex flex-wrap items-center gap-2">
       <span class="text-xs font-bold text-slate-600 uppercase tracking-wider mr-1">Filtrar:</span>
       <button
@@ -190,15 +187,14 @@
         type="button"
         (click)="alCambiarEstado('ATENDIDO')"
         class="px-3.5 py-1.5 rounded-md border text-xs font-bold transition-colors cursor-pointer"
-        [ngClass]="estadoFiltro() === 'ATENDIDO' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'">
+        [ngClass]="estadoFiltro() === 'ATENDIDO' ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'">
         Atendidos ({{ totalAtendidos() }})
       </button>
     </div>
 
   </div>
 
-  <!-- Tabla Formal Institucional de Pacientes Citados -->
-  <div class="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
+  <div class="bg-white rounded-md border border-slate-300 shadow-xs overflow-hidden">
     @if (cargando()) {
       <div class="text-center py-16 text-slate-600 text-sm font-medium">
         Consultando pacientes citados y cola de atenciones médicas...
@@ -225,128 +221,132 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
-            @for (item of pacientesFiltrados(); track item.idAtencion; let indice = $index) {
+            @for (item of pacientesPaginados(); track item.idAtencion; let indice = $index) {
               <tr class="hover:bg-slate-50 transition-colors bg-white">
-                
-                <!-- 1. Correlativo -->
-                <td class="px-3.5 py-3.5 text-center font-mono font-bold text-slate-500 text-sm">
-                  {{ indice + 1 }}
+                <td class="px-3.5 py-3.5 text-center font-bold text-slate-500 text-sm">
+                  {{ (paginaActual() - 1) * elementosPorPagina() + indice + 1 }}
                 </td>
-
-                <!-- 2. Hora de Cita / Turno -->
-                <td class="px-3.5 py-3.5 align-top font-mono">
+                <td class="px-3.5 py-3.5 align-top">
                   <div class="space-y-1">
-                    <span class="font-bold text-slate-900 text-sm block">
+                    <span class="font-bold text-slate-900 text-sm sm:text-base block">
                       {{ item.horaIngreso || '--:--' }}
                     </span>
-                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-slate-100 text-slate-700 border border-slate-300">
+                    <span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 text-slate-800 border border-slate-300">
                       {{ item.turno || 'MAÑANA' }}
                     </span>
                   </div>
                 </td>
-
-                <!-- 3. Historia Clínica / DNI / Cuenta -->
-                <td class="px-3.5 py-3.5 align-top font-mono">
+                <td class="px-3.5 py-3.5 align-top">
                   <div class="space-y-1">
                     <div class="text-sm font-bold text-blue-900">
-                      H.C.: {{ item.nroHistoriaClinica || '-' }}
+                      Historia Clínica: {{ item.nroHistoriaClinica || '-' }}
                     </div>
-                    <div class="text-xs text-slate-700 font-medium">
-                      DNI: <strong class="font-bold text-slate-900">{{ item.nroDocumento || '-' }}</strong>
+                    <div class="text-sm text-slate-800 font-medium">
+                      Documento: <strong class="font-bold text-slate-900">{{ item.nroDocumento || '-' }}</strong>
                     </div>
-                    <div class="text-[11px] text-slate-500">
-                      CTA: {{ item.idCuentaAtencion }}
+                    <div class="text-xs font-bold text-slate-600">
+                      Cuenta: {{ item.idCuentaAtencion }}
                     </div>
                   </div>
                 </td>
-
-                <!-- 4. Paciente (Nombre destacado, Edad, Sexo, Teléfono) -->
                 <td class="px-4 py-3.5 align-top">
                   <div class="space-y-1">
-                    <span class="font-bold text-slate-900 block text-sm sm:text-base leading-snug">
+                    <span class="font-bold text-slate-900 block text-base sm:text-lg leading-snug">
                       {{ item.pacienteNombre }}
                     </span>
-                    <div class="flex items-center gap-2 text-xs font-mono text-slate-700">
-                      <span>EDAD: <strong class="font-bold text-slate-900">{{ item.edad }} AÑOS</strong></span>
+                    <div class="flex items-center gap-2 text-sm text-slate-800">
+                      <span>Edad: <strong class="font-bold text-slate-900">{{ item.edad }} años</strong></span>
                       <span class="text-slate-400">•</span>
-                      <span>SEXO: <strong class="font-bold text-slate-900">{{ item.sexo || 'M' }}</strong></span>
+                      <span>Sexo: <strong class="font-bold text-slate-900">{{ item.sexo === 'F' ? 'Femenino' : 'Masculino' }}</strong></span>
                     </div>
                     @if (item.telefono) {
                       <div class="pt-0.5">
-                        <span class="inline-block text-xs font-semibold font-mono text-slate-800 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded">
-                          TEL: {{ item.telefono }}
+                        <span class="inline-block text-xs font-bold text-slate-800 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded">
+                          Teléfono: {{ item.telefono }}
                         </span>
                       </div>
                     }
                   </div>
                 </td>
-
-                <!-- 5. Consultorio / Especialidad / Médico -->
                 <td class="px-4 py-3.5 align-top">
                   <div class="space-y-1">
-                    <span class="font-bold text-slate-900 block text-xs sm:text-sm">
+                    <span class="font-bold text-slate-900 block text-sm">
                       {{ item.servicioNombre }}
                     </span>
-                    <span class="text-xs text-slate-700 block font-medium">
+                    <span class="text-sm text-slate-800 block font-medium">
                       {{ item.medicoNombre || 'Médico Asignado' }}
                     </span>
                   </div>
                 </td>
 
-                <!-- 6. Financiador (SIS / Pagante) -->
-                <td class="px-3.5 py-3.5 align-top font-mono">
-                  <span class="inline-block px-2.5 py-1 rounded text-xs font-bold uppercase border"
-                        [ngClass]="item.tipoFinanciador.toUpperCase().includes('SIS') ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-blue-50 text-blue-900 border-blue-200'">
+                <td class="px-3.5 py-3.5 align-top">
+                  <span class="inline-block px-2.5 py-1 rounded text-xs sm:text-sm font-bold uppercase border"
+                        [ngClass]="item.tipoFinanciador.toUpperCase().includes('SIS') ? 'bg-blue-50 text-blue-900 border-blue-200' : 'bg-slate-50 text-slate-800 border-slate-200'">
                     {{ item.tipoFinanciador }}
                   </span>
                 </td>
 
-                <!-- 7. Triaje (Estado y Botón Integrado) -->
                 <td class="px-3.5 py-3.5 align-top text-center">
                   <div class="flex flex-col items-center gap-1.5">
                     @if (item.tieneTriaje) {
-                      <span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 uppercase tracking-wide">
-                        TRIAJE: SÍ
+                      <span class="inline-block px-2.5 py-0.5 rounded text-xs sm:text-sm font-bold bg-blue-50 text-blue-800 border border-blue-200 uppercase tracking-wide">
+                        Triaje: Registrado
                       </span>
-                      <button
-                        type="button"
-                        (click)="abrirTriaje(item, true)"
-                        class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded border border-slate-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer w-full"
-                        title="Ver signos vitales en modo consulta">
-                        Ver Triaje
-                      </button>
+                      <div class="flex items-center gap-1.5 w-full">
+                        <button
+                          type="button"
+                          (click)="abrirTriaje(item, true)"
+                          class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded border border-slate-300 text-xs font-bold uppercase transition-colors cursor-pointer flex-1"
+                          title="Ver signos vitales en modo consulta">
+                          Ver
+                        </button>
+                        <button
+                          type="button"
+                          (click)="abrirTriaje(item, false)"
+                          class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded border border-amber-300 text-xs font-bold uppercase transition-colors cursor-pointer flex-1"
+                          title="Modificar o corregir signos vitales del triaje">
+                          Editar
+                        </button>
+                      </div>
                     } @else {
-                      <span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 uppercase tracking-wide">
-                        TRIAJE: NO
+                      <span class="inline-block px-2.5 py-0.5 rounded text-xs sm:text-sm font-bold bg-rose-100 text-rose-900 border border-rose-300 uppercase tracking-wide">
+                        Triaje: Pendiente
                       </span>
                       <button
                         type="button"
                         (click)="abrirTriaje(item, false)"
-                        class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded border border-amber-600 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer w-full shadow-xs"
-                        title="Tomar signos vitales del paciente">
+                        class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded border border-amber-600 text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer w-full shadow-xs"
+                        title="Tomar y registrar signos vitales del paciente">
                         Triaje
                       </button>
                     }
                   </div>
                 </td>
 
-                <!-- 8. Estado General de la Atención -->
                 <td class="px-3.5 py-3.5 align-top text-center">
-                  <span class="inline-block px-2.5 py-1 rounded text-xs font-bold border uppercase"
+                  <span class="inline-block px-2.5 py-1 rounded text-xs sm:text-sm font-bold border uppercase"
                         [ngClass]="obtenerClaseEstado(item.estadoAtencion)">
-                    {{ item.estadoAtencion === 'ATENDIDO' ? 'FIRMADO' : item.estadoAtencion === 'EN_ATENCION' ? 'EN ATENCIÓN' : 'EN ESPERA' }}
+                    {{ item.estadoAtencion === 'ATENDIDO' ? 'Firmado' : item.estadoAtencion === 'EN_ATENCION' ? 'En Atención' : 'En Espera' }}
                   </span>
                 </td>
 
-                <!-- 9. Acción Médica (Botón Solo Texto) -->
                 <td class="px-4 py-3.5 align-middle text-right">
-                  <button
-                    type="button"
-                    (click)="atenderPaciente(item)"
-                    class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border shadow-xs"
-                    [ngClass]="item.estadoAtencion === 'ATENDIDO' ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-[#07153a] hover:bg-blue-900 text-white border-[#07153a]'">
-                    {{ item.estadoAtencion === 'ATENDIDO' ? 'Ficha' : 'Atender' }}
-                  </button>
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      (click)="abrirHistorialPaciente(item)"
+                      class="px-2.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 shadow-2xs"
+                      title="Consultar historial clínico y atenciones anteriores del paciente">
+                      Historial
+                    </button>
+                    <button
+                      type="button"
+                      (click)="atenderPaciente(item)"
+                      class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer border shadow-xs"
+                      [ngClass]="item.estadoAtencion === 'ATENDIDO' ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-[#07153a] hover:bg-blue-900 text-white border-[#07153a]'">
+                      {{ item.estadoAtencion === 'ATENDIDO' ? 'Ficha' : 'Atender' }}
+                    </button>
+                  </div>
                 </td>
 
               </tr>
@@ -354,16 +354,47 @@
           </tbody>
         </table>
       </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-3 text-slate-700 font-medium">
+          <span>
+            Mostrando del <strong class="font-bold text-slate-900">{{ indiceInicio() }}</strong> al <strong class="font-bold text-slate-900">{{ indiceFin() }}</strong> de <strong class="font-bold text-slate-900">{{ totalFiltrados() }}</strong> pacientes citados
+          </span>
+          <div class="flex items-center gap-1.5 ml-2 border-l border-slate-300 pl-3">
+            <label for="selector-elementos-pagina" class="font-semibold text-slate-600">Por página:</label>
+            <select
+              id="selector-elementos-pagina"
+              [ngModel]="elementosPorPagina()"
+              (ngModelChange)="cambiarElementosPorPagina($event)"
+              class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer">
+              @for (opcion of opcionesElementosPorPagina; track opcion) {
+                <option [value]="opcion">{{ opcion }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <app-paginacion
+          [page]="paginaActual()"
+          [totalPages]="totalPaginas()"
+          [totalItems]="totalFiltrados()"
+          [showTotal]="false"
+          (pageChange)="cambiarPagina($event)" />
+      </div>
     }
   </div>
 
-  <!-- Modal de Registro de Triaje CE -->
   <app-triaje-ce-modal
     [visible]="modalTriajeVisible()"
     [paciente]="pacienteSeleccionadoTriaje()"
     [soloLectura]="modalTriajeSoloLectura()"
     (cerrarModal)="cerrarModalTriaje()"
     (triajeGuardado)="alGuardarTriaje()" />
+
+  <app-historial-atenciones-modal
+    [visible]="modalHistorialVisible()"
+    [paciente]="pacienteSeleccionadoHistorial()"
+    (alCerrar)="cerrarModalHistorial()" />
 
 </div>
 

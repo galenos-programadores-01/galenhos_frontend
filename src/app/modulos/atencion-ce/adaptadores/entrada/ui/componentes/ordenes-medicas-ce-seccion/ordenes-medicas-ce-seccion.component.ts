@@ -94,26 +94,26 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
 
   readonly cantidadMed = signal<number>(30);
   readonly dosisMed = signal<string>('1');
-  readonly unidadMed = signal<string>('TAB');
-  readonly frecuenciaMed = signal<string>('C\\24 HORAS');
+  readonly unidadMed = signal<string>('TABLETA');
+  readonly frecuenciaMed = signal<string>('CADA 24 HORAS');
   readonly viaMed = signal<string>('ORAL');
   readonly duracionMed = signal<string>('30 DÍAS');
 
   readonly unidadesComunes = [
-    'TAB',
-    'CAP',
-    'FCO',
-    'AMP',
-    'UNID',
+    'TABLETA',
+    'CÁPSULA',
+    'FRASCO',
+    'AMPOLLA',
+    'UNIDAD',
     'GEL',
     'CREMA',
-    'SUSP',
-    'INHAL',
+    'SUSPENSIÓN',
+    'INHALADOR',
   ];
   readonly viasComunes = [
     'ORAL',
-    'EV',
-    'IM',
+    'ENDOVENOSA',
+    'INTRAMUSCULAR',
     'SUBCUTÁNEA',
     'TÓPICA',
     'INHALATORIA',
@@ -122,12 +122,12 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
     'RECTAL',
   ];
   readonly frecuenciasComunes = [
-    'C\\24 HORAS',
-    'C\\12 HORAS',
-    'C\\8 HORAS',
-    'C\\6 HORAS',
-    'C\\4 HORAS',
-    'CONDICIONAL',
+    'CADA 24 HORAS',
+    'CADA 12 HORAS',
+    'CADA 8 HORAS',
+    'CADA 6 HORAS',
+    'CADA 4 HORAS',
+    'CONDICIONAL A SÍNTOMAS',
   ];
 
   // --- Sub-pestaña 2: APOYO AL DIAGNÓSTICO ---
@@ -287,8 +287,8 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
           concentracion: '50 MG',
           formaFarmaceutica: 'TABLETA',
           dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\12 HORAS',
+          unidad: 'TABLETA',
+          frecuencia: 'CADA 12 HORAS',
           via: 'ORAL',
           duracion: '30 DÍAS',
           cantidad: 60,
@@ -298,8 +298,8 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
           concentracion: '10 MG',
           formaFarmaceutica: 'TABLETA',
           dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\24 HORAS',
+          unidad: 'TABLETA',
+          frecuencia: 'CADA 24 HORAS',
           via: 'ORAL',
           duracion: '30 DÍAS',
           cantidad: 30,
@@ -309,8 +309,8 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
           concentracion: '5 MG',
           formaFarmaceutica: 'TABLETA',
           dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\24 HORAS',
+          unidad: 'TABLETA',
+          frecuencia: 'CADA 24 HORAS',
           via: 'ORAL',
           duracion: '30 DÍAS',
           cantidad: 30,
@@ -320,22 +320,11 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
           concentracion: '12.5 MG',
           formaFarmaceutica: 'TABLETA',
           dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\24 HORAS',
+          unidad: 'TABLETA',
+          frecuencia: 'CADA 24 HORAS',
           via: 'ORAL',
           duracion: '30 DÍAS',
           cantidad: 30,
-        },
-        {
-          nombre: 'LOSARTAN POTASICO',
-          concentracion: '50 MG',
-          formaFarmaceutica: 'TABLETA',
-          dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\12 HORAS',
-          via: 'ORAL',
-          duracion: '30 DÍAS',
-          cantidad: 60,
         },
       ],
     },
@@ -350,8 +339,8 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
           concentracion: '850 MG',
           formaFarmaceutica: 'TABLETA',
           dosis: '1',
-          unidad: 'TAB',
-          frecuencia: 'C\\12 HORAS',
+          unidad: 'TABLETA',
+          frecuencia: 'CADA 12 HORAS',
           via: 'ORAL',
           duracion: '30 DÍAS',
           cantidad: 60,
@@ -462,15 +451,25 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
     else if (forma.includes('AMP')) this.unidadMed.set('AMP');
   }
 
+  private resolverDiagnosticoAsociado(
+    idDiagnostico: number,
+  ): AtencionDiagnosticoCEItem | undefined {
+    const lista = this.diagnosticos();
+    if (!lista || lista.length === 0) return undefined;
+    if (idDiagnostico > 0) {
+      const encontrado = lista.find((d) => d.idDiagnostico === idDiagnostico);
+      if (encontrado) return encontrado;
+    }
+    const principal = lista.find((d) => d.idSubclasificacionDx === 1);
+    return principal || lista[0];
+  }
+
   agregarMedicamento(): void {
     const med = this.medicamentoSeleccionado();
     if (!med) return;
 
-    // Obtener diagnóstico seleccionado o el primero disponible
     const idDx = Number(this.idDiagnosticoFarmacia()) || 0;
-    const dxEncontrado =
-      this.diagnosticos().find((d) => d.idDiagnostico === idDx) ||
-      this.diagnosticos()[0];
+    const dxEncontrado = this.resolverDiagnosticoAsociado(idDx);
 
     const nuevoItem: ItemRecetaPrescripcion = {
       idProducto: med.idProducto,
@@ -560,9 +559,7 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
     if (!ex && !textoManual) return;
 
     const idDx = Number(this.idDiagnosticoApoyo()) || 0;
-    const dxEncontrado =
-      this.diagnosticos().find((d) => d.idDiagnostico === idDx) ||
-      this.diagnosticos()[0];
+    const dxEncontrado = this.resolverDiagnosticoAsociado(idDx);
 
     const nuevoItem: OrdenApoyoDiagnosticoItem = {
       idProducto: ex ? ex.idProducto : 0,
@@ -712,9 +709,7 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
       : `Especialidad ${idEspecialidad}`;
 
     const idDx = Number(this.idDiagnosticoInterconsulta()) || 0;
-    const dxEncontrado =
-      this.diagnosticos().find((d) => d.idDiagnostico === idDx) ||
-      this.diagnosticos()[0];
+    const dxEncontrado = this.resolverDiagnosticoAsociado(idDx);
 
     const nuevaInterconsulta: InterconsultaCEItem = {
       idDiagnostico: dxEncontrado?.idDiagnostico,
@@ -812,9 +807,7 @@ export class OrdenesMedicasCeSeccionComponent implements OnInit {
     if (!proc && !textoManual) return;
 
     const idDx = Number(this.idDiagnosticoProcedimiento()) || 0;
-    const dxEncontrado =
-      this.diagnosticos().find((d) => d.idDiagnostico === idDx) ||
-      this.diagnosticos()[0];
+    const dxEncontrado = this.resolverDiagnosticoAsociado(idDx);
 
     const nuevoProcedimiento: OrdenProcedimientoCEItem = {
       idProducto: proc ? proc.idProducto : 0,

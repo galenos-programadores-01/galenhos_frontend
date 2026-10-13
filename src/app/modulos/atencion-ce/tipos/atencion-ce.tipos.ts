@@ -22,6 +22,12 @@ export interface ColaPacienteCEItem {
   readonly turno?: string;
 }
 
+export interface ServicioMedicoItem {
+  readonly idServicio: number;
+  readonly descripcionHospitalaria: string;
+  readonly nombreServicio: string;
+}
+
 export interface AtencionDiagnosticoCEItem {
   readonly idAtencionDiagnostico?: number;
   readonly idDiagnostico: number;
@@ -78,7 +84,10 @@ export interface FichaAtencionCEDetalle {
   readonly horaIngreso: string;
   readonly horaEgreso: string;
   readonly estado: number;
+  readonly fechaAtencion?: string;
+  readonly fechaIngreso?: string;
   readonly especialidadNombre?: string;
+  readonly medicoNombre?: string;
   readonly iafa?: string;
   diagnosticos: AtencionDiagnosticoCEItem[];
   procedimientos?: AtencionProcedimientoCEItem[];
@@ -219,3 +228,131 @@ export interface CatalogoLabHISItem {
   readonly valor: string;
   readonly descripcion: string;
 }
+
+export interface HistorialAtencionItem {
+  readonly idAtencion: number;
+  readonly idCuentaAtencion: number;
+  readonly idPaciente: number;
+  readonly fechaIngreso: string;
+  readonly horaIngreso: string;
+  readonly horaEgreso: string;
+  readonly servicioNombre: string;
+  readonly idMedico: number;
+  readonly medicoNombre: string;
+  readonly idTipoServicio: number;
+  readonly tipoServicioNombre: string;
+  readonly tiempoProgramado: number;
+  readonly tiempoAtencion: number;
+}
+
+export interface HistorialTriajeItem {
+  readonly presionArterial: string;
+  readonly frecuenciaCardiaca: number;
+  readonly frecuenciaRespiratoria: number;
+  readonly temperatura: number;
+  readonly saturacion: number;
+  readonly peso: number;
+  readonly talla: number;
+  readonly imc: number;
+  readonly hemoglobina?: string;
+  readonly fiO2?: string;
+  readonly fechaRegistro: string;
+  readonly observacion: string;
+}
+
+export interface HistorialAtencionDetalle {
+  readonly idAtencion: number;
+  readonly idCuentaAtencion: number;
+  readonly idPaciente: number;
+  readonly pacienteNombre: string;
+  readonly nroHistoriaClinica: number;
+  readonly nroDocumento: string;
+  readonly edad: number;
+  readonly sexo: string;
+  readonly servicioNombre: string;
+  readonly medicoNombre: string;
+  readonly fechaAtencion: string;
+  readonly horaInicio: string;
+  readonly horaFin: string;
+  readonly triaje?: HistorialTriajeItem;
+  readonly diagnosticos: AtencionDiagnosticoCEItem[];
+  readonly inforCompDiagMed: string;
+  readonly motivo: string;
+  readonly tratamiento: string;
+  readonly planTratamiento: string;
+  readonly observaciones: string;
+  readonly examenClinico: string;
+  readonly consumoEnServicio?: string;
+  readonly servicioApoyoAlDx?: string;
+}
+
+export interface HistorialReporteOperatorioItem {
+  readonly idReporte: number;
+  readonly idAtencion: number;
+  readonly codigoCPT: string;
+  readonly fecha: string;
+  readonly descripcion: string;
+  readonly cirujano: string;
+  readonly servicio: string;
+  readonly estado: string;
+  readonly cama?: string;
+  readonly horaInicio?: string;
+  readonly horaFin?: string;
+  readonly tiempoQuirurgico?: string;
+  readonly diagnosticoPre?: string;
+  readonly diagnosticoPost?: string;
+  readonly operacionIndicada?: string;
+  readonly operacionRealizada?: string;
+  readonly primerAyudante?: string;
+  readonly segundoAyudante?: string;
+  readonly anestesiologo?: string;
+  readonly instrumentista?: string;
+  readonly personalCirculante?: string;
+  readonly tipoAnestesia?: string;
+  readonly tipoOperacion?: string;
+  readonly cuentaGasas?: string;
+  readonly piezaOperatoria?: string;
+  readonly tipoIntervencion?: string;
+  readonly riesgoQuirurgico?: string;
+  readonly hallazgos?: string;
+}
+
+export interface HistorialProcedimientoItem {
+  readonly idProcedimiento: number;
+  readonly idAtencion: number;
+  readonly codigoCPT: string;
+  readonly fecha: string;
+  readonly descripcion: string;
+  readonly medico: string;
+  readonly servicio: string;
+  readonly estado: string;
+  readonly numeroCuenta?: string;
+  readonly numeroHistoria?: string;
+  readonly fechaHoraAtencion?: string;
+  readonly especialidad?: string;
+  readonly tipoSeguro?: string;
+  readonly procedencia?: string;
+  readonly cmp?: string;
+  readonly hallazgos?: string;
+  readonly diagnosticos?: string;
+  readonly observacion?: string;
+}
+
+export interface PacienteHistorialTriajeItem {
+  readonly idTriaje: number;
+  readonly idAtencion: number;
+  readonly fechaRegistro: string;
+  readonly horaRegistro: string;
+  readonly presionArterial: string;
+  readonly pulso: string;
+  readonly frecuenciaCardiaca: number;
+  readonly frecuenciaRespiratoria: number;
+  readonly temperatura: number;
+  readonly saturacion: number;
+  readonly peso: number;
+  readonly talla: number;
+  readonly imc: number;
+  readonly hemoglobina: string;
+  readonly observacion: string;
+}
+
