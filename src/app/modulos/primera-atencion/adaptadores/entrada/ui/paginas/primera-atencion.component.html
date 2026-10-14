@@ -1950,6 +1950,33 @@
               </div>
             </div>
 
+            <div class="pa-cierre-docs" aria-label="Documentos a firmar">
+              <div class="pa-cierre-docs-head">
+                <h5 class="pa-cierre-docs-titulo">Documentos a firmar</h5>
+                <span class="pa-cierre-docs-count">
+                  {{ documentosParaFirmarLista.length }}
+                  {{ documentosParaFirmarLista.length === 1 ? 'documento' : 'documentos' }}
+                </span>
+              </div>
+              <ul class="pa-cierre-docs-lista">
+                @for (doc of documentosParaFirmarLista; track doc.clave) {
+                  <li class="pa-cierre-docs-item" [attr.data-tipo]="doc.tipo">
+                    <span class="pa-cierre-docs-bullet" aria-hidden="true"></span>
+                    <span class="pa-cierre-docs-label">{{ doc.etiqueta }}</span>
+                    @if (doc.tipo !== 'pa') {
+                      <span class="pa-cierre-docs-meta">
+                        {{ doc.cantidadItems }}
+                        {{ doc.cantidadItems === 1 ? 'ítem' : 'ítems' }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+              <p class="pa-cierre-docs-hint">
+                Se firmarán en un solo lote con Firma Perú (DNIe).
+              </p>
+            </div>
+
             @if (mensaje) {
               <div class="pa-paso-cierre-msg">{{ mensaje }}</div>
             }
@@ -1963,7 +1990,7 @@
               @if (isSigning) {
                 <span>Procesando firma con DNIe...</span>
               } @else {
-                <span>Firmar y registrar primera atención</span>
+                <span>Firmar</span>
               }
             </button>
             <button type="button" class="pa-btn-secundario pa-btn-cancelar-cierre" (click)="volverBandeja()">

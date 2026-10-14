@@ -409,6 +409,16 @@ type GrupoExamenVista = {
   }[];
 };
 
+/** Fila de la lista “Documentos a firmar” (Paso 1 — solo UI; sin lote aún). */
+type DocFirmaListaItem = {
+  clave: string;
+  etiqueta: string;
+  tipo: 'pa' | 'examen' | 'medicamentos';
+  idReceta: number | null;
+  idPuntoCarga: number | null;
+  cantidadItems: number;
+};
+
 type ItemProcedimientoCat = {
   idProducto: number;
   codigo: string;
@@ -969,6 +979,96 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   get listoParaSelladoPa(): boolean {
     const resumen = this.resumenVerificacionPa;
     return resumen.length > 0 && resumen.every((item) => item.completado);
+  }
+
+  /**
+   * Lista informativa del cierre: PA + exámenes por IdReceta/PC + medicamentos.
+   * Orden: Primera Atención → Exámenes (A–Z) → Medicamentos.
+   * Procedimientos e IC no entran (acuerdo diseño firma lote).
+   */
+  get documentosParaFirmarLista(): DocFirmaListaItem[] {
+    const docs: DocFirmaListaItem[] = [
+      {
+        clave: 'pa',
+        etiqueta: 'Primera Atención',
+        tipo: 'pa',
+        idReceta: null,
+        idPuntoCarga: null,
+        cantidadItems: 1,
+      },
+    ];
+
+    type AccEx = {
+      idReceta: number | null;
+      idPuntoCarga: number | null;
+      etiquetaPunto: string;
+      cantidad: number;
+    };
+    const porReceta = new Map<string, AccEx>();
+    for (const e of this.examenes) {
+      if (e.idProducto == null && !(e.nombre || '').trim()) continue;
+      const idPunto =
+        typeof e.idPuntoCarga === 'number' && e.idPuntoCarga > 0
+          ? e.idPuntoCarga
+          : null;
+      if (idPunto === 26) continue; // procedimientos: fuera de firma
+      const idReceta =
+        typeof e.idReceta === 'number' && e.idReceta > 0 ? e.idReceta : null;
+      const etiquetaPunto =
+        (e.puntoCarga || '').trim() || 'Sin punto de carga';
+      const clave =
+        idReceta != null
+          ? `receta:${idReceta}`
+          : idPunto != null
+            ? `pc:${idPunto}`
+            : `nom:${etiquetaPunto}`;
+      const prev = porReceta.get(clave);
+      if (prev) {
+        prev.cantidad += 1;
+      } else {
+        porReceta.set(clave, {
+          idReceta,
+          idPuntoCarga: idPunto,
+          etiquetaPunto,
+          cantidad: 1,
+        });
+      }
+    }
+
+    const examenesOrdenados = [...porReceta.entries()].sort((a, b) => {
+      if (a[1].etiquetaPunto === 'Sin punto de carga') return 1;
+      if (b[1].etiquetaPunto === 'Sin punto de carga') return -1;
+      return a[1].etiquetaPunto.localeCompare(b[1].etiquetaPunto, 'es');
+    });
+    for (const [clave, g] of examenesOrdenados) {
+      docs.push({
+        clave: `examen:${clave}`,
+        etiqueta: `Examen - ${g.etiquetaPunto}`,
+        tipo: 'examen',
+        idReceta: g.idReceta,
+        idPuntoCarga: g.idPuntoCarga,
+        cantidadItems: g.cantidad,
+      });
+    }
+
+    const meds = this.medicamentos.filter(
+      (m) => m.idProducto !== '' && m.idProducto != null,
+    );
+    if (meds.length > 0) {
+      const idRecetaMed =
+        meds.find((m) => m.idReceta != null && m.idReceta > 0)?.idReceta ??
+        null;
+      docs.push({
+        clave: 'medicamentos',
+        etiqueta: 'Medicamentos',
+        tipo: 'medicamentos',
+        idReceta: idRecetaMed,
+        idPuntoCarga: 5,
+        cantidadItems: meds.length,
+      });
+    }
+
+    return docs;
   }
 
   /**
