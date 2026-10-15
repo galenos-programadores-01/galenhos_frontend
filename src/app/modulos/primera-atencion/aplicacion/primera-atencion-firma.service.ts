@@ -3,7 +3,7 @@ import { ApiClientService } from '../../../compartido/api-client/api-client.serv
 import type { DatosInstitucionPdf } from '../../../compartido/pdf/pdf.tipos';
 import {
   type FirmaPeruConexion,
-  iniciarFirmaDocumento,
+  iniciarFirmaLote,
 } from '../../../compartido/utilidades/firma-peru.util';
 import { AuthService } from '../../auth/aplicacion/auth.service';
 import { PrimeraAtencionApiService } from '../adaptadores/salida/http/primera-atencion.api.service';
@@ -12,7 +12,7 @@ import type {
   DocumentoFirmaPa,
   EntradaArmarDocumentosFirmaPa,
 } from './firma/primera-atencion-firma.tipos';
-import { construirPdfPrimeraAtencion } from './pdf/primera-atencion-pdf.util';
+import { generarPdfsDocumentosFirmaPa } from './pdf/primera-atencion-pdf-satelite.util';
 import type { PrimeraAtencionPdfData } from './pdf/primera-atencion-pdf.tipos';
 
 export interface ContextoFirmaPa {
@@ -21,6 +21,8 @@ export interface ContextoFirmaPa {
   institucion: DatosInstitucionPdf | null;
   nombreUsuario: string;
   cargoFirma: string;
+  /** Si se omite, se arma solo PA (sin satélites). */
+  documentos?: DocumentoFirmaPa[];
 }
 
 export interface ResultadoFirmaPa {
@@ -28,15 +30,12 @@ export interface ResultadoFirmaPa {
   uuidFirma?: string;
   ubicacionArchivo?: string;
   mensajeError?: string;
+  cantidadDocumentos?: number;
 }
 
 /**
- * Orquesta PDF + Firma Perú / DNIe + cierre en BD.
- * Mismo patrón que FormularioSoapFirmaService, sin re-persistir satélites
- * (DX / plan / receta ya se guardaron como borrador).
- *
- * Paso 2: `armarDocumentosParaFirmar` prepara el lote (sin PDF aún).
- * `procesarFirmaDigital` sigue firmando solo el PDF de PA hasta el Paso 4.
+ * Orquesta PDFs del lote + Firma Perú (7z / un PIN) + cierre en BD.
+ * Paso 3–5: PA + exámenes + medicamentos; sin re-persistir satélites.
  */
 @Injectable({ providedIn: 'root' })
 export class PrimeraAtencionFirmaService {
@@ -46,7 +45,6 @@ export class PrimeraAtencionFirmaService {
 
   /**
    * Lista canónica de documentos del lote: PA + exámenes por IdReceta + medicamentos.
-   * No genera PDF ni invoca Firma Perú.
    */
   armarDocumentosParaFirmar(
     entrada: EntradaArmarDocumentosFirmaPa,
@@ -65,21 +63,50 @@ export class PrimeraAtencionFirmaService {
       };
     }
 
-    const documentoPdf = await this.construirPdf(contexto);
-    if (!documentoPdf) {
+    const documentos =
+      contexto.documentos && contexto.documentos.length > 0
+        ? contexto.documentos
+        : this.armarDocumentosParaFirmar({
+            idAtencion: contexto.idAtencion,
+            examenes: [],
+            medicamentos: [],
+          });
+
+    const fechaImpresion = new Date().toLocaleString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    let pdfs;
+    try {
+      pdfs = await generarPdfsDocumentosFirmaPa(
+        documentos,
+        contexto.datosPdf,
+        contexto.institucion,
+        contexto.nombreUsuario,
+        fechaImpresion,
+      );
+    } catch (error) {
       return {
         exito: false,
-        mensajeError: 'No se pudo construir el PDF de primera atención.',
+        mensajeError:
+          error instanceof Error
+            ? error.message
+            : 'No se pudieron construir los PDF del lote.',
       };
     }
 
     let resultadoFirma;
     try {
-      resultadoFirma = await iniciarFirmaDocumento(
-        {
-          blob: documentoPdf.output('blob'),
-          nombre: `PA_${contexto.idAtencion}.pdf`,
-        },
+      resultadoFirma = await iniciarFirmaLote(
+        pdfs.map((p) => ({
+          blob: p.doc.output('blob'),
+          nombre: p.documento.nombreArchivoSugerido,
+        })),
         this.conexionFirma(),
         {
           motivo: 'Soy el Autor',
@@ -88,7 +115,6 @@ export class PrimeraAtencionFirmaService {
             contexto.institucion?.logoHospi ||
             contexto.institucion?.logoMinsa ||
             undefined,
-          stampPage: 1,
           positionX: 430,
           positionY: 10,
         },
@@ -107,7 +133,7 @@ export class PrimeraAtencionFirmaService {
       return {
         exito: false,
         mensajeError:
-          'No se recibió el documento firmado. Verifique que completó la firma en Firma Perú.',
+          'No se recibió el lote firmado. Verifique que completó la firma en Firma Perú.',
       };
     }
 
@@ -119,6 +145,7 @@ export class PrimeraAtencionFirmaService {
         exito: true,
         uuidFirma: resultadoFirma.uuid,
         ubicacionArchivo: cierre.ubicacionArchivo,
+        cantidadDocumentos: pdfs.length,
       };
     } catch (error) {
       return {
@@ -129,23 +156,6 @@ export class PrimeraAtencionFirmaService {
             : 'La firma se completó pero no se pudo cerrar el registro en el servidor.',
       };
     }
-  }
-
-  private async construirPdf(contexto: ContextoFirmaPa) {
-    const fechaImpresion = new Date().toLocaleString('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-    return construirPdfPrimeraAtencion(
-      contexto.datosPdf,
-      contexto.institucion,
-      contexto.nombreUsuario,
-      fechaImpresion,
-    );
   }
 
   private conexionFirma(): FirmaPeruConexion {

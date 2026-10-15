@@ -973,14 +973,20 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Lista del cierre (Paso 1 UI + Paso 2 servicio): misma fuente que el lote.
-   * Orden PA → exámenes → medicamentos. Sin PDF/firma aún.
+   * Lista del cierre + fuente del lote (PA → exámenes → medicamentos).
    */
   get documentosParaFirmarLista(): DocumentoFirmaPa[] {
     return this.firmaService.armarDocumentosParaFirmar({
       idAtencion: this.idAtencionActivo() ?? 0,
-      examenes: this.examenes,
-      medicamentos: this.medicamentos,
+      examenes: this.examenes.map((e) => ({
+        ...e,
+        cie10Dx: this.pdfCie10DeIdDx(e.idDiagnostico),
+      })),
+      medicamentos: this.medicamentos.map((m) => ({
+        ...m,
+        cie10Dx: this.pdfCie10DeIdDx(m.idDiagnostico),
+        via: this.etiquetaVia(m.idViaAdministracion),
+      })),
     });
   }
 
@@ -4723,8 +4729,12 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const documentos = this.documentosParaFirmarLista;
+    const nDocs = documentos.length;
     const confirmado = await this.modalGlobal.confirmar(
-      'Se generará el PDF de primera atención y se abrirá el Firmador de Firma Perú para firmar con su DNIe. ¿Desea continuar?',
+      nDocs === 1
+        ? 'Se generará el PDF de primera atención y se abrirá Firma Perú para firmar con su DNIe. ¿Desea continuar?'
+        : `Se generarán ${nDocs} documentos (PA, exámenes y/o medicamentos) y se firmarán en un solo lote con su DNIe. ¿Desea continuar?`,
       'Firmar primera atención con DNIe',
       'Firmar',
     );
@@ -4751,6 +4761,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
         institucion: this.datosInstitucionPa,
         nombreUsuario: this.authService.username() ?? '',
         cargoFirma: this.cargoCompletoFirmantePa,
+        documentos,
       });
 
       if (!resultado.exito) {
@@ -4764,8 +4775,11 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
 
       this.persistencia.limpiarSessionStorage(idAtencion);
       this.persistencia.desactivar();
+      const nFirmados = resultado.cantidadDocumentos ?? nDocs;
       this.modalGlobal.exito(
-        'La primera atención fue firmada con el DNIe y cerrada. Ya no se puede editar.',
+        nFirmados > 1
+          ? `Se firmaron ${nFirmados} documentos en lote y la primera atención quedó cerrada. Ya no se puede editar.`
+          : 'La primera atención fue firmada con el DNIe y cerrada. Ya no se puede editar.',
         'Primera atención firmada',
       );
       this.vista = 'bandeja';
