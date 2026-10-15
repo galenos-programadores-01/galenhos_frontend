@@ -8,7 +8,7 @@ import {
 } from './primera-atencion-firma.tipos';
 
 type AccExamen = {
-  idReceta: number | null;
+  idReceta: number;
   idPuntoCarga: number | null;
   etiquetaPunto: string;
   items: ItemExamenDocumentoFirmaPa[];
@@ -16,16 +16,18 @@ type AccExamen = {
 
 /**
  * Arma la lista de documentos del lote PA.
- * Orden: Primera Atención → Exámenes (A–Z por punto de carga) → Medicamentos.
- * Excluye procedimientos (IdPuntoCarga=26) e interconsultas.
- * Solo-PA es válido (sin satélites).
+ * Orden: Primera Atención → Exámenes (A–Z) → Medicamentos.
+ * Nombres canónicos (mismo basename que FTP):
+ *   {idPrimeraAtencion}.pdf
+ *   {idPrimeraAtencion}_{idReceta}.pdf
+ * Satélites sin IdReceta no entran (no hay path mapeable).
  */
 export function armarDocumentosFirmaPa(
   entrada: EntradaArmarDocumentosFirmaPa,
 ): DocumentoFirmaPa[] {
-  const idAtencion =
-    Number.isFinite(entrada.idAtencion) && entrada.idAtencion > 0
-      ? entrada.idAtencion
+  const idPA =
+    Number.isFinite(entrada.idPrimeraAtencion) && entrada.idPrimeraAtencion > 0
+      ? entrada.idPrimeraAtencion
       : 0;
 
   const docs: DocumentoFirmaPa[] = [
@@ -36,7 +38,7 @@ export function armarDocumentosFirmaPa(
       idReceta: null,
       idPuntoCarga: null,
       cantidadItems: 1,
-      nombreArchivoSugerido: nombrePa(idAtencion),
+      nombreArchivoSugerido: nombreArchivoPa(idPA),
       examenes: [],
       medicamentos: [],
     },
@@ -53,13 +55,11 @@ export function armarDocumentosFirmaPa(
 
     const idReceta =
       typeof e.idReceta === 'number' && e.idReceta > 0 ? e.idReceta : null;
+    // Sin IdReceta no hay path FTP mapeable.
+    if (idReceta == null) continue;
+
     const etiquetaPunto = (e.puntoCarga || '').trim() || 'Sin punto de carga';
-    const claveGrupo =
-      idReceta != null
-        ? `receta:${idReceta}`
-        : idPunto != null
-          ? `pc:${idPunto}`
-          : `nom:${etiquetaPunto}`;
+    const claveGrupo = `receta:${idReceta}`;
 
     const item: ItemExamenDocumentoFirmaPa = {
       idProducto: e.idProducto,
@@ -92,12 +92,6 @@ export function armarDocumentosFirmaPa(
   });
 
   for (const [claveGrupo, g] of examenesOrdenados) {
-    const sufijo =
-      g.idReceta != null
-        ? `R${g.idReceta}`
-        : g.idPuntoCarga != null
-          ? `PC${g.idPuntoCarga}`
-          : 'X';
     docs.push({
       clave: `examen:${claveGrupo}`,
       etiqueta: `Examen - ${g.etiquetaPunto}`,
@@ -105,7 +99,7 @@ export function armarDocumentosFirmaPa(
       idReceta: g.idReceta,
       idPuntoCarga: g.idPuntoCarga,
       cantidadItems: g.items.length,
-      nombreArchivoSugerido: nombreSatelite(idAtencion, 'EX', sufijo),
+      nombreArchivoSugerido: nombreArchivoReceta(idPA, g.idReceta),
       examenes: g.items,
       medicamentos: [],
     });
@@ -116,10 +110,12 @@ export function armarDocumentosFirmaPa(
     if (m.idProducto === '' || m.idProducto == null) continue;
     const idProducto = Number(m.idProducto);
     if (!Number.isFinite(idProducto) || idProducto <= 0) continue;
+    const idReceta =
+      typeof m.idReceta === 'number' && m.idReceta > 0 ? m.idReceta : null;
+    if (idReceta == null) continue;
     meds.push({
       idProducto,
-      idReceta:
-        typeof m.idReceta === 'number' && m.idReceta > 0 ? m.idReceta : null,
+      idReceta,
       nombre: (m.nombre || '').trim(),
       cantidad: (m.cantidad || '').trim(),
       dosis: (m.dosis || '').trim(),
@@ -133,34 +129,35 @@ export function armarDocumentosFirmaPa(
   }
 
   if (meds.length > 0) {
-    const idRecetaMed =
-      meds.find((m) => m.idReceta != null && m.idReceta > 0)?.idReceta ?? null;
-    const sufijo = idRecetaMed != null ? `R${idRecetaMed}` : 'FAR';
-    docs.push({
-      clave: 'medicamentos',
-      etiqueta: 'Medicamentos',
-      tipo: 'medicamentos',
-      idReceta: idRecetaMed,
-      idPuntoCarga: PA_ID_PUNTO_CARGA_FARMACIA,
-      cantidadItems: meds.length,
-      nombreArchivoSugerido: nombreSatelite(idAtencion, 'MED', sufijo),
-      examenes: [],
-      medicamentos: meds,
-    });
+    const idRecetaMed = meds[0].idReceta;
+    if (idRecetaMed != null && idRecetaMed > 0) {
+      docs.push({
+        clave: 'medicamentos',
+        etiqueta: 'Medicamentos',
+        tipo: 'medicamentos',
+        idReceta: idRecetaMed,
+        idPuntoCarga: PA_ID_PUNTO_CARGA_FARMACIA,
+        cantidadItems: meds.length,
+        nombreArchivoSugerido: nombreArchivoReceta(idPA, idRecetaMed),
+        examenes: [],
+        medicamentos: meds,
+      });
+    }
   }
 
   return docs;
 }
 
-function nombrePa(idAtencion: number): string {
-  return idAtencion > 0 ? `PA_${idAtencion}.pdf` : 'PA.pdf';
+function nombreArchivoPa(idPrimeraAtencion: number): string {
+  return idPrimeraAtencion > 0 ? `${idPrimeraAtencion}.pdf` : 'PA.pdf';
 }
 
-function nombreSatelite(
-  idAtencion: number,
-  tipo: 'EX' | 'MED',
-  sufijo: string,
+function nombreArchivoReceta(
+  idPrimeraAtencion: number,
+  idReceta: number,
 ): string {
-  const prefijo = idAtencion > 0 ? `PA_${idAtencion}` : 'PA';
-  return `${prefijo}_${tipo}_${sufijo}.pdf`;
+  if (idPrimeraAtencion > 0 && idReceta > 0) {
+    return `${idPrimeraAtencion}_${idReceta}.pdf`;
+  }
+  return idReceta > 0 ? `${idReceta}.pdf` : 'receta.pdf';
 }

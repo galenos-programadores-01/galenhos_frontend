@@ -978,6 +978,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   get documentosParaFirmarLista(): DocumentoFirmaPa[] {
     return this.firmaService.armarDocumentosParaFirmar({
       idAtencion: this.idAtencionActivo() ?? 0,
+      idPrimeraAtencion: this.persistencia.idPrimeraAtencion ?? 0,
       examenes: this.examenes.map((e) => ({
         ...e,
         cie10Dx: this.pdfCie10DeIdDx(e.idDiagnostico),

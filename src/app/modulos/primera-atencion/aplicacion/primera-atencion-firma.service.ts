@@ -68,6 +68,7 @@ export class PrimeraAtencionFirmaService {
         ? contexto.documentos
         : this.armarDocumentosParaFirmar({
             idAtencion: contexto.idAtencion,
+            idPrimeraAtencion: 0,
             examenes: [],
             medicamentos: [],
           });

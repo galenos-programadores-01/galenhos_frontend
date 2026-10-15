@@ -35,7 +35,7 @@ export interface ItemMedicamentoDocumentoFirmaPa {
 
 /**
  * Documento que entrará al lote de Firma Perú.
- * Paso 2: solo metadatos + ítems; PDF/firma en pasos siguientes.
+ * Basename = path FTP: {idPA}.pdf / {idPA}_{idReceta}.pdf
  */
 export interface DocumentoFirmaPa {
   clave: string;
@@ -45,7 +45,7 @@ export interface DocumentoFirmaPa {
   idReceta: number | null;
   idPuntoCarga: number | null;
   cantidadItems: number;
-  /** Nombre sugerido del PDF en el 7z (aún no se genera). */
+  /** Nombre en el 7z (= basename remoto). */
   nombreArchivoSugerido: string;
   examenes: ItemExamenDocumentoFirmaPa[];
   medicamentos: ItemMedicamentoDocumentoFirmaPa[];
@@ -53,7 +53,10 @@ export interface DocumentoFirmaPa {
 
 /** Entrada del armado: filas UI ya cargadas en el cierre. */
 export interface EntradaArmarDocumentosFirmaPa {
+  /** Clave HIS (contexto); el path FTP usa idPrimeraAtencion. */
   idAtencion: number;
+  /** PK de Tab_PA — basename del PDF principal y prefijo de satélites. */
+  idPrimeraAtencion: number;
   examenes: ReadonlyArray<{
     idProducto: number | null;
     idReceta: number | null;
