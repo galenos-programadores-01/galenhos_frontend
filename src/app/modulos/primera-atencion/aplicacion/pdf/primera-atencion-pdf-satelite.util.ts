@@ -100,16 +100,6 @@ async function construirPdfExamenSatelite(
     );
   }
 
-  if (documento.idReceta != null) {
-    lienzo.dibujarParrafoEtiquetado('N° RECETA', String(documento.idReceta));
-  }
-  if (documento.idPuntoCarga != null) {
-    lienzo.dibujarParrafoEtiquetado(
-      'PUNTO DE CARGA',
-      String(documento.idPuntoCarga),
-    );
-  }
-
   lienzo.dibujarEspacioFirma(
     datosPa.cabecera,
     institucion,
@@ -121,7 +111,7 @@ async function construirPdfExamenSatelite(
 }
 
 async function construirPdfMedicamentosSatelite(
-  documento: DocumentoFirmaPa,
+  _documento: DocumentoFirmaPa,
   items: ItemMedicamentoDocumentoFirmaPa[],
   datosPa: PrimeraAtencionPdfData,
   institucion: DatosInstitucionPdf | null,
@@ -161,10 +151,6 @@ async function construirPdfMedicamentosSatelite(
       ]),
       [20, 48, 14, 28, 24, 30, 14],
     );
-  }
-
-  if (documento.idReceta != null) {
-    lienzo.dibujarParrafoEtiquetado('N° RECETA', String(documento.idReceta));
   }
 
   lienzo.dibujarEspacioFirma(
