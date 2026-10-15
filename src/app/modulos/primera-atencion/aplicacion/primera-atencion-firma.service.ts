@@ -7,6 +7,11 @@ import {
 } from '../../../compartido/utilidades/firma-peru.util';
 import { AuthService } from '../../auth/aplicacion/auth.service';
 import { PrimeraAtencionApiService } from '../adaptadores/salida/http/primera-atencion.api.service';
+import { armarDocumentosFirmaPa } from './firma/armar-documentos-firma-pa';
+import type {
+  DocumentoFirmaPa,
+  EntradaArmarDocumentosFirmaPa,
+} from './firma/primera-atencion-firma.tipos';
 import { construirPdfPrimeraAtencion } from './pdf/primera-atencion-pdf.util';
 import type { PrimeraAtencionPdfData } from './pdf/primera-atencion-pdf.tipos';
 
@@ -29,12 +34,25 @@ export interface ResultadoFirmaPa {
  * Orquesta PDF + Firma Perú / DNIe + cierre en BD.
  * Mismo patrón que FormularioSoapFirmaService, sin re-persistir satélites
  * (DX / plan / receta ya se guardaron como borrador).
+ *
+ * Paso 2: `armarDocumentosParaFirmar` prepara el lote (sin PDF aún).
+ * `procesarFirmaDigital` sigue firmando solo el PDF de PA hasta el Paso 4.
  */
 @Injectable({ providedIn: 'root' })
 export class PrimeraAtencionFirmaService {
   private readonly apiClient = inject(ApiClientService);
   private readonly authService = inject(AuthService);
   private readonly api = inject(PrimeraAtencionApiService);
+
+  /**
+   * Lista canónica de documentos del lote: PA + exámenes por IdReceta + medicamentos.
+   * No genera PDF ni invoca Firma Perú.
+   */
+  armarDocumentosParaFirmar(
+    entrada: EntradaArmarDocumentosFirmaPa,
+  ): DocumentoFirmaPa[] {
+    return armarDocumentosFirmaPa(entrada);
+  }
 
   async procesarFirmaDigital(
     contexto: ContextoFirmaPa,

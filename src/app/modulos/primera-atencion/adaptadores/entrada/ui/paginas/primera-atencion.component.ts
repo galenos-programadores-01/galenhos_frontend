@@ -37,6 +37,7 @@ import { AuthService } from '../../../../../auth/aplicacion/auth.service';
 import { PrimeraAtencionApiService } from '../../../salida/http/primera-atencion.api.service';
 import { PrimeraAtencionPersistenciaService } from '../../../../aplicacion/primera-atencion-persistencia.service';
 import { PrimeraAtencionFirmaService } from '../../../../aplicacion/primera-atencion-firma.service';
+import type { DocumentoFirmaPa } from '../../../../aplicacion/firma/primera-atencion-firma.tipos';
 import { calcularResumenVerificacionPa } from '../../../../aplicacion/validacion/primera-atencion-resumen.util';
 import {
   obtenerErroresCamposPasoPa,
@@ -407,16 +408,6 @@ type GrupoExamenVista = {
     cie10: string;
     tipo: string;
   }[];
-};
-
-/** Fila de la lista “Documentos a firmar” (Paso 1 — solo UI; sin lote aún). */
-type DocFirmaListaItem = {
-  clave: string;
-  etiqueta: string;
-  tipo: 'pa' | 'examen' | 'medicamentos';
-  idReceta: number | null;
-  idPuntoCarga: number | null;
-  cantidadItems: number;
 };
 
 type ItemProcedimientoCat = {
@@ -982,93 +973,15 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Lista informativa del cierre: PA + exámenes por IdReceta/PC + medicamentos.
-   * Orden: Primera Atención → Exámenes (A–Z) → Medicamentos.
-   * Procedimientos e IC no entran (acuerdo diseño firma lote).
+   * Lista del cierre (Paso 1 UI + Paso 2 servicio): misma fuente que el lote.
+   * Orden PA → exámenes → medicamentos. Sin PDF/firma aún.
    */
-  get documentosParaFirmarLista(): DocFirmaListaItem[] {
-    const docs: DocFirmaListaItem[] = [
-      {
-        clave: 'pa',
-        etiqueta: 'Primera Atención',
-        tipo: 'pa',
-        idReceta: null,
-        idPuntoCarga: null,
-        cantidadItems: 1,
-      },
-    ];
-
-    type AccEx = {
-      idReceta: number | null;
-      idPuntoCarga: number | null;
-      etiquetaPunto: string;
-      cantidad: number;
-    };
-    const porReceta = new Map<string, AccEx>();
-    for (const e of this.examenes) {
-      if (e.idProducto == null && !(e.nombre || '').trim()) continue;
-      const idPunto =
-        typeof e.idPuntoCarga === 'number' && e.idPuntoCarga > 0
-          ? e.idPuntoCarga
-          : null;
-      if (idPunto === 26) continue; // procedimientos: fuera de firma
-      const idReceta =
-        typeof e.idReceta === 'number' && e.idReceta > 0 ? e.idReceta : null;
-      const etiquetaPunto =
-        (e.puntoCarga || '').trim() || 'Sin punto de carga';
-      const clave =
-        idReceta != null
-          ? `receta:${idReceta}`
-          : idPunto != null
-            ? `pc:${idPunto}`
-            : `nom:${etiquetaPunto}`;
-      const prev = porReceta.get(clave);
-      if (prev) {
-        prev.cantidad += 1;
-      } else {
-        porReceta.set(clave, {
-          idReceta,
-          idPuntoCarga: idPunto,
-          etiquetaPunto,
-          cantidad: 1,
-        });
-      }
-    }
-
-    const examenesOrdenados = [...porReceta.entries()].sort((a, b) => {
-      if (a[1].etiquetaPunto === 'Sin punto de carga') return 1;
-      if (b[1].etiquetaPunto === 'Sin punto de carga') return -1;
-      return a[1].etiquetaPunto.localeCompare(b[1].etiquetaPunto, 'es');
+  get documentosParaFirmarLista(): DocumentoFirmaPa[] {
+    return this.firmaService.armarDocumentosParaFirmar({
+      idAtencion: this.idAtencionActivo() ?? 0,
+      examenes: this.examenes,
+      medicamentos: this.medicamentos,
     });
-    for (const [clave, g] of examenesOrdenados) {
-      docs.push({
-        clave: `examen:${clave}`,
-        etiqueta: `Examen - ${g.etiquetaPunto}`,
-        tipo: 'examen',
-        idReceta: g.idReceta,
-        idPuntoCarga: g.idPuntoCarga,
-        cantidadItems: g.cantidad,
-      });
-    }
-
-    const meds = this.medicamentos.filter(
-      (m) => m.idProducto !== '' && m.idProducto != null,
-    );
-    if (meds.length > 0) {
-      const idRecetaMed =
-        meds.find((m) => m.idReceta != null && m.idReceta > 0)?.idReceta ??
-        null;
-      docs.push({
-        clave: 'medicamentos',
-        etiqueta: 'Medicamentos',
-        tipo: 'medicamentos',
-        idReceta: idRecetaMed,
-        idPuntoCarga: 5,
-        cantidadItems: meds.length,
-      });
-    }
-
-    return docs;
   }
 
   /**
