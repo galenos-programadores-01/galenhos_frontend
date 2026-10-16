@@ -23,3 +23,28 @@ export interface FiltroBandejaRecetas {
   fechaFin: string;
   idEstado: number | null;
 }
+
+export interface MedicamentoReceta {
+  idPaciente: number;
+  idProducto: number;
+  codigo: string;
+  nombre: string;
+  cantidadPedida: string;
+  via: string;
+  tratamiento: string;
+  solicitadoAntes: boolean;
+}
+
+export interface HistoricoMedicamento {
+  fecha: string;
+  medico: string;
+  tratamiento: string;
+  cantidadDespachada: string;
+}
+
+export type DecisionAuditoria = 'pasa' | 'observar' | 'no_pasa';
+
+export interface DecisionPendiente {
+  decision: DecisionAuditoria;
+  observacion: string;
+}

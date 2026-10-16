@@ -1,5 +1,10 @@
 import { horaDesdeFechaReceta } from './auditoria-qf.filtros';
-import type { EstadoRecetaOpcion, RecetaBandeja } from './auditoria-qf.tipos';
+import type {
+  EstadoRecetaOpcion,
+  HistoricoMedicamento,
+  MedicamentoReceta,
+  RecetaBandeja,
+} from './auditoria-qf.tipos';
 
 export function mapearRecetaBandeja(fila: Record<string, unknown>): RecetaBandeja {
   const numReceta = texto(fila, ['Num_Receta', 'numReceta', 'NumReceta']);
@@ -14,6 +19,28 @@ export function mapearRecetaBandeja(fila: Record<string, unknown>): RecetaBandej
     servicio: texto(fila, ['Servicio', 'servicio']),
     estadoFirma: texto(fila, ['Estado_Firma', 'EstadoFirma', 'estadoFirma']),
     estado: texto(fila, ['Estado', 'estado']),
+  };
+}
+
+export function mapearMedicamentoReceta(fila: Record<string, unknown>): MedicamentoReceta {
+  return {
+    idPaciente: entero(fila, ['IdPaciente', 'idPaciente']),
+    idProducto: entero(fila, ['IdProducto', 'idProducto']),
+    codigo: texto(fila, ['Codigo', 'Código', 'codigo']),
+    nombre: texto(fila, ['Nombre', 'nombre']),
+    cantidadPedida: texto(fila, ['CantidadPedida', 'cantidadPedida']),
+    via: viaVisible(texto(fila, ['VIA', 'Via', 'via'])),
+    tratamiento: texto(fila, ['Tratamiento', 'tratamiento']),
+    solicitadoAntes: esAfirmativo(texto(fila, ['SolicitadoAntes', 'solicitadoAntes'])),
+  };
+}
+
+export function mapearHistoricoMedicamento(fila: Record<string, unknown>): HistoricoMedicamento {
+  return {
+    fecha: fechaVisible(texto(fila, ['Fecha', 'fecha'])),
+    medico: texto(fila, ['Medico', 'Médico', 'medico']),
+    tratamiento: texto(fila, ['Tratamiento', 'tratamiento']),
+    cantidadDespachada: texto(fila, ['CantidadDespachada', 'cantidadDespachada']),
   };
 }
 
@@ -43,6 +70,27 @@ function valor(fila: Record<string, unknown>, claves: string[]): unknown {
 
 function texto(fila: Record<string, unknown>, claves: string[]): string {
   return aTexto(valor(fila, claves));
+}
+
+function entero(fila: Record<string, unknown>, claves: string[]): number {
+  const numero = Number(texto(fila, claves));
+  return Number.isInteger(numero) && numero > 0 ? numero : 0;
+}
+
+function viaVisible(via: string): string {
+  if (!via || via === '--' || via === '-') return '';
+  return via;
+}
+
+function esAfirmativo(valor: string): boolean {
+  const limpio = valor.trim().toLowerCase();
+  return limpio !== '' && limpio !== 'no' && limpio !== '0';
+}
+
+function fechaVisible(valor: string): string {
+  const coincidencia = valor.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!coincidencia) return valor;
+  return `${coincidencia[3]}/${coincidencia[2]}/${coincidencia[1]} · ${coincidencia[4]}:${coincidencia[5]}`;
 }
 
 function aTexto(crudo: unknown): string {

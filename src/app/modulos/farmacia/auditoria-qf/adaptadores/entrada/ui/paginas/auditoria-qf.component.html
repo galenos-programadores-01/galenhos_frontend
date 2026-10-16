@@ -178,9 +178,88 @@
           </div>
         </div>
 
-        <div class="aqf-seccion-titulo">Medicamentos prescritos</div>
-        <div class="aqf-detalle-vacio">Los medicamentos de esta receta se mostrarán aquí cuando se consulte el detalle.</div>
+        <div class="aqf-seccion-titulo">
+          Medicamentos prescritos
+          @if (!cargandoDetalle && !errorDetalle) {
+            <span>{{ etiquetaItems() }}</span>
+          }
+        </div>
+
+        @if (cargandoDetalle) {
+          <div class="aqf-detalle-vacio">Cargando medicamentos…</div>
+        } @else if (errorDetalle) {
+          <div class="aqf-detalle-error">{{ errorDetalle }}</div>
+        } @else if (medicamentos.length === 0) {
+          <div class="aqf-detalle-vacio">Esta receta no tiene medicamentos.</div>
+        } @else {
+          @for (medicamento of medicamentos; track medicamento.idProducto) {
+            <article class="aqf-med">
+              <div class="aqf-med-fila">
+                <div class="aqf-med-indice">{{ $index + 1 }}</div>
+                <div class="aqf-med-cuerpo">
+                  <div class="aqf-med-nombre">{{ medicamento.nombre || '—' }}</div>
+                  @if (medicamento.tratamiento) {
+                    <div class="aqf-med-indicacion">{{ medicamento.tratamiento }}</div>
+                  }
+                  @if (medicamento.solicitadoAntes) {
+                    <div class="aqf-med-aviso">Solicitado antes</div>
+                  }
+                </div>
+                <div class="aqf-med-etiquetas">
+                  <div class="aqf-med-etiqueta">Vía<strong>{{ medicamento.via || '—' }}</strong></div>
+                  <div class="aqf-med-etiqueta">Cantidad<strong>{{ medicamento.cantidadPedida || '—' }}</strong></div>
+                </div>
+                <button type="button" class="aqf-historico" (click)="alternarHistorico(medicamento)" [disabled]="cargandoHistoricoId === medicamento.idProducto">
+                  {{ historicoAbierto === medicamento.idProducto ? 'Ocultar histórico' : 'Histórico' }}
+                </button>
+              </div>
+
+              @if (historicoAbierto === medicamento.idProducto) {
+                <div class="aqf-historico-panel">
+                  <div class="aqf-historico-cabecera">
+                    <span>Histórico del medicamento</span>
+                    <span>{{ medicamento.nombre }}</span>
+                  </div>
+                  @if (cargandoHistoricoId === medicamento.idProducto) {
+                    <p class="aqf-historico-vacio">Cargando histórico…</p>
+                  } @else if (erroresHistorico[medicamento.idProducto]) {
+                    <p class="aqf-historico-error">{{ erroresHistorico[medicamento.idProducto] }}</p>
+                  } @else if (historicoDe(medicamento.idProducto).length === 0) {
+                    <p class="aqf-historico-vacio">Este medicamento no tiene histórico.</p>
+                  } @else {
+                    <div class="aqf-linea">
+                      @for (evento of historicoDe(medicamento.idProducto); track $index) {
+                        <div class="aqf-evento">
+                          <div class="aqf-evento-top">
+                            <span>{{ evento.medico || '—' }}</span>
+                            <span>{{ evento.fecha || '—' }}</span>
+                          </div>
+                          @if (evento.tratamiento) {
+                            <p>{{ evento.tratamiento }}</p>
+                          }
+                          <p>Cantidad despachada: {{ evento.cantidadDespachada || '0' }}</p>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </article>
+          }
+        }
       </div>
     </div>
+
+    <footer class="aqf-pantalla-pie">
+      <div class="aqf-observacion">
+        <label for="aqf-observacion">Observación farmacéutica</label>
+        <input id="aqf-observacion" type="text" [(ngModel)]="observacion" autocomplete="off" placeholder="Opcional, se registra junto con la decisión" />
+      </div>
+      <div class="aqf-decisiones">
+        <button type="button" class="aqf-decision aqf-decision-no" [class.aqf-decision-activa]="decisionPendiente === 'no_pasa'" (click)="elegirDecision('no_pasa')">No pasa</button>
+        <button type="button" class="aqf-decision aqf-decision-observar" [class.aqf-decision-activa]="decisionPendiente === 'observar'" (click)="elegirDecision('observar')">Observar</button>
+        <button type="button" class="aqf-decision aqf-decision-pasa" [class.aqf-decision-activa]="decisionPendiente === 'pasa'" (click)="elegirDecision('pasa')">Pasa</button>
+      </div>
+    </footer>
   </section>
 }

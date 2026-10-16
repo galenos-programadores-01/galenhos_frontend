@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, inject, type OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { prepararDecision } from '../../../../aplicacion/auditoria-qf.decision';
 import {
   ajustarRangoBandeja,
   fechaFinParam,
@@ -11,7 +12,10 @@ import {
 import {
   DIAS_MAXIMOS_BANDEJA,
   TAMANO_PAGINA_BANDEJA,
+  type DecisionAuditoria,
   type EstadoRecetaOpcion,
+  type HistoricoMedicamento,
+  type MedicamentoReceta,
   type RecetaBandeja,
 } from '../../../../aplicacion/auditoria-qf.tipos';
 import { ApiRequestError } from '../../../../../../../compartido/api-client/api-client.service';
@@ -57,6 +61,15 @@ export class AuditoriaQfComponent implements OnInit {
   recetas: RecetaBandeja[] = [];
   pagina = 1;
   recetaAbierta: RecetaBandeja | null = null;
+  medicamentos: MedicamentoReceta[] = [];
+  historicos: Record<number, HistoricoMedicamento[]> = {};
+  erroresHistorico: Record<number, string> = {};
+  historicoAbierto: number | null = null;
+  cargandoHistoricoId: number | null = null;
+  cargandoDetalle = false;
+  errorDetalle = '';
+  observacion = '';
+  decisionPendiente: DecisionAuditoria | null = null;
   cargando = false;
   buscado = false;
   error = '';
@@ -179,13 +192,39 @@ export class AuditoriaQfComponent implements OnInit {
 
   abrirDetalle(fila: unknown): void {
     if (!fila || typeof fila !== 'object') return;
+    this.reiniciarDetalle();
     this.recetaAbierta = fila as RecetaBandeja;
     this.cdr.detectChanges();
+    void this.cargarDetalle();
   }
 
   cerrarDetalle(): void {
     this.recetaAbierta = null;
+    this.reiniciarDetalle();
     this.cdr.detectChanges();
+  }
+
+  async alternarHistorico(medicamento: MedicamentoReceta): Promise<void> {
+    if (this.historicoAbierto === medicamento.idProducto) {
+      this.historicoAbierto = null;
+      return;
+    }
+    this.historicoAbierto = medicamento.idProducto;
+    if (this.historicos[medicamento.idProducto]) return;
+    await this.cargarHistorico(medicamento);
+  }
+
+  elegirDecision(decision: DecisionAuditoria): void {
+    this.decisionPendiente = prepararDecision(decision, this.observacion).decision;
+  }
+
+  historicoDe(idProducto: number): HistoricoMedicamento[] {
+    return this.historicos[idProducto] ?? [];
+  }
+
+  etiquetaItems(): string {
+    const total = this.medicamentos.length;
+    return total === 1 ? '1 ítem' : `${total} ítems`;
   }
 
   @HostListener('document:keydown.escape')
@@ -250,5 +289,65 @@ export class AuditoriaQfComponent implements OnInit {
     if (this.idEstado === '') return null;
     const id = Number(this.idEstado);
     return Number.isInteger(id) ? id : null;
+  }
+
+  private reiniciarDetalle(): void {
+    this.medicamentos = [];
+    this.historicos = {};
+    this.erroresHistorico = {};
+    this.historicoAbierto = null;
+    this.cargandoHistoricoId = null;
+    this.cargandoDetalle = false;
+    this.errorDetalle = '';
+    this.observacion = '';
+    this.decisionPendiente = null;
+  }
+
+  private async cargarDetalle(): Promise<void> {
+    const receta = this.recetaAbierta;
+    if (!receta) return;
+    const idReceta = Number(this.numeroReceta(receta));
+    if (!Number.isInteger(idReceta) || idReceta <= 0) {
+      this.errorDetalle = 'La receta no tiene un número válido.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.cargandoDetalle = true;
+    this.cdr.detectChanges();
+    try {
+      this.medicamentos = await this.api.listarDetalle(idReceta);
+    } catch (error) {
+      this.medicamentos = [];
+      this.errorDetalle =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo cargar el detalle de la receta.';
+    } finally {
+      this.cargandoDetalle = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async cargarHistorico(medicamento: MedicamentoReceta): Promise<void> {
+    const idProducto = medicamento.idProducto;
+    this.cargandoHistoricoId = idProducto;
+    this.erroresHistorico = { ...this.erroresHistorico, [idProducto]: '' };
+    this.cdr.detectChanges();
+    try {
+      const filas = await this.api.listarHistorico(medicamento.idPaciente, idProducto);
+      this.historicos = { ...this.historicos, [idProducto]: filas };
+    } catch (error) {
+      this.erroresHistorico = {
+        ...this.erroresHistorico,
+        [idProducto]:
+          error instanceof ApiRequestError
+            ? error.message
+            : 'No se pudo cargar el histórico.',
+      };
+    } finally {
+      this.cargandoHistoricoId = null;
+      this.cdr.detectChanges();
+    }
   }
 }
