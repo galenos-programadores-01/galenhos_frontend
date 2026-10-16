@@ -141,48 +141,46 @@
         <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         Volver a la bandeja
       </button>
-      <div>
-        <div class="aqf-pantalla-titulo">
-          <h2 id="aqf-detalle-titulo">Receta {{ numeroReceta(receta) }}</h2>
-          <span class="aqf-detalle-estado">{{ receta.estado || '—' }}</span>
-        </div>
-        <p>{{ subtituloDetalle(receta) || '—' }}</p>
+      <div class="aqf-pantalla-titulo">
+        <h2 id="aqf-detalle-titulo">Receta #{{ numeroReceta(receta) }}</h2>
+        <span class="aqf-pantalla-especialidad">{{ receta.servicio || '—' }}</span>
+        <span class="aqf-detalle-estado">{{ receta.estado || '—' }}</span>
       </div>
     </div>
 
     <div class="aqf-pantalla-cuerpo">
+      <aside class="aqf-pantalla-lado">
+        <div class="aqf-lado-titulo">Resumen de la receta</div>
+        <div class="aqf-resumen-fila"><span>Hora</span><span>{{ receta.hora || '—' }}</span></div>
+        <div class="aqf-resumen-fila"><span>Servicio</span><span>{{ receta.servicio || '—' }}</span></div>
+        <div class="aqf-resumen-fila">
+          <span>Firma del médico</span>
+          @if (esFirmado(receta)) {
+            <span class="aqf-firma aqf-firma-firmado">{{ receta.estadoFirma }}</span>
+          } @else if (esSinFirmar(receta)) {
+            <span class="aqf-firma aqf-firma-sin">{{ receta.estadoFirma }}</span>
+          } @else {
+            <span>{{ receta.estadoFirma || '—' }}</span>
+          }
+        </div>
+        <div class="aqf-resumen-fila"><span>Estado</span><span>{{ receta.estado || '—' }}</span></div>
+      </aside>
+
       <div class="aqf-pantalla-principal">
-          <div class="aqf-paciente">
-            <div class="aqf-paciente-avatar" aria-hidden="true">{{ inicialesPaciente(receta.paciente) }}</div>
-            <div>
-              <div class="aqf-paciente-nombre">{{ receta.paciente || '—' }}</div>
-              <div class="aqf-paciente-meta">
-                @if (receta.edad) { <span>{{ receta.edad }}</span> }
-                @if (receta.medico) { <span>{{ receta.medico }}</span> }
-              </div>
+        <div class="aqf-paciente">
+          <div class="aqf-paciente-avatar" aria-hidden="true">{{ inicialesPaciente(receta.paciente) }}</div>
+          <div>
+            <div class="aqf-paciente-nombre">{{ receta.paciente || '—' }}</div>
+            <div class="aqf-paciente-meta">
+              @if (receta.edad) { <span>{{ receta.edad }}</span> }
+              @if (receta.medico) { <span>{{ receta.medico }}</span> }
             </div>
           </div>
-
-          <div class="aqf-seccion-titulo">Medicamentos prescritos</div>
-          <div class="aqf-detalle-vacio">Los medicamentos de esta receta se mostrarán aquí cuando se consulte el detalle.</div>
         </div>
 
-        <aside class="aqf-pantalla-lado">
-          <div class="aqf-lado-titulo">Resumen de la receta</div>
-          <div class="aqf-resumen-fila"><span>Hora</span><span>{{ receta.hora || '—' }}</span></div>
-          <div class="aqf-resumen-fila"><span>Servicio</span><span>{{ receta.servicio || '—' }}</span></div>
-          <div class="aqf-resumen-fila">
-            <span>Firma del médico</span>
-            @if (esFirmado(receta)) {
-              <span class="aqf-firma aqf-firma-firmado">{{ receta.estadoFirma }}</span>
-            } @else if (esSinFirmar(receta)) {
-              <span class="aqf-firma aqf-firma-sin">{{ receta.estadoFirma }}</span>
-            } @else {
-              <span>{{ receta.estadoFirma || '—' }}</span>
-            }
-          </div>
-          <div class="aqf-resumen-fila"><span>Estado</span><span>{{ receta.estado || '—' }}</span></div>
-        </aside>
+        <div class="aqf-seccion-titulo">Medicamentos prescritos</div>
+        <div class="aqf-detalle-vacio">Los medicamentos de esta receta se mostrarán aquí cuando se consulte el detalle.</div>
+      </div>
     </div>
   </section>
 }

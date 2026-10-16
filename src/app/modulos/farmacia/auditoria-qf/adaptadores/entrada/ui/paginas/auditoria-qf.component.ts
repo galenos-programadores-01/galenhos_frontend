@@ -200,10 +200,6 @@ export class AuditoriaQfComponent implements OnInit {
     return letras.join('').toUpperCase() || '—';
   }
 
-  subtituloDetalle(receta: RecetaBandeja): string {
-    return [receta.servicio, receta.hora].filter((parte) => parte.length > 0).join(' · ');
-  }
-
   rangoVisible(): string {
     if (this.recetas.length === 0) return '';
     const inicio = (this.pagina - 1) * this.tamanoPagina + 1;

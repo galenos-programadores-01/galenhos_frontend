@@ -199,9 +199,10 @@
 
 .aqf-pantalla-cabecera {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 18px;
-  padding: 16px 24px;
+  padding: 28px 24px 20px;
   background: #fff;
   border-bottom: 1px solid var(--aqf-border);
 }
@@ -240,9 +241,9 @@
   color: #07153a;
 }
 
-.aqf-pantalla-cabecera p {
-  margin: 4px 0 0;
-  font-size: 12px;
+.aqf-pantalla-especialidad {
+  font-size: 13px;
+  font-weight: 700;
   color: #54617f;
 }
 
@@ -260,14 +261,13 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 320px 1fr;
 }
 
 .aqf-pantalla-principal {
   padding: 24px;
   overflow-y: auto;
   background: #fff;
-  border-right: 1px solid var(--aqf-border);
 }
 
 .aqf-paciente {
@@ -335,6 +335,7 @@
   padding: 24px;
   overflow-y: auto;
   background: #fbfcfd;
+  border-right: 1px solid var(--aqf-border);
 }
 
 .aqf-lado-titulo {
@@ -371,7 +372,7 @@
     overflow-y: auto;
   }
 
-  .aqf-pantalla-principal {
+  .aqf-pantalla-lado {
     border-right: none;
     border-bottom: 1px solid var(--aqf-border);
   }
