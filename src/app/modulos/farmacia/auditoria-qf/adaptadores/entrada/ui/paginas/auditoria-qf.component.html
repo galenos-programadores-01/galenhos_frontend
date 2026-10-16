@@ -1,0 +1,187 @@
+@if (!recetaAbierta) {
+<div class="gp-in" style="display: flex; flex-direction: column; gap: 18px;">
+
+  <p style="margin: 0; font-size: 13px; color: #54617f;">
+    Revise las recetas médicas antes de su atención en farmacia. Rango máximo: {{ diasMaximos }} días.
+  </p>
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div class="aqf-filtros">
+      <div>
+        <label for="aqf-desde" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha desde</label>
+        <input id="aqf-desde" type="date" [(ngModel)]="fechaDesde" [min]="minFechaDesde()" [max]="maxFechaDesde()" autocomplete="off"
+               style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div>
+        <label for="aqf-hasta" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha hasta</label>
+        <input id="aqf-hasta" type="date" [(ngModel)]="fechaHasta" [min]="minFechaHasta()" [max]="maxFechaHasta()" autocomplete="off"
+               style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div>
+        <label for="aqf-estado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado</label>
+        <select id="aqf-estado" [(ngModel)]="idEstado"
+                style="width: 100%; padding: 10px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;">
+          <option value="">Todas</option>
+          @for (opcion of estados; track opcion.idEstado) {
+            <option [value]="opcion.idEstado">{{ opcion.estado }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="aqf-buscar" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Buscar</label>
+        <input id="aqf-buscar" type="text" [(ngModel)]="buscar" (ngModelChange)="aplicarBusqueda()" autocomplete="off"
+               placeholder="Paciente o N° de receta"
+               style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+      </div>
+      <div class="aqf-filtros-acciones">
+        <button type="button" (click)="cargarBandeja()" [disabled]="cargando" class="aqf-btn-actualizar">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          Actualizar
+        </button>
+        <button type="button" (click)="limpiarFiltros()" [disabled]="cargando" class="aqf-btn-secundario">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (error) {
+    <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+      {{ error }}
+    </div>
+  }
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px;">
+      <span style="font-size: 15px; font-weight: 700; color: #07153a;">{{ tituloBandeja() }}</span>
+      <span style="font-size: 12.5px; color: #7a86a1;">{{ resumenBandeja() }}</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <app-tabla [columnas]="columnas" [datos]="recetasPagina()" [cargando]="cargando"
+                 [filasClickeables]="true" (filaSeleccionada)="abrirDetalle($event)"
+                 mensajeCargando="Consultando bandeja..."
+                 mensajeVacio="No se encontraron recetas para los filtros aplicados.">
+
+        <ng-template appColumnaTemplate="recetaCustom" let-receta>
+          <span style="font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; font-weight: 700; color: #263c7a;">{{ numeroReceta(receta) }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="horaCustom" let-receta>
+          <span style="color: #54617f;">{{ receta.hora || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="pacienteCustom" let-receta>
+          <span style="font-weight: 600; color: #07153a; font-size: 13.5px;">{{ receta.paciente }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="edadCustom" let-receta>
+          <span style="color: #54617f;">{{ receta.edad || '—' }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="medicoCustom" let-receta>
+          <span style="color: #07153a;">{{ receta.medico }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="servicioCustom" let-receta>
+          <span style="color: #54617f;">{{ receta.servicio }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="firmaCustom" let-receta>
+          @if (esFirmado(receta)) {
+            <span class="aqf-firma aqf-firma-firmado">{{ receta.estadoFirma }}</span>
+          } @else if (esSinFirmar(receta)) {
+            <span class="aqf-firma aqf-firma-sin">{{ receta.estadoFirma }}</span>
+          } @else {
+            <span style="color: #7a86a1;">{{ receta.estadoFirma || '—' }}</span>
+          }
+        </ng-template>
+
+        <ng-template appColumnaTemplate="estadoCustom" let-receta>
+          <span style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #eaf3f6; color: #14415c;">{{ receta.estado || '—' }}</span>
+        </ng-template>
+
+      </app-tabla>
+    </div>
+
+    @if (mostrarPaginacion()) {
+      <div class="aqf-paginacion">
+        <span class="aqf-paginacion-resumen">
+          Mostrando <strong>{{ rangoVisible() }}</strong> de <strong>{{ recetas.length }}</strong>
+        </span>
+        <div class="aqf-paginacion-controles">
+          <button type="button" class="aqf-pagina" title="Primera página" [disabled]="pagina <= 1" (click)="irAPagina(1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+          </button>
+          <button type="button" class="aqf-pagina" title="Anterior" [disabled]="pagina <= 1" (click)="irAPagina(pagina - 1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          @for (numero of paginasVisibles(); track numero) {
+            <button type="button" class="aqf-pagina" [class.aqf-pagina-activa]="numero === pagina" (click)="irAPagina(numero)">{{ numero }}</button>
+          }
+          <button type="button" class="aqf-pagina" title="Siguiente" [disabled]="pagina >= totalPaginas()" (click)="irAPagina(pagina + 1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <button type="button" class="aqf-pagina" title="Última página" [disabled]="pagina >= totalPaginas()" (click)="irAPagina(totalPaginas())">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>
+}
+
+@if (recetaAbierta; as receta) {
+  <section class="aqf-pantalla">
+    <div class="aqf-pantalla-cabecera">
+      <button type="button" class="aqf-volver" (click)="cerrarDetalle()">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Volver a la bandeja
+      </button>
+      <div>
+        <div class="aqf-pantalla-titulo">
+          <h2 id="aqf-detalle-titulo">Receta {{ numeroReceta(receta) }}</h2>
+          <span class="aqf-detalle-estado">{{ receta.estado || '—' }}</span>
+        </div>
+        <p>{{ subtituloDetalle(receta) || '—' }}</p>
+      </div>
+    </div>
+
+    <div class="aqf-pantalla-cuerpo">
+      <div class="aqf-pantalla-principal">
+          <div class="aqf-paciente">
+            <div class="aqf-paciente-avatar" aria-hidden="true">{{ inicialesPaciente(receta.paciente) }}</div>
+            <div>
+              <div class="aqf-paciente-nombre">{{ receta.paciente || '—' }}</div>
+              <div class="aqf-paciente-meta">
+                @if (receta.edad) { <span>{{ receta.edad }}</span> }
+                @if (receta.medico) { <span>{{ receta.medico }}</span> }
+              </div>
+            </div>
+          </div>
+
+          <div class="aqf-seccion-titulo">Medicamentos prescritos</div>
+          <div class="aqf-detalle-vacio">Los medicamentos de esta receta se mostrarán aquí cuando se consulte el detalle.</div>
+        </div>
+
+        <aside class="aqf-pantalla-lado">
+          <div class="aqf-lado-titulo">Resumen de la receta</div>
+          <div class="aqf-resumen-fila"><span>Hora</span><span>{{ receta.hora || '—' }}</span></div>
+          <div class="aqf-resumen-fila"><span>Servicio</span><span>{{ receta.servicio || '—' }}</span></div>
+          <div class="aqf-resumen-fila">
+            <span>Firma del médico</span>
+            @if (esFirmado(receta)) {
+              <span class="aqf-firma aqf-firma-firmado">{{ receta.estadoFirma }}</span>
+            } @else if (esSinFirmar(receta)) {
+              <span class="aqf-firma aqf-firma-sin">{{ receta.estadoFirma }}</span>
+            } @else {
+              <span>{{ receta.estadoFirma || '—' }}</span>
+            }
+          </div>
+          <div class="aqf-resumen-fila"><span>Estado</span><span>{{ receta.estado || '—' }}</span></div>
+        </aside>
+    </div>
+  </section>
+}

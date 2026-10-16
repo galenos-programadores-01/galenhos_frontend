@@ -1,0 +1,35 @@
+import { Injectable, inject } from '@angular/core';
+import { ApiClientService } from '../../../../../../compartido/api-client/api-client.service';
+import { mapearEstadoReceta, mapearRecetaBandeja } from '../../../aplicacion/auditoria-qf.mapper';
+import type {
+  EstadoRecetaOpcion,
+  FiltroBandejaRecetas,
+  RecetaBandeja,
+} from '../../../aplicacion/auditoria-qf.tipos';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuditoriaQfApiService {
+  private readonly api = inject(ApiClientService);
+
+  async listarBandeja(filtro: FiltroBandejaRecetas): Promise<RecetaBandeja[]> {
+    const query = new URLSearchParams();
+    query.set('fechaInicio', filtro.fechaInicio);
+    query.set('fechaFin', filtro.fechaFin);
+    if (filtro.idEstado != null) query.set('idEstado', String(filtro.idEstado));
+    const filas = await this.api.request<Record<string, unknown>[]>(
+      `/api/v1/farmacia/auditoria-qf/recetas?${query.toString()}`,
+    );
+    return (filas ?? []).map(mapearRecetaBandeja);
+  }
+
+  async listarEstados(): Promise<EstadoRecetaOpcion[]> {
+    const filas = await this.api.request<Record<string, unknown>[]>(
+      '/api/v1/farmacia/auditoria-qf/estados',
+    );
+    return (filas ?? [])
+      .map(mapearEstadoReceta)
+      .filter((estado) => estado.idEstado > 0 && estado.estado !== '');
+  }
+}

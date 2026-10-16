@@ -81,6 +81,14 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Admisiones' },
       },
       {
+        path: 'auditoriaqf',
+        loadComponent: () =>
+          import(
+            '../modulos/farmacia/auditoria-qf/adaptadores/entrada/ui/paginas/auditoria-qf.component'
+          ).then((m) => m.AuditoriaQfComponent),
+        data: { title: 'Auditoría QF' },
+      },
+      {
         path: 'sis',
         loadComponent: () =>
           import(
