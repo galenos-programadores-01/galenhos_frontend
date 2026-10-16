@@ -1,3 +1,4 @@
+import type { DocumentoFirmaPa } from '../firma/primera-atencion-firma.tipos';
 import type { PrimeraAtencionPdfData } from '../pdf/primera-atencion-pdf.tipos';
 
 /** Ítem del paquete firmado (PA + satélites) para el visor. */
@@ -17,7 +18,13 @@ export interface VerFichaPaVista {
   uuidFirma: string;
   firmado: boolean;
   ubicacionArchivo: string;
+  /** Lista UI del lateral (misma clave que loteDocumentos). */
   documentos: VerFichaDocumentoItem[];
+  /**
+   * Lote completo (ítems de examen/meds) para regenerar PDF si falla el FTP.
+   * Misma forma que el armado de firma.
+   */
+  loteDocumentos: DocumentoFirmaPa[];
   financiamiento: string;
   prioridad: string;
   logoInstitucion: string;

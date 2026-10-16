@@ -15,9 +15,50 @@ export interface PdfDocumentoFirmaPa {
 }
 
 /**
- * Genera el PDF de cada DocumentoFirmaPa.
+ * Genera el PDF de un DocumentoFirmaPa.
  * PA: motor completo. Satélites: cabecera paciente sin signos vitales.
  */
+export async function generarPdfDocumentoFirmaPa(
+  documento: DocumentoFirmaPa,
+  datosPa: PrimeraAtencionPdfData,
+  institucion: DatosInstitucionPdf | null,
+  nombreUsuario: string,
+  fechaImpresion: string,
+): Promise<jsPDF> {
+  let doc: jsPDF | null = null;
+  if (documento.tipo === 'pa') {
+    doc = await construirPdfPrimeraAtencion(
+      datosPa,
+      institucion,
+      nombreUsuario,
+      fechaImpresion,
+    );
+  } else if (documento.tipo === 'examen') {
+    doc = await construirPdfExamenSatelite(
+      documento,
+      documento.examenes,
+      datosPa,
+      institucion,
+      nombreUsuario,
+      fechaImpresion,
+    );
+  } else if (documento.tipo === 'medicamentos') {
+    doc = await construirPdfMedicamentosSatelite(
+      documento,
+      documento.medicamentos,
+      datosPa,
+      institucion,
+      nombreUsuario,
+      fechaImpresion,
+    );
+  }
+  if (!doc) {
+    throw new Error(`No se pudo generar el PDF: ${documento.etiqueta}`);
+  }
+  return doc;
+}
+
+/** Genera el PDF de cada DocumentoFirmaPa del lote. */
 export async function generarPdfsDocumentosFirmaPa(
   documentos: DocumentoFirmaPa[],
   datosPa: PrimeraAtencionPdfData,
@@ -27,36 +68,13 @@ export async function generarPdfsDocumentosFirmaPa(
 ): Promise<PdfDocumentoFirmaPa[]> {
   const out: PdfDocumentoFirmaPa[] = [];
   for (const documento of documentos) {
-    let doc: jsPDF | null = null;
-    if (documento.tipo === 'pa') {
-      doc = await construirPdfPrimeraAtencion(
-        datosPa,
-        institucion,
-        nombreUsuario,
-        fechaImpresion,
-      );
-    } else if (documento.tipo === 'examen') {
-      doc = await construirPdfExamenSatelite(
-        documento,
-        documento.examenes,
-        datosPa,
-        institucion,
-        nombreUsuario,
-        fechaImpresion,
-      );
-    } else if (documento.tipo === 'medicamentos') {
-      doc = await construirPdfMedicamentosSatelite(
-        documento,
-        documento.medicamentos,
-        datosPa,
-        institucion,
-        nombreUsuario,
-        fechaImpresion,
-      );
-    }
-    if (!doc) {
-      throw new Error(`No se pudo generar el PDF: ${documento.etiqueta}`);
-    }
+    const doc = await generarPdfDocumentoFirmaPa(
+      documento,
+      datosPa,
+      institucion,
+      nombreUsuario,
+      fechaImpresion,
+    );
     out.push({ documento, doc });
   }
   return out;

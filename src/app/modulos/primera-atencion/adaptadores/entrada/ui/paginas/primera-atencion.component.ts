@@ -40,7 +40,14 @@ import { PrimeraAtencionPersistenciaService } from '../../../../aplicacion/prime
 import { PrimeraAtencionFirmaService } from '../../../../aplicacion/primera-atencion-firma.service';
 import { armarDocumentosFirmaPa } from '../../../../aplicacion/firma/armar-documentos-firma-pa';
 import type { DocumentoFirmaPa } from '../../../../aplicacion/firma/primera-atencion-firma.tipos';
-import type { VerFichaDocumentoItem } from '../../../../aplicacion/ficha/ver-ficha-pa.tipos';
+import type {
+  VerFichaDocumentoItem,
+  VerFichaPaVista,
+} from '../../../../aplicacion/ficha/ver-ficha-pa.tipos';
+import {
+  generarBlobCopiaDocumentoFichaPa,
+  type OrigenPdfFichaPa,
+} from '../../../../aplicacion/ficha/generar-copia-pdf-documento-ficha-pa';
 import { calcularResumenVerificacionPa } from '../../../../aplicacion/validacion/primera-atencion-resumen.util';
 import {
   obtenerErroresCamposPasoPa,
@@ -53,9 +60,7 @@ import type {
   PasoAtencionPa,
 } from '../../../../aplicacion/validacion/primera-atencion.validacion.tipos';
 import { mapearPrimeraAtencionPdfData } from '../../../../aplicacion/pdf/primera-atencion-pdf.mapper';
-import { construirPdfPrimeraAtencion } from '../../../../aplicacion/pdf/primera-atencion-pdf.util';
 import type { ContextoMapperPdfPa } from '../../../../aplicacion/pdf/primera-atencion-pdf.tipos';
-import type { VerFichaPaVista } from '../../../../aplicacion/ficha/ver-ficha-pa.tipos';
 import type { DatosInstitucionPdf } from '../../../../../../compartido/pdf/pdf.tipos';
 import {
   CONDICIONES_EGRESO,
@@ -865,6 +870,8 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   fichaPdfUrl: SafeResourceUrl | null = null;
   /** URL blob del PDF activo (para imprimir / liberar). */
   fichaPdfObjectUrl: string | null = null;
+  /** firmado = FTP; copia = regenerado desde BD (fallback). */
+  fichaPdfOrigen: OrigenPdfFichaPa | null = null;
   fichaPdfCargando = false;
   fichaPdfError = '';
   mensaje = '';
@@ -3462,19 +3469,16 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     this.liberarPdfFicha();
     this.cdr.detectChanges();
     try {
-      const tipo = doc.tipo === 'pa' ? 'pa' : 'receta';
-      const blob = await this.api.descargarDocumentoFirmado(vista.idAtencion, {
-        tipo,
-        idReceta: doc.idReceta ?? undefined,
-      });
+      const { blob, origen } = await this.obtenerBlobDocumentoFicha(vista, doc);
       const objectUrl = URL.createObjectURL(blob);
       this.fichaPdfObjectUrl = objectUrl;
       this.fichaPdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+      this.fichaPdfOrigen = origen;
     } catch (err: unknown) {
       this.fichaPdfError =
         err instanceof Error
           ? err.message
-          : 'No se pudo cargar el PDF firmado.';
+          : 'No se pudo cargar el PDF del documento.';
     } finally {
       this.fichaPdfCargando = false;
       this.cdr.detectChanges();
@@ -3507,6 +3511,35 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       this.fichaPdfObjectUrl = null;
     }
     this.fichaPdfUrl = null;
+    this.fichaPdfOrigen = null;
+  }
+
+  /**
+   * Preferencia: PDF firmado (FTP). Si no hay acceso remoto, regenera
+   * el mismo documento (PA / examen / meds) desde datos clínicos de BD.
+   */
+  private async obtenerBlobDocumentoFicha(
+    vista: VerFichaPaVista,
+    doc: VerFichaDocumentoItem,
+  ): Promise<{ blob: Blob; origen: OrigenPdfFichaPa }> {
+    try {
+      const tipo = doc.tipo === 'pa' ? 'pa' : 'receta';
+      const blob = await this.api.descargarDocumentoFirmado(vista.idAtencion, {
+        tipo,
+        idReceta: doc.idReceta ?? undefined,
+      });
+      return { blob, origen: 'firmado' };
+    } catch {
+      const { blob } = await generarBlobCopiaDocumentoFichaPa(
+        vista.loteDocumentos,
+        doc.clave,
+        vista.datos,
+        this.datosInstitucionPa,
+        this.authService.username() ?? '',
+        new Date().toLocaleString('es-PE'),
+      );
+      return { blob, origen: 'copia' };
+    }
   }
 
   private async construirVistaFicha(
@@ -3731,6 +3764,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       firmado,
       ubicacionArchivo,
       documentos,
+      loteDocumentos: docsLote,
       financiamiento:
         campo(item, [
           'FuenteFinanciamiento',
@@ -3757,10 +3791,9 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       if (vista.firmado) {
         const doc = this.fichaDocActivo ?? vista.documentos[0] ?? null;
         if (doc) {
-          const tipo = doc.tipo === 'pa' ? 'pa' : 'receta';
-          const blob = await this.api.descargarDocumentoFirmado(
-            vista.idAtencion,
-            { tipo, idReceta: doc.idReceta ?? undefined },
+          const { blob, origen } = await this.obtenerBlobDocumentoFicha(
+            vista,
+            doc,
           );
           const sufijo =
             doc.tipo === 'pa'
@@ -3768,9 +3801,10 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
               : doc.idReceta != null
                 ? `R${doc.idReceta}`
                 : 'doc';
+          const marca = origen === 'copia' ? '_copia' : '';
           this.descargarBlobPa(
             blob,
-            `PrimeraAtencion_${vista.historia || vista.idAtencion}_${sufijo}.pdf`,
+            `PrimeraAtencion_${vista.historia || vista.idAtencion}_${sufijo}${marca}.pdf`,
           );
           return;
         }
@@ -3789,25 +3823,22 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Copia PA (encuentro sin firma o sin documento activo). */
   private async generarYDescargarPdfCopiaPa(
     vista: VerFichaPaVista,
   ): Promise<void> {
-    const fechaImpresion = new Date().toLocaleString('es-PE');
-    const documento = await construirPdfPrimeraAtencion(
+    const clavePa =
+      vista.loteDocumentos.find((d) => d.tipo === 'pa')?.clave ?? 'pa';
+    const { blob } = await generarBlobCopiaDocumentoFichaPa(
+      vista.loteDocumentos,
+      clavePa,
       vista.datos,
       this.datosInstitucionPa,
       this.authService.username() ?? '',
-      fechaImpresion,
+      new Date().toLocaleString('es-PE'),
     );
-    if (!documento) {
-      this.modalGlobal.error(
-        'No se pudo generar la copia PDF de primera atención.',
-        'Error',
-      );
-      return;
-    }
     this.descargarBlobPa(
-      documento.output('blob'),
+      blob,
       `PrimeraAtencion_${vista.historia || vista.idAtencion}_copia.pdf`,
     );
   }

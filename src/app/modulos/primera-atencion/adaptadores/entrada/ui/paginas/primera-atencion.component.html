@@ -2190,29 +2190,44 @@
                           [class.text-slate-500]="fichaDocActivo?.clave !== doc.clave"
                         >
                           {{ doc.tipo === 'pa' ? 'Principal' : doc.tipo === 'examen' ? 'Examen' : 'Medicamentos' }}
-                          · firmado
+                          @if (fichaDocActivo?.clave === doc.clave && fichaPdfOrigen === 'copia') {
+                            · copia
+                          } @else {
+                            · firmado
+                          }
                         </span>
                       </button>
                     </li>
                   }
                 </ul>
               </aside>
-              <div class="flex-1 min-w-0 min-h-[50vh] relative bg-slate-200">
-                @if (fichaPdfCargando) {
-                  <p class="absolute inset-0 flex items-center justify-center text-[13px] text-slate-600">
-                    Cargando PDF...
+              <div class="flex-1 min-w-0 min-h-[50vh] relative bg-slate-200 flex flex-col">
+                @if (fichaPdfOrigen === 'copia' && fichaPdfUrl && !fichaPdfCargando) {
+                  <p class="shrink-0 px-3 py-2 text-[12px] text-amber-900 bg-amber-50 border-b border-amber-200">
+                    Copia no firmada (sin acceso al documento del FTP). Solo para visualizar o imprimir.
                   </p>
-                } @else if (fichaPdfError) {
-                  <p class="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-red-700">
-                    {{ fichaPdfError }}
-                  </p>
-                } @else if (fichaPdfUrl) {
-                  <iframe
-                    class="w-full h-full min-h-[60vh] border-0 bg-white"
-                    [src]="fichaPdfUrl"
-                    title="Documento firmado de primera atención"
-                  ></iframe>
                 }
+                <div class="relative flex-1 min-h-0">
+                  @if (fichaPdfCargando) {
+                    <p class="absolute inset-0 flex items-center justify-center text-[13px] text-slate-600">
+                      Cargando PDF...
+                    </p>
+                  } @else if (fichaPdfError) {
+                    <p class="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-red-700">
+                      {{ fichaPdfError }}
+                    </p>
+                  } @else if (fichaPdfUrl) {
+                    <iframe
+                      class="w-full h-full min-h-[60vh] border-0 bg-white"
+                      [src]="fichaPdfUrl"
+                      [title]="
+                        fichaPdfOrigen === 'copia'
+                          ? 'Copia no firmada de primera atención'
+                          : 'Documento firmado de primera atención'
+                      "
+                    ></iframe>
+                  }
+                </div>
               </div>
             </div>
           } @else {
