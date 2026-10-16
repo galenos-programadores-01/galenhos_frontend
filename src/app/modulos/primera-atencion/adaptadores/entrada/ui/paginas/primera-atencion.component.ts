@@ -7,6 +7,7 @@ import {
   type OnDestroy,
   type OnInit,
 } from '@angular/core';
+import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 
 import {
@@ -37,7 +38,9 @@ import { AuthService } from '../../../../../auth/aplicacion/auth.service';
 import { PrimeraAtencionApiService } from '../../../salida/http/primera-atencion.api.service';
 import { PrimeraAtencionPersistenciaService } from '../../../../aplicacion/primera-atencion-persistencia.service';
 import { PrimeraAtencionFirmaService } from '../../../../aplicacion/primera-atencion-firma.service';
+import { armarDocumentosFirmaPa } from '../../../../aplicacion/firma/armar-documentos-firma-pa';
 import type { DocumentoFirmaPa } from '../../../../aplicacion/firma/primera-atencion-firma.tipos';
+import type { VerFichaDocumentoItem } from '../../../../aplicacion/ficha/ver-ficha-pa.tipos';
 import { calcularResumenVerificacionPa } from '../../../../aplicacion/validacion/primera-atencion-resumen.util';
 import {
   obtenerErroresCamposPasoPa,
@@ -471,6 +474,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   private readonly firmaService = inject(PrimeraAtencionFirmaService);
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly modalGlobal = inject(ModalGlobalService);
   public readonly authService = inject(AuthService);
 
@@ -855,6 +859,14 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   fichaCargando = false;
   fichaError = '';
   fichaDescargando = false;
+  /** Modo del modal: resumen HTML o documentos firmados del FTP. */
+  fichaModo: 'resumen' | 'documentos' = 'resumen';
+  fichaDocActivo: VerFichaDocumentoItem | null = null;
+  fichaPdfUrl: SafeResourceUrl | null = null;
+  /** URL blob del PDF activo (para imprimir / liberar). */
+  fichaPdfObjectUrl: string | null = null;
+  fichaPdfCargando = false;
+  fichaPdfError = '';
   mensaje = '';
 
   /** Wizard de atención (diseño alineado a Evolución). */
@@ -3381,10 +3393,14 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   }
 
   cerrarFicha() {
+    this.liberarPdfFicha();
     this.fichaVista = null;
     this.fichaError = '';
     this.fichaCargando = false;
     this.fichaDescargando = false;
+    this.fichaModo = 'resumen';
+    this.fichaDocActivo = null;
+    this.fichaPdfError = '';
   }
 
   private async abrirFichaAsync(item: IFilaBackend) {
@@ -3399,11 +3415,20 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
 
     this.fichaError = '';
     this.fichaCargando = true;
+    this.liberarPdfFicha();
     this.fichaVista = null;
+    this.fichaDocActivo = null;
+    this.fichaPdfError = '';
     this.cdr.detectChanges();
 
     try {
       this.fichaVista = await this.construirVistaFicha(item, idAtencion);
+      if (this.fichaVista.firmado && this.fichaVista.documentos.length > 0) {
+        this.fichaModo = 'documentos';
+        await this.seleccionarDocumentoFicha(this.fichaVista.documentos[0]);
+      } else {
+        this.fichaModo = 'resumen';
+      }
     } catch (err: unknown) {
       this.fichaError =
         err instanceof ApiRequestError
@@ -3415,6 +3440,73 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       this.fichaCargando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  cambiarModoFicha(modo: 'resumen' | 'documentos'): void {
+    this.fichaModo = modo;
+    if (
+      modo === 'documentos' &&
+      this.fichaVista?.documentos.length &&
+      !this.fichaDocActivo
+    ) {
+      void this.seleccionarDocumentoFicha(this.fichaVista.documentos[0]);
+    }
+  }
+
+  async seleccionarDocumentoFicha(doc: VerFichaDocumentoItem): Promise<void> {
+    const vista = this.fichaVista;
+    if (!vista?.firmado) return;
+    this.fichaDocActivo = doc;
+    this.fichaPdfError = '';
+    this.fichaPdfCargando = true;
+    this.liberarPdfFicha();
+    this.cdr.detectChanges();
+    try {
+      const tipo = doc.tipo === 'pa' ? 'pa' : 'receta';
+      const blob = await this.api.descargarDocumentoFirmado(vista.idAtencion, {
+        tipo,
+        idReceta: doc.idReceta ?? undefined,
+      });
+      const objectUrl = URL.createObjectURL(blob);
+      this.fichaPdfObjectUrl = objectUrl;
+      this.fichaPdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+    } catch (err: unknown) {
+      this.fichaPdfError =
+        err instanceof Error
+          ? err.message
+          : 'No se pudo cargar el PDF firmado.';
+    } finally {
+      this.fichaPdfCargando = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  imprimirDocumentoFicha(): void {
+    if (!this.fichaPdfObjectUrl) return;
+    const win = window.open(this.fichaPdfObjectUrl, '_blank');
+    if (!win) {
+      this.modalGlobal.error(
+        'Permita ventanas emergentes para imprimir el PDF.',
+        'Impresión',
+      );
+      return;
+    }
+    win.addEventListener('load', () => {
+      try {
+        win.focus();
+        win.print();
+      } catch {
+        /* el usuario puede imprimir manualmente */
+      }
+    });
+  }
+
+  private liberarPdfFicha(): void {
+    if (this.fichaPdfObjectUrl) {
+      URL.revokeObjectURL(this.fichaPdfObjectUrl);
+      this.fichaPdfObjectUrl = null;
+    }
+    this.fichaPdfUrl = null;
   }
 
   private async construirVistaFicha(
@@ -3604,14 +3696,41 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     };
 
     const datos = mapearPrimeraAtencionPdfData(contexto);
-    const uuidFirma = uuidFirmaDesdeUbicacion(
-      ubicacionArchivoDesdeDetalle(detalle),
-    );
+    const ubicacionArchivo = ubicacionArchivoDesdeDetalle(detalle);
+    const estadoFirma = campoNum(detalle as IFilaBackend, [
+      'EstadoFirma',
+      'estadoFirma',
+    ]);
+    const firmado = estadoFirma === 1 || Boolean(ubicacionArchivo);
+    const examenesUi = examenesDesdeApi(exaApi);
+    const docsLote = armarDocumentosFirmaPa({
+      idAtencion,
+      idPrimeraAtencion: idPrimera,
+      examenes: examenesUi.map((e) => ({
+        ...e,
+        cie10Dx: cieDe(e.idDiagnostico),
+      })),
+      medicamentos: medicamentosUi.map((m) => ({
+        ...m,
+        cie10Dx: cieDe(m.idDiagnostico),
+        via: this.etiquetaVia(m.idViaAdministracion),
+      })),
+    });
+    const documentos: VerFichaDocumentoItem[] = docsLote.map((d) => ({
+      clave: d.clave,
+      etiqueta: d.etiqueta,
+      tipo: d.tipo,
+      idReceta: d.idReceta,
+    }));
 
     return {
       idAtencion,
+      idPrimeraAtencion: idPrimera,
       historia: this.historia(item),
-      uuidFirma,
+      uuidFirma: uuidFirmaDesdeUbicacion(ubicacionArchivo),
+      firmado,
+      ubicacionArchivo,
+      documentos,
       financiamiento:
         campo(item, [
           'FuenteFinanciamiento',
@@ -3635,44 +3754,39 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     this.fichaDescargando = true;
     this.cdr.detectChanges();
     try {
-      if (vista.uuidFirma) {
-        const ok = await this.descargarPdfFirmadoRemotoPa(
-          vista.uuidFirma,
-          vista.historia || vista.idAtencion,
-        );
-        if (ok) return;
+      if (vista.firmado) {
+        const doc = this.fichaDocActivo ?? vista.documentos[0] ?? null;
+        if (doc) {
+          const tipo = doc.tipo === 'pa' ? 'pa' : 'receta';
+          const blob = await this.api.descargarDocumentoFirmado(
+            vista.idAtencion,
+            { tipo, idReceta: doc.idReceta ?? undefined },
+          );
+          const sufijo =
+            doc.tipo === 'pa'
+              ? 'PA'
+              : doc.idReceta != null
+                ? `R${doc.idReceta}`
+                : 'doc';
+          this.descargarBlobPa(
+            blob,
+            `PrimeraAtencion_${vista.historia || vista.idAtencion}_${sufijo}.pdf`,
+          );
+          return;
+        }
       }
       await this.generarYDescargarPdfCopiaPa(vista);
+    } catch (err: unknown) {
+      this.modalGlobal.error(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo descargar el documento.',
+        'Error',
+      );
     } finally {
       this.fichaDescargando = false;
       this.cdr.detectChanges();
     }
-  }
-
-  private async descargarPdfFirmadoRemotoPa(
-    uuidFirma: string,
-    identificador: string | number,
-  ): Promise<boolean> {
-    try {
-      const urlDescarga = `${this.apiClient.getApiBaseUrl()}/api/v1/firmaperu/documentos/${uuidFirma}/firmado`;
-      const token = this.authService.getToken();
-      const respuesta = await fetch(urlDescarga, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (respuesta.ok) {
-        this.descargarBlobPa(
-          await respuesta.blob(),
-          `PrimeraAtencion_${identificador}_firmada.pdf`,
-        );
-        return true;
-      }
-    } catch (error) {
-      console.warn(
-        'No se pudo obtener el PDF firmado del servidor, generando copia:',
-        error,
-      );
-    }
-    return false;
   }
 
   private async generarYDescargarPdfCopiaPa(
@@ -4025,6 +4139,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.liberarPdfFicha();
     this.persistencia.desactivar();
     if (this.debounceBorradorDxPa) clearTimeout(this.debounceBorradorDxPa);
     if (this.debounceBorradorDxInterc) clearTimeout(this.debounceBorradorDxInterc);

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '../../../../../compartido/api-client/api-client.service';
 import type { IFilaBackend } from '../../../../../compartido/tipos/api-tipos';
+import { AuthService } from '../../../../auth/aplicacion/auth.service';
 import type {
   AltaDomicilioRegistrarBody,
   AltaDomicilioRegistrarResponse,
@@ -59,6 +60,7 @@ export interface PrimeraAtencionCerrarFirmaResponse {
 })
 export class PrimeraAtencionApiService {
   private readonly apiClient = inject(ApiClientService);
+  private readonly authService = inject(AuthService);
 
   listarBandeja(
     params: PrimeraAtencionListarParams = {},
@@ -111,6 +113,40 @@ export class PrimeraAtencionApiService {
       `/api/v1/primera-atencion/${idAtencion}/cerrar-firma`,
       { method: 'POST', body: JSON.stringify(body) },
     );
+  }
+
+  /**
+   * GET /api/v1/primera-atencion/:idAtencion/documento
+   * PDF firmado desde FTP/SFTP (binario, no envelope JSON).
+   */
+  async descargarDocumentoFirmado(
+    idAtencion: number,
+    opts: { tipo: 'pa' | 'receta'; idReceta?: number },
+  ): Promise<Blob> {
+    const query = new URLSearchParams();
+    query.set('tipo', opts.tipo);
+    if (opts.tipo === 'receta' && opts.idReceta != null && opts.idReceta > 0) {
+      query.set('idReceta', String(opts.idReceta));
+    }
+    const headers: Record<string, string> = { Accept: 'application/pdf' };
+    const token = this.authService.getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(
+      `${this.apiClient.getApiBaseUrl()}/api/v1/primera-atencion/${idAtencion}/documento?${query}`,
+      { headers },
+    );
+    if (!res.ok) {
+      let mensaje = 'No se pudo obtener el documento firmado.';
+      try {
+        const env = (await res.json()) as { error?: { message?: string } };
+        if (env?.error?.message) mensaje = env.error.message;
+      } catch {
+        /* cuerpo no JSON */
+      }
+      throw new Error(mensaje);
+    }
+    return res.blob();
   }
 
   /**

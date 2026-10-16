@@ -27,7 +27,7 @@ export class VerFichaPaComponent {
   }
 
   get esFirmado(): boolean {
-    return Boolean(this.vista.uuidFirma);
+    return Boolean(this.vista.firmado || this.vista.uuidFirma);
   }
 
   get signosVitales(): SignoVitalFicha[] {
