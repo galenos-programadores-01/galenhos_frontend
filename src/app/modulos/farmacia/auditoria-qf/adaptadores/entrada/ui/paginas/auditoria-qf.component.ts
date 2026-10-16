@@ -1,12 +1,12 @@
 import { ChangeDetectorRef, Component, HostListener, inject, type OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  ajustarRangoBandeja,
   fechaFinParam,
   fechaInicioParam,
   fechaIsoLocal,
   filtrarPorReceta,
   mensajeRangoBandeja,
-  sumarDiasIso,
 } from '../../../../aplicacion/auditoria-qf.filtros';
 import {
   DIAS_MAXIMOS_BANDEJA,
@@ -48,6 +48,7 @@ export class AuditoriaQfComponent implements OnInit {
 
   fechaDesde = fechaIsoLocal();
   fechaHasta = fechaIsoLocal();
+  avisoRango = '';
   idEstado = '';
   buscar = '';
 
@@ -65,23 +66,23 @@ export class AuditoriaQfComponent implements OnInit {
     void this.cargarBandeja();
   }
 
-  minFechaDesde(): string {
-    return this.fechaHasta ? sumarDiasIso(this.fechaHasta, -this.diasMaximos) : '';
+  get hoy(): string {
+    return fechaIsoLocal();
   }
 
-  maxFechaDesde(): string {
-    return this.fechaHasta || fechaIsoLocal();
+  alCambiarDesde(valor: string): void {
+    this.aplicarRango('desde', valor, this.fechaHasta);
   }
 
-  minFechaHasta(): string {
-    return this.fechaDesde;
+  alCambiarHasta(valor: string): void {
+    this.aplicarRango('hasta', this.fechaDesde, valor);
   }
 
-  maxFechaHasta(): string {
-    const hoy = fechaIsoLocal();
-    if (!this.fechaDesde) return hoy;
-    const tope = sumarDiasIso(this.fechaDesde, this.diasMaximos);
-    return tope < hoy ? tope : hoy;
+  private aplicarRango(ancla: 'desde' | 'hasta', desde: string, hasta: string): void {
+    const ajuste = ajustarRangoBandeja(ancla, desde, hasta, this.diasMaximos, this.hoy);
+    this.fechaDesde = ajuste.desde;
+    this.fechaHasta = ajuste.hasta;
+    this.avisoRango = ajuste.mensaje;
   }
 
   async cargarEstados(): Promise<void> {
@@ -214,6 +215,7 @@ export class AuditoriaQfComponent implements OnInit {
     const hoy = fechaIsoLocal();
     this.fechaDesde = hoy;
     this.fechaHasta = hoy;
+    this.avisoRango = '';
     this.idEstado = '';
     this.buscar = '';
     void this.cargarBandeja();

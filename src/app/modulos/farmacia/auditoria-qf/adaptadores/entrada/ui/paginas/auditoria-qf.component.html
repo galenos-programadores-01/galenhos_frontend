@@ -9,13 +9,11 @@
     <div class="aqf-filtros">
       <div>
         <label for="aqf-desde" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha desde</label>
-        <input id="aqf-desde" type="date" [(ngModel)]="fechaDesde" [min]="minFechaDesde()" [max]="maxFechaDesde()" autocomplete="off"
-               style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+        <input id="aqf-desde" class="aqf-fecha" type="date" [ngModel]="fechaDesde" (ngModelChange)="alCambiarDesde($event)" [max]="hoy" autocomplete="off" />
       </div>
       <div>
         <label for="aqf-hasta" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha hasta</label>
-        <input id="aqf-hasta" type="date" [(ngModel)]="fechaHasta" [min]="minFechaHasta()" [max]="maxFechaHasta()" autocomplete="off"
-               style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+        <input id="aqf-hasta" class="aqf-fecha" type="date" [ngModel]="fechaHasta" (ngModelChange)="alCambiarHasta($event)" [max]="hoy" autocomplete="off" />
       </div>
       <div>
         <label for="aqf-estado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado</label>
@@ -43,6 +41,9 @@
         </button>
       </div>
     </div>
+    @if (avisoRango) {
+      <p class="aqf-aviso-rango">{{ avisoRango }}</p>
+    }
   </div>
 
   @if (error) {

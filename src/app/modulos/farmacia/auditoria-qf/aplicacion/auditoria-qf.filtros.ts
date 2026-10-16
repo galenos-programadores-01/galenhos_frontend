@@ -53,6 +53,81 @@ export function fechaFinParam(hasta: string, ahora: Date = new Date()): string {
   return `${hasta}T23:59:59`;
 }
 
+export function fechaCorta(iso: string): string {
+  const partes = iso.split('-');
+  if (partes.length !== 3) return iso;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+export interface RangoAjustado {
+  desde: string;
+  hasta: string;
+  mensaje: string;
+}
+
+/** Mantiene la fecha editada y corre la otra solo si el rango deja de ser válido. */
+export function ajustarRangoBandeja(
+  ancla: 'desde' | 'hasta',
+  desde: string,
+  hasta: string,
+  maximo = DIAS_MAXIMOS_BANDEJA,
+  hoy: string = fechaIsoLocal(),
+): RangoAjustado {
+  let inicio = desde;
+  let fin = hasta;
+  let porTope = false;
+
+  if (ancla === 'desde') {
+    if (inicio && inicio > hoy) inicio = hoy;
+    if (!fin && inicio) fin = inicio;
+    if (fin && fin > hoy) fin = hoy;
+    if (inicio && fin && inicio > fin) fin = inicio;
+    if (inicio && fin) {
+      const dias = diasEntre(inicio, fin);
+      if (dias !== null && dias > maximo) {
+        const tope = sumarDiasIso(inicio, maximo);
+        fin = tope < hoy ? tope : hoy;
+        porTope = true;
+      }
+    }
+    return {
+      desde: inicio,
+      hasta: fin,
+      mensaje: mensajeAjuste('Hasta', hasta, fin, porTope, maximo),
+    };
+  }
+
+  if (fin && fin > hoy) fin = hoy;
+  if (!inicio && fin) inicio = fin;
+  if (inicio && inicio > hoy) inicio = hoy;
+  if (inicio && fin && fin < inicio) inicio = fin;
+  if (inicio && fin) {
+    const dias = diasEntre(inicio, fin);
+    if (dias !== null && dias > maximo) {
+      inicio = sumarDiasIso(fin, -maximo);
+      porTope = true;
+    }
+  }
+  return {
+    desde: inicio,
+    hasta: fin,
+    mensaje: mensajeAjuste('Desde', desde, inicio, porTope, maximo),
+  };
+}
+
+function mensajeAjuste(
+  campo: 'Desde' | 'Hasta',
+  antes: string,
+  despues: string,
+  porTope: boolean,
+  maximo: number,
+): string {
+  if (!despues || despues === antes) return '';
+  const fecha = fechaCorta(despues);
+  if (porTope) return `${campo} se ajustó al ${fecha}. El máximo es ${maximo} días.`;
+  return `${campo} se ajustó al ${fecha}.`;
+}
+
 export function horaDesdeFechaReceta(valor: string): string {
   const coincidencia = valor.match(/(?:T|\s)(\d{2}):(\d{2})/);
   if (!coincidencia) return '';

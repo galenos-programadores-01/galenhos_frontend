@@ -9,9 +9,31 @@
 
 .aqf-filtros {
   display: grid;
-  grid-template-columns: 160px 160px 180px 1fr auto;
+  grid-template-columns: 200px 200px 180px 1fr auto;
   gap: 10px;
   align-items: end;
+}
+
+.aqf-fecha {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid #e0e6f1;
+  border-radius: 11px;
+  font-size: 13.5px;
+  background: #f8fafc;
+  color: #07153a;
+  color-scheme: light;
+}
+
+.aqf-fecha::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.aqf-aviso-rango {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #54617f;
 }
 
 .aqf-filtros-acciones {
