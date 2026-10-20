@@ -270,14 +270,11 @@
   min-height: 0;
   gap: 12px;
   padding: 16px;
-  overflow: hidden;
+  overflow-y: auto;
   background: #f4f6fb;
 }
 
 .aqf-detalle-caja {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   padding: 18px 20px;
   border: 1px solid #e6eaf2;
   border-radius: 16px;
@@ -574,9 +571,16 @@
 
 .aqf-decision-fila {
   display: grid;
-  grid-template-columns: 1fr 148px;
+  grid-template-columns: 168px minmax(0, 1fr) 148px;
   gap: 10px;
   align-items: start;
+}
+
+.aqf-decision-fila label {
+  color: #54617f;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 38px;
 }
 
 .aqf-decision-fila input {
@@ -693,12 +697,12 @@
     align-items: stretch;
   }
 
-  .aqf-pantalla-cuerpo {
-    overflow-y: auto;
+  .aqf-decision-fila {
+    grid-template-columns: 1fr;
   }
 
-  .aqf-pantalla-principal {
-    overflow: visible;
+  .aqf-decision-fila > span {
+    display: none;
   }
 }
 

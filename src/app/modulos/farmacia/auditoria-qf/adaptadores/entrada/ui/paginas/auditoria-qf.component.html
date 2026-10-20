@@ -252,9 +252,9 @@
 
         <div class="aqf-pantalla-pie">
           <div class="aqf-decision-fila">
+            <label for="aqf-motivo-rechazo">Motivo de rechazado</label>
             <div class="aqf-decision-campo">
-              <label class="aqf-sr" for="aqf-motivo-rechazo">Motivo de rechazado</label>
-              <input #motivoRechazoInput id="aqf-motivo-rechazo" type="text" placeholder="Motivo de rechazado" [ngModel]="textoMotivo(receta, 'rechazar')" (ngModelChange)="alEscribirMotivo('rechazar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
+              <input #motivoRechazoInput id="aqf-motivo-rechazo" type="text" [ngModel]="textoMotivo(receta, 'rechazar')" (ngModelChange)="alEscribirMotivo('rechazar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
               @if (errorRechazo) {
                 <p class="aqf-motivo-error">{{ errorRechazo }}</p>
               }
@@ -262,9 +262,9 @@
             <button type="button" class="aqf-decision aqf-decision-no" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'rechazar'" (click)="elegirDecision('rechazar')">Rechazar</button>
           </div>
           <div class="aqf-decision-fila">
+            <label for="aqf-motivo-observacion">Motivo de observado</label>
             <div class="aqf-decision-campo">
-              <label class="aqf-sr" for="aqf-motivo-observacion">Motivo de observado</label>
-              <input #motivoObservacionInput id="aqf-motivo-observacion" type="text" placeholder="Motivo de observado" [ngModel]="textoMotivo(receta, 'observar')" (ngModelChange)="alEscribirMotivo('observar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
+              <input #motivoObservacionInput id="aqf-motivo-observacion" type="text" [ngModel]="textoMotivo(receta, 'observar')" (ngModelChange)="alEscribirMotivo('observar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
               @if (errorObservacion) {
                 <p class="aqf-motivo-error">{{ errorObservacion }}</p>
               }
@@ -272,6 +272,7 @@
             <button type="button" class="aqf-decision aqf-decision-observar" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'observar'" (click)="elegirDecision('observar')">Observar</button>
           </div>
           <div class="aqf-decision-fila">
+            <span></span>
             <span></span>
             <button type="button" class="aqf-decision aqf-decision-pasa" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'aprobar'" (click)="elegirDecision('aprobar')">Aprobar</button>
           </div>
