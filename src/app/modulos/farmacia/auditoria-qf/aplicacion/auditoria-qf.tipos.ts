@@ -48,4 +48,13 @@ export type DecisionAuditoria = 'aprobar' | 'observar' | 'rechazar';
 export interface DecisionPendiente {
   decision: DecisionAuditoria;
   observacion: string;
+  idEstado: number;
+  motivoObservacion: string;
+  motivoRechazo: string;
+}
+
+export interface GuardarEstadoReceta {
+  idEstado: number;
+  motivoObservacion: string;
+  motivoRechazo: string;
 }

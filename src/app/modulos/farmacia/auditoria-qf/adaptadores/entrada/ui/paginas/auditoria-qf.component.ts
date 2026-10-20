@@ -87,6 +87,8 @@ export class AuditoriaQfComponent implements OnInit {
   motivoObservacion = '';
   errorRechazo = '';
   errorObservacion = '';
+  errorGuardado = '';
+  guardando = false;
   decisionPendiente: DecisionAuditoria | null = null;
   cargando = false;
   buscado = false;
@@ -247,33 +249,59 @@ export class AuditoriaQfComponent implements OnInit {
     return decisionDeEstado(receta.estado) === decision ? receta.motivo : '';
   }
 
-  elegirDecision(decision: DecisionAuditoria): void {
-    if (this.recetaAbierta && this.yaRegistrada(this.recetaAbierta)) return;
-    if (decision === 'aprobar') {
-      this.errorRechazo = '';
-      this.errorObservacion = '';
-      this.decisionPendiente = 'aprobar';
-      return;
-    }
+  async elegirDecision(decision: DecisionAuditoria): Promise<void> {
+    const receta = this.recetaAbierta;
+    if (!receta || this.guardando || this.yaRegistrada(receta)) return;
 
     const texto = decision === 'rechazar' ? this.motivoRechazo : this.motivoObservacion;
     const preparada = prepararDecision(decision, texto);
-    if (!preparada.observacion) {
+    this.errorGuardado = '';
+    if (!preparada.pendiente) {
       this.decisionPendiente = null;
-      this.errorRechazo = decision === 'rechazar' ? 'Escriba el motivo.' : '';
-      this.errorObservacion = decision === 'observar' ? 'Escriba el motivo.' : '';
-      this.enfocarMotivo(decision);
+      this.errorRechazo = decision === 'rechazar' ? preparada.error : '';
+      this.errorObservacion = decision === 'observar' ? preparada.error : '';
+      if (decision !== 'aprobar') this.enfocarMotivo(decision);
+      this.cdr.detectChanges();
       return;
     }
+
+    const idReceta = Number(this.numeroReceta(receta));
+    if (!Number.isInteger(idReceta) || idReceta <= 0) {
+      this.errorGuardado = 'La receta no tiene un número válido.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.errorRechazo = '';
     this.errorObservacion = '';
     this.decisionPendiente = decision;
+    this.guardando = true;
+    this.cdr.detectChanges();
+    try {
+      await this.api.guardarEstado(idReceta, {
+        idEstado: preparada.pendiente.idEstado,
+        motivoObservacion: preparada.pendiente.motivoObservacion,
+        motivoRechazo: preparada.pendiente.motivoRechazo,
+      });
+      this.cerrarDetalle();
+      await this.cargarBandeja();
+    } catch (error) {
+      this.decisionPendiente = null;
+      this.errorGuardado =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo guardar el estado de la receta.';
+    } finally {
+      this.guardando = false;
+      this.cdr.detectChanges();
+    }
   }
 
   alEscribirMotivo(decision: 'rechazar' | 'observar', valor: string): void {
     if (this.recetaAbierta && this.yaRegistrada(this.recetaAbierta)) return;
     if (decision === 'rechazar') this.motivoRechazo = valor;
     else this.motivoObservacion = valor;
+    this.errorGuardado = '';
     if (this.decisionPendiente !== decision) return;
     if (!valor.trim()) {
       this.decisionPendiente = null;
@@ -370,6 +398,8 @@ export class AuditoriaQfComponent implements OnInit {
     this.motivoObservacion = '';
     this.errorRechazo = '';
     this.errorObservacion = '';
+    this.errorGuardado = '';
+    this.guardando = false;
     this.decisionPendiente = null;
   }
 

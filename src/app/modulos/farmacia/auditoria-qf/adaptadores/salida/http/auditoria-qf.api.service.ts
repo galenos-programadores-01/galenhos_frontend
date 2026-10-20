@@ -9,6 +9,7 @@ import {
 import type {
   EstadoRecetaOpcion,
   FiltroBandejaRecetas,
+  GuardarEstadoReceta,
   HistoricoMedicamento,
   MedicamentoReceta,
   RecetaBandeja,
@@ -57,5 +58,12 @@ export class AuditoriaQfApiService {
       `/api/v1/farmacia/auditoria-qf/historico?${query.toString()}`,
     );
     return (filas ?? []).map(mapearHistoricoMedicamento);
+  }
+
+  async guardarEstado(idReceta: number, cuerpo: GuardarEstadoReceta): Promise<void> {
+    await this.api.request(`/api/v1/farmacia/auditoria-qf/recetas/${idReceta}/estado`, {
+      method: 'PUT',
+      body: JSON.stringify(cuerpo),
+    });
   }
 }
