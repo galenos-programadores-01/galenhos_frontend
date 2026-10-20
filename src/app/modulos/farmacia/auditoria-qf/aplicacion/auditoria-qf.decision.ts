@@ -22,8 +22,3 @@ export function decisionDeEstado(estado: string): DecisionAuditoria | null {
 export function recetaYaRegistrada(estado: string): boolean {
   return decisionDeEstado(estado) !== null;
 }
-
-export function etiquetaMotivo(decision: DecisionAuditoria | null): string {
-  if (decision === 'rechazar') return 'Motivo de rechazado';
-  return 'Motivo de observado';
-}

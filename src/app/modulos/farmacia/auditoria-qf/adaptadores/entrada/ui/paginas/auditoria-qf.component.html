@@ -251,24 +251,27 @@
     </div>
 
     <footer class="aqf-pantalla-pie">
-      <div class="aqf-observacion">
-        @if (mostrarMotivo(receta)) {
-          <label for="aqf-observacion">{{ textoEtiquetaMotivo(receta) }}</label>
-          @if (motivoSoloLectura(receta)) {
-            <input id="aqf-observacion" type="text" [value]="receta.motivo || '—'" readonly />
-          } @else {
-            <input #motivoInput id="aqf-observacion" type="text" [ngModel]="observacion" (ngModelChange)="alEscribirMotivo($event)" autocomplete="off" />
-            @if (errorMotivo) {
-              <p class="aqf-motivo-error">{{ errorMotivo }}</p>
-            }
-          }
+      <div class="aqf-decision-grupo">
+        <label for="aqf-motivo-rechazo">Motivo de rechazado</label>
+        <div class="aqf-decision-fila">
+          <input #motivoRechazoInput id="aqf-motivo-rechazo" type="text" [ngModel]="textoMotivo(receta, 'rechazar')" (ngModelChange)="alEscribirMotivo('rechazar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
+          <button type="button" class="aqf-decision aqf-decision-no" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'rechazar'" (click)="elegirDecision('rechazar')">Rechazar</button>
+        </div>
+        @if (errorRechazo) {
+          <p class="aqf-motivo-error">{{ errorRechazo }}</p>
         }
       </div>
-      <div class="aqf-decisiones">
-        <button type="button" class="aqf-decision aqf-decision-no" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'rechazar'" (click)="elegirDecision('rechazar')">Rechazar</button>
-        <button type="button" class="aqf-decision aqf-decision-observar" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'observar'" (click)="elegirDecision('observar')">Observar</button>
-        <button type="button" class="aqf-decision aqf-decision-pasa" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'aprobar'" (click)="elegirDecision('aprobar')">Aprobar</button>
+      <div class="aqf-decision-grupo">
+        <label for="aqf-motivo-observacion">Motivo de observado</label>
+        <div class="aqf-decision-fila">
+          <input #motivoObservacionInput id="aqf-motivo-observacion" type="text" [ngModel]="textoMotivo(receta, 'observar')" (ngModelChange)="alEscribirMotivo('observar', $event)" [disabled]="yaRegistrada(receta)" autocomplete="off" />
+          <button type="button" class="aqf-decision aqf-decision-observar" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'observar'" (click)="elegirDecision('observar')">Observar</button>
+        </div>
+        @if (errorObservacion) {
+          <p class="aqf-motivo-error">{{ errorObservacion }}</p>
+        }
       </div>
+      <button type="button" class="aqf-decision aqf-decision-pasa aqf-decision-aprobar" [disabled]="yaRegistrada(receta)" [class.aqf-decision-activa]="decisionVisible(receta) === 'aprobar'" (click)="elegirDecision('aprobar')">Aprobar</button>
     </footer>
   </section>
 }

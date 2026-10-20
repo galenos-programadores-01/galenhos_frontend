@@ -10,7 +10,6 @@ import {
 import { FormsModule } from '@angular/forms';
 import {
   decisionDeEstado,
-  etiquetaMotivo,
   prepararDecision,
   recetaYaRegistrada,
 } from '../../../../aplicacion/auditoria-qf.decision';
@@ -50,7 +49,8 @@ export class AuditoriaQfComponent implements OnInit {
   private readonly api = inject(AuditoriaQfApiService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  @ViewChild('motivoInput') motivoInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('motivoRechazoInput') motivoRechazoInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('motivoObservacionInput') motivoObservacionInput?: ElementRef<HTMLInputElement>;
 
   readonly diasMaximos = DIAS_MAXIMOS_BANDEJA;
   readonly tamanoPagina = TAMANO_PAGINA_BANDEJA;
@@ -83,9 +83,10 @@ export class AuditoriaQfComponent implements OnInit {
   cargandoHistoricoId: number | null = null;
   cargandoDetalle = false;
   errorDetalle = '';
-  observacion = '';
-  errorMotivo = '';
-  motivoPedido: DecisionAuditoria | null = null;
+  motivoRechazo = '';
+  motivoObservacion = '';
+  errorRechazo = '';
+  errorObservacion = '';
   decisionPendiente: DecisionAuditoria | null = null;
   cargando = false;
   buscado = false;
@@ -239,52 +240,49 @@ export class AuditoriaQfComponent implements OnInit {
     return decisionDeEstado(receta.estado) ?? this.decisionPendiente;
   }
 
-  mostrarMotivo(receta: RecetaBandeja): boolean {
-    const fija = decisionDeEstado(receta.estado);
-    if (fija === 'observar' || fija === 'rechazar') return true;
-    return this.motivoPedido === 'observar' || this.motivoPedido === 'rechazar';
-  }
-
-  motivoSoloLectura(receta: RecetaBandeja): boolean {
-    const fija = decisionDeEstado(receta.estado);
-    return fija === 'observar' || fija === 'rechazar';
-  }
-
-  textoEtiquetaMotivo(receta: RecetaBandeja): string {
-    return etiquetaMotivo(decisionDeEstado(receta.estado) ?? this.motivoPedido);
+  textoMotivo(receta: RecetaBandeja, decision: 'rechazar' | 'observar'): string {
+    if (!this.yaRegistrada(receta)) {
+      return decision === 'rechazar' ? this.motivoRechazo : this.motivoObservacion;
+    }
+    return decisionDeEstado(receta.estado) === decision ? receta.motivo : '';
   }
 
   elegirDecision(decision: DecisionAuditoria): void {
     if (this.recetaAbierta && this.yaRegistrada(this.recetaAbierta)) return;
     if (decision === 'aprobar') {
-      this.motivoPedido = null;
-      this.errorMotivo = '';
+      this.errorRechazo = '';
+      this.errorObservacion = '';
       this.decisionPendiente = 'aprobar';
       return;
     }
 
-    this.motivoPedido = decision;
-    const preparada = prepararDecision(decision, this.observacion);
+    const texto = decision === 'rechazar' ? this.motivoRechazo : this.motivoObservacion;
+    const preparada = prepararDecision(decision, texto);
     if (!preparada.observacion) {
       this.decisionPendiente = null;
-      this.errorMotivo = 'Escriba el motivo.';
-      this.enfocarMotivo();
+      this.errorRechazo = decision === 'rechazar' ? 'Escriba el motivo.' : '';
+      this.errorObservacion = decision === 'observar' ? 'Escriba el motivo.' : '';
+      this.enfocarMotivo(decision);
       return;
     }
-    this.errorMotivo = '';
+    this.errorRechazo = '';
+    this.errorObservacion = '';
     this.decisionPendiente = decision;
   }
 
-  alEscribirMotivo(valor: string): void {
-    this.observacion = valor;
-    if (this.motivoPedido !== 'observar' && this.motivoPedido !== 'rechazar') return;
+  alEscribirMotivo(decision: 'rechazar' | 'observar', valor: string): void {
+    if (this.recetaAbierta && this.yaRegistrada(this.recetaAbierta)) return;
+    if (decision === 'rechazar') this.motivoRechazo = valor;
+    else this.motivoObservacion = valor;
+    if (this.decisionPendiente !== decision) return;
     if (!valor.trim()) {
       this.decisionPendiente = null;
-      this.errorMotivo = 'Escriba el motivo.';
+      if (decision === 'rechazar') this.errorRechazo = 'Escriba el motivo.';
+      else this.errorObservacion = 'Escriba el motivo.';
       return;
     }
-    this.errorMotivo = '';
-    this.decisionPendiente = this.motivoPedido;
+    this.errorRechazo = '';
+    this.errorObservacion = '';
   }
 
   historicoDe(idProducto: number): HistoricoMedicamento[] {
@@ -368,14 +366,18 @@ export class AuditoriaQfComponent implements OnInit {
     this.cargandoHistoricoId = null;
     this.cargandoDetalle = false;
     this.errorDetalle = '';
-    this.observacion = '';
-    this.errorMotivo = '';
-    this.motivoPedido = null;
+    this.motivoRechazo = '';
+    this.motivoObservacion = '';
+    this.errorRechazo = '';
+    this.errorObservacion = '';
     this.decisionPendiente = null;
   }
 
-  private enfocarMotivo(): void {
-    setTimeout(() => this.motivoInput?.nativeElement.focus());
+  private enfocarMotivo(decision: 'rechazar' | 'observar'): void {
+    setTimeout(() => {
+      const campo = decision === 'rechazar' ? this.motivoRechazoInput : this.motivoObservacionInput;
+      campo?.nativeElement.focus();
+    });
   }
 
   private async cargarDetalle(): Promise<void> {
