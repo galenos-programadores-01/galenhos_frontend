@@ -571,9 +571,25 @@
 
 .aqf-decision-fila {
   display: grid;
-  grid-template-columns: 168px minmax(0, 1fr) 148px;
-  gap: 10px;
+  grid-template-columns: 168px minmax(0, 1fr);
+  column-gap: 14px;
   align-items: start;
+}
+
+.aqf-decision-linea {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.aqf-decision-linea-fin {
+  justify-content: flex-end;
+}
+
+.aqf-decision-campo {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .aqf-decision-fila label {
@@ -584,7 +600,8 @@
 }
 
 .aqf-decision-fila input {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   height: 38px;
   padding: 0 11px;
@@ -608,7 +625,8 @@
 }
 
 .aqf-decision {
-  width: 100%;
+  flex: 0 0 auto;
+  width: 120px;
   height: 38px;
   padding: 0 16px;
   border: none;
@@ -698,7 +716,8 @@
   }
 
   .aqf-decision-fila {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
   }
 
   .aqf-decision-fila > span {
