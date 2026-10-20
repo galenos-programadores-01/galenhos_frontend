@@ -570,6 +570,18 @@
   font-size: 12.5px;
 }
 
+.aqf-observacion input[readonly] {
+  background: #f4f6fb;
+  color: #54617f;
+}
+
+.aqf-motivo-error {
+  margin: 6px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .aqf-decisiones {
   display: flex;
   flex-shrink: 0;
@@ -599,9 +611,19 @@
   background: #16a34a;
 }
 
+.aqf-decision:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .aqf-decision-activa {
   outline: 2px solid #07153a;
   outline-offset: 2px;
+}
+
+.aqf-decision:disabled.aqf-decision-activa {
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .aqf-pantalla-lado {

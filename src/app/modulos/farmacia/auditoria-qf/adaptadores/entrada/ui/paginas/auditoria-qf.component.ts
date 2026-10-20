@@ -1,6 +1,19 @@
-import { ChangeDetectorRef, Component, HostListener, inject, type OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  type OnInit,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { prepararDecision } from '../../../../aplicacion/auditoria-qf.decision';
+import {
+  decisionDeEstado,
+  etiquetaMotivo,
+  prepararDecision,
+  recetaYaRegistrada,
+} from '../../../../aplicacion/auditoria-qf.decision';
 import {
   ajustarRangoBandeja,
   fechaFinParam,
@@ -37,6 +50,8 @@ export class AuditoriaQfComponent implements OnInit {
   private readonly api = inject(AuditoriaQfApiService);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('motivoInput') motivoInput?: ElementRef<HTMLInputElement>;
+
   readonly diasMaximos = DIAS_MAXIMOS_BANDEJA;
   readonly tamanoPagina = TAMANO_PAGINA_BANDEJA;
   readonly columnas: ColumnaTabla[] = [
@@ -69,6 +84,8 @@ export class AuditoriaQfComponent implements OnInit {
   cargandoDetalle = false;
   errorDetalle = '';
   observacion = '';
+  errorMotivo = '';
+  motivoPedido: DecisionAuditoria | null = null;
   decisionPendiente: DecisionAuditoria | null = null;
   cargando = false;
   buscado = false;
@@ -214,8 +231,60 @@ export class AuditoriaQfComponent implements OnInit {
     await this.cargarHistorico(medicamento);
   }
 
+  yaRegistrada(receta: RecetaBandeja): boolean {
+    return recetaYaRegistrada(receta.estado);
+  }
+
+  decisionVisible(receta: RecetaBandeja): DecisionAuditoria | null {
+    return decisionDeEstado(receta.estado) ?? this.decisionPendiente;
+  }
+
+  mostrarMotivo(receta: RecetaBandeja): boolean {
+    const fija = decisionDeEstado(receta.estado);
+    if (fija === 'observar' || fija === 'rechazar') return true;
+    return this.motivoPedido === 'observar' || this.motivoPedido === 'rechazar';
+  }
+
+  motivoSoloLectura(receta: RecetaBandeja): boolean {
+    const fija = decisionDeEstado(receta.estado);
+    return fija === 'observar' || fija === 'rechazar';
+  }
+
+  textoEtiquetaMotivo(receta: RecetaBandeja): string {
+    return etiquetaMotivo(decisionDeEstado(receta.estado) ?? this.motivoPedido);
+  }
+
   elegirDecision(decision: DecisionAuditoria): void {
-    this.decisionPendiente = prepararDecision(decision, this.observacion).decision;
+    if (this.recetaAbierta && this.yaRegistrada(this.recetaAbierta)) return;
+    if (decision === 'aprobar') {
+      this.motivoPedido = null;
+      this.errorMotivo = '';
+      this.decisionPendiente = 'aprobar';
+      return;
+    }
+
+    this.motivoPedido = decision;
+    const preparada = prepararDecision(decision, this.observacion);
+    if (!preparada.observacion) {
+      this.decisionPendiente = null;
+      this.errorMotivo = 'Escriba el motivo.';
+      this.enfocarMotivo();
+      return;
+    }
+    this.errorMotivo = '';
+    this.decisionPendiente = decision;
+  }
+
+  alEscribirMotivo(valor: string): void {
+    this.observacion = valor;
+    if (this.motivoPedido !== 'observar' && this.motivoPedido !== 'rechazar') return;
+    if (!valor.trim()) {
+      this.decisionPendiente = null;
+      this.errorMotivo = 'Escriba el motivo.';
+      return;
+    }
+    this.errorMotivo = '';
+    this.decisionPendiente = this.motivoPedido;
   }
 
   historicoDe(idProducto: number): HistoricoMedicamento[] {
@@ -300,7 +369,13 @@ export class AuditoriaQfComponent implements OnInit {
     this.cargandoDetalle = false;
     this.errorDetalle = '';
     this.observacion = '';
+    this.errorMotivo = '';
+    this.motivoPedido = null;
     this.decisionPendiente = null;
+  }
+
+  private enfocarMotivo(): void {
+    setTimeout(() => this.motivoInput?.nativeElement.focus());
   }
 
   private async cargarDetalle(): Promise<void> {

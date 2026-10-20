@@ -19,6 +19,14 @@ export function mapearRecetaBandeja(fila: Record<string, unknown>): RecetaBandej
     servicio: texto(fila, ['Servicio', 'servicio']),
     estadoFirma: texto(fila, ['Estado_Firma', 'EstadoFirma', 'estadoFirma']),
     estado: texto(fila, ['Estado', 'estado']),
+    motivo: texto(fila, [
+      'Motivo',
+      'motivo',
+      'Observacion',
+      'Observación',
+      'MotivoObservacion',
+      'MotivoRechazo',
+    ]),
   };
 }
 

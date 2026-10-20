@@ -10,3 +10,20 @@ export function prepararDecision(
     observacion: observacion.trim(),
   };
 }
+
+export function decisionDeEstado(estado: string): DecisionAuditoria | null {
+  const limpio = estado.trim().toLowerCase();
+  if (limpio.startsWith('aprob')) return 'aprobar';
+  if (limpio.startsWith('observ')) return 'observar';
+  if (limpio.startsWith('rechaz')) return 'rechazar';
+  return null;
+}
+
+export function recetaYaRegistrada(estado: string): boolean {
+  return decisionDeEstado(estado) !== null;
+}
+
+export function etiquetaMotivo(decision: DecisionAuditoria | null): string {
+  if (decision === 'rechazar') return 'Motivo de rechazado';
+  return 'Motivo de observado';
+}

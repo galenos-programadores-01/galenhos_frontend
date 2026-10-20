@@ -11,6 +11,7 @@ export interface RecetaBandeja {
   servicio: string;
   estadoFirma: string;
   estado: string;
+  motivo: string;
 }
 
 export interface EstadoRecetaOpcion {
@@ -42,7 +43,7 @@ export interface HistoricoMedicamento {
   cantidadDespachada: string;
 }
 
-export type DecisionAuditoria = 'pasa' | 'observar' | 'no_pasa';
+export type DecisionAuditoria = 'aprobar' | 'observar' | 'rechazar';
 
 export interface DecisionPendiente {
   decision: DecisionAuditoria;
