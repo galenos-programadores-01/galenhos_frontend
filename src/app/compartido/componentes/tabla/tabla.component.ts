@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  contentChildren,
+  EventEmitter,
   Input,
+  Output,
+  contentChildren,
   type TemplateRef,
 } from '@angular/core';
 import { ColumnaTemplateDirective } from './columna-template.directive';
@@ -19,10 +21,13 @@ export interface ColumnaTabla {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './tabla.component.html',
+  styleUrl: './tabla.component.css',
 })
 export class TablaComponent {
   @Input() columnas: readonly ColumnaTabla[] | ColumnaTabla[] = [];
   @Input() datos: readonly unknown[] | unknown[] = [];
+  @Input() filasClickeables = false;
+  @Output() filaSeleccionada = new EventEmitter<unknown>();
   @Input() cargando: boolean = false;
   @Input() mensajeCargando: string = 'Consultando...';
   @Input() mostrarFiltroRequerido: boolean = false;
@@ -37,5 +42,11 @@ export class TablaComponent {
     if (!list || list.length === 0) return null;
     const directiva = list.find((t) => t.nombreColumna === nombreColumna);
     return directiva ? directiva.template : null;
+  }
+
+  emitirFila(item: unknown, event?: Event): void {
+    if (!this.filasClickeables) return;
+    event?.preventDefault();
+    this.filaSeleccionada.emit(item);
   }
 }

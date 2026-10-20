@@ -1,0 +1,2242 @@
+<div class="gp-in" style="display: flex; flex-direction: column; gap: 18px;">
+
+  @if (vista === 'bandeja') {
+    <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+      <div class="pa-filtros-bandeja">
+        <div>
+          <label for="filtro-pa" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Buscar</label>
+          <input id="filtro-pa" type="text" [(ngModel)]="filtro" (keydown.enter)="handleBuscar()"
+                 placeholder="Nombre, DNI o N° de cuenta..."
+                 style="width: 100%; padding: 10px 14px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;" />
+        </div>
+        <div>
+          <label for="filtro-prio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Prioridad</label>
+          <select id="filtro-prio" [(ngModel)]="filtroPrioridad" (ngModelChange)="onFiltroLocalChange()"
+                  [disabled]="cargandoPrioridades"
+                  style="width: 100%; padding: 10px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;">
+            <option value="">Toda prioridad</option>
+            @for (o of opcionesPrioridad; track o.id) {
+              <option [value]="o.id">{{ o.descripcion || ('Prioridad ' + o.id) }}</option>
+            }
+          </select>
+          @if (errorPrioridades) {
+            <div style="margin-top: 6px; font-size: 12px; color: #b91c1c;">{{ errorPrioridades }}</div>
+          }
+        </div>
+        <div>
+          <label for="filtro-est" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado</label>
+          <select id="filtro-est" [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroLocalChange()"
+                  style="width: 100%; padding: 10px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; color: #07153a;">
+            <option value="">Todo estado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="curso">En atención</option>
+            <option value="atendido">Atendido</option>
+          </select>
+        </div>
+        <button type="button" (click)="handleBuscar()" [disabled]="cargando" class="pa-btn-actualizar">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          Actualizar
+        </button>
+      </div>
+    </div>
+
+    @if (error) {
+      <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
+        {{ error }}
+      </div>
+    }
+
+    <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px;">
+        <span style="font-size: 15px; font-weight: 700; color: #07153a;">Pacientes — Primera Atención</span>
+        <span style="font-size: 12.5px; color: #7a86a1;">
+          {{ buscado ? itemsFiltrados.length + ' registro(s)' : 'Pulse Actualizar para cargar la bandeja.' }}
+        </span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <app-tabla [columnas]="columnasTabla" [datos]="itemsFiltrados" [cargando]="cargando"
+                   mensajeCargando="Consultando bandeja..."
+                   mensajeVacio="No se encontraron pacientes para los filtros aplicados.">
+
+          <ng-template appColumnaTemplate="cuentaCustom" let-p>
+            <span style="font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; color: #07153a;">{{ cuenta(p) }}</span>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="pacienteCustom" let-p>
+            <div style="font-weight: 600; color: #07153a; font-size: 13.5px;">{{ nombrePaciente(p) }}</div>
+            <div style="font-size: 12px; color: #7a86a1; margin-top: 2px;">
+              Doc. {{ documento(p) }}
+              @if (edad(p)) { · {{ edad(p) }} años }
+              @if (sexo(p) !== '—') { · {{ sexo(p) }} }
+            </div>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="prioridadCustom" let-p>
+            @if (prioridadInfo(p); as info) {
+              <span [style.background]="info.bg" [style.color]="info.text"
+                    style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+                {{ info.label }}
+              </span>
+            } @else {
+              <span style="color: #7a86a1;">{{ prioridadTexto(p) || '—' }}</span>
+            }
+          </ng-template>
+
+          <ng-template appColumnaTemplate="esperaCustom" let-p>
+            <span style="font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;"
+                  [style.color]="idTipoPrioridad(p) === 1 ? '#b91c1c' : '#07153a'"
+                  [style.fontWeight]="idTipoPrioridad(p) === 1 ? '700' : '400'">
+              {{ espera(p) }}
+            </span>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="consultorioCustom" let-p>
+            <div style="font-size: 13px; color: #07153a;">{{ consultorio(p) }}</div>
+            <div style="font-size: 12px; color: #7a86a1; margin-top: 2px;">{{ medico(p) }}</div>
+          </ng-template>
+
+          <ng-template appColumnaTemplate="estadoCustom" let-p>
+            @switch (estadoClave(p)) {
+              @case ('pendiente') {
+                <span style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #fbf1de; color: #c9871a;">Pendiente</span>
+              }
+              @case ('curso') {
+                <span style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #eaf3f6; color: #14415c;">En atención</span>
+              }
+              @case ('atendido') {
+                <span style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #e7f5ef; color: #2f8f6f;">Atendido</span>
+              }
+              @default {
+                <span style="color: #7a86a1;">{{ estadoLabel(p) }}</span>
+              }
+            }
+          </ng-template>
+
+          <ng-template appColumnaTemplate="accionCustom" let-p>
+            @switch (estadoClave(p)) {
+              @case ('pendiente') {
+                <button type="button" (click)="iniciarAtencion(p)"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #263c7a; color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  Iniciar atención
+                </button>
+              }
+              @case ('curso') {
+                <button type="button" (click)="continuarAtencion(p)"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #263c7a; color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  Continuar
+                </button>
+              }
+              @case ('atendido') {
+                <button type="button" (click)="abrirFicha(p)"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: transparent; color: #263c7a; border: 1px solid #263c7a; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  Ver ficha
+                </button>
+              }
+              @default {
+                <button type="button" (click)="iniciarAtencion(p)"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #263c7a; color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  Iniciar atención
+                </button>
+              }
+            }
+          </ng-template>
+        </app-tabla>
+      </div>
+    </div>
+  }
+
+  @if (vista === 'atencion' && pacienteSeleccionado) {
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <button type="button" (click)="volverBandeja()"
+              style="align-self: flex-start; background: none; border: none; color: #263c7a; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0;">
+        ← Volver a la bandeja
+      </button>
+      @if (persistencia.textoEstado()) {
+        <span class="pa-estado-guardado"
+              [class.pa-estado-guardado--error]="persistencia.estado === 'error'"
+              [class.pa-estado-guardado--saving]="persistencia.estado === 'saving'"
+              role="status" aria-live="polite">
+          {{ persistencia.textoEstado() }}
+        </span>
+      }
+    </div>
+
+    <!-- Cabecera solo lectura (datos del SP) -->
+    <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; overflow: hidden;">
+      <div class="pa-cabecera-paciente">
+        <div style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.32); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0;">
+          {{ iniciales(nombrePaciente(pacienteSeleccionado)) }}
+        </div>
+        <div class="pa-cabecera-info">
+          <div class="pa-cabecera-nombre">{{ nombrePaciente(pacienteSeleccionado) }}</div>
+          <div class="pa-cabecera-datos">
+            <span>H. CLÍNICA <b style="color: #eaf6f2; font-family: ui-monospace, Consolas, monospace; margin-left: 4px;">{{ historia(pacienteSeleccionado) }}</b></span>
+            <span>CUENTA <b style="color: #eaf6f2; font-family: ui-monospace, Consolas, monospace; margin-left: 4px;">{{ cuenta(pacienteSeleccionado) }}</b></span>
+            <span>DOC. <b style="color: #eaf6f2; font-family: ui-monospace, Consolas, monospace; margin-left: 4px;">{{ documento(pacienteSeleccionado) }}</b></span>
+          </div>
+        </div>
+        <div class="pa-cabecera-meta">
+          <span class="pa-cabecera-badge">
+            {{ modoAtencion === 'iniciar' ? 'Iniciar atención' : 'Continuar atención' }}
+          </span>
+          <!-- (1) Fecha y hora de ingreso — FechaIngreso del SP -->
+          <div class="pa-cabecera-fecha">
+            {{ fechaHoraIngreso(pacienteSeleccionado) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="pa-card-body">
+        <div class="pa-grid-info">
+          <div class="pa-grid-info-celda">
+            <div style="font-size: 10px; font-weight: 700; color: #1f6f8b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e6eaf2;">Identificación</div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Fecha de nacimiento</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ fechaNacimiento(pacienteSeleccionado) }}</div></div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Sexo</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ sexo(pacienteSeleccionado) }}</div></div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Estado civil</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ estadoCivil(pacienteSeleccionado) }}</div></div>
+            <div><div style="font-size: 10.5px; color: #5b6875;">Ocupación</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ ocupacion(pacienteSeleccionado) }}</div></div>
+          </div>
+          <div class="pa-grid-info-celda">
+            <div style="font-size: 10px; font-weight: 700; color: #1f6f8b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e6eaf2;">Procedencia y contacto</div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Dirección</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ direccion(pacienteSeleccionado) }}</div></div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Lugar de procedencia</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ procedencia(pacienteSeleccionado) }}</div></div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Teléfono</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a; font-family: ui-monospace, Consolas, monospace;">{{ telefono(pacienteSeleccionado) }}</div></div>
+            <div><div style="font-size: 10.5px; color: #5b6875;">Acompañante</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ acompanante(pacienteSeleccionado) }}</div></div>
+          </div>
+          <div class="pa-grid-info-celda">
+            <div style="font-size: 10px; font-weight: 700; color: #1f6f8b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e6eaf2;">Asignación clínica</div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 10.5px; color: #5b6875;">Prioridad</div>
+              @if (prioridadInfo(pacienteSeleccionado); as info) {
+                <span [style.background]="info.bg" [style.color]="info.text" style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-top: 2px;">{{ info.label }}</span>
+              } @else {
+                <div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ prioridadTexto(pacienteSeleccionado) || '—' }}</div>
+              }
+            </div>
+            <div style="margin-bottom: 10px;"><div style="font-size: 10.5px; color: #5b6875;">Consultorio</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ consultorio(pacienteSeleccionado) }}</div></div>
+            <div><div style="font-size: 10.5px; color: #5b6875;">Médico asignado</div><div style="font-size: 13.5px; font-weight: 600; color: #07153a;">{{ medico(pacienteSeleccionado) }}</div></div>
+          </div>
+        </div>
+
+        <div style="font-size: 10px; font-weight: 700; color: #5b6875; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;">Signos vitales de ingreso</div>
+        <div class="pa-grid-vitales">
+          <!-- TEMP -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('temp', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">TEMP</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('temp', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['temperatura', 'Temperatura', 'temp']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">°C</div>
+          </div>
+          <!-- P.A. — círculo partido (sistólica | diastólica) -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="estiloCirculoPa(pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"
+                    [title]="'Sistólica / Diastólica'"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">P.A.</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;">
+              @if (partesPaTexto(pacienteSeleccionado); as pa) {
+                <span [style.color]="pa.colorSistolica">{{ pa.sistolica }}</span><span style="color: #9fc0d0;">/</span><span [style.color]="pa.colorDiastolica">{{ pa.diastolica }}</span>
+              } @else {
+                <span style="color: #ffffff;">{{ vital(pacienteSeleccionado, ['presion_arterial', 'PresionArterial', 'pa']) }}</span>
+              }
+            </div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">mmHg</div>
+          </div>
+          <!-- F.R. -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('fr', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">F.R.</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('fr', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['frecuencia_respiratoria', 'FrecuenciaRespiratoria', 'fr']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">x min</div>
+          </div>
+          <!-- F.C. -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('fc', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">F.C.</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('fc', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['frecuencia_cardiaca', 'FrecuenciaCardiaca', 'fc']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">x min</div>
+          </div>
+          <!-- F.P. — rangos propios (rojo prioriza sobre amarillo) -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('fp', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">F.P.</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('fp', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['frecuencia_pulso', 'FrecuenciaPulso', 'fp']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">x min</div>
+          </div>
+          <!-- PESO — neutro (texto blanco) -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('peso', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">PESO</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('peso', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['peso', 'Peso']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">Kg</div>
+          </div>
+          <!-- SPO2 -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('spo2', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">SPO2</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('spo2', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['saturacion_oxigeno', 'Saturacion', 'spo2']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">%</div>
+          </div>
+          <!-- GLASGOW -->
+          <div class="pa-vital-celda">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span aria-hidden="true" [style.background]="colorEstadoVital('glasgow', pacienteSeleccionado)"
+                    style="width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.2);"></span>
+              <span style="font-size: 11.5px; color: #d4e8f0; font-weight: 700; letter-spacing: .4px;">GLASGOW</span>
+            </div>
+            <div style="font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; margin-top: 4px;"
+                 [style.color]="colorTextoVital('glasgow', pacienteSeleccionado)">{{ vital(pacienteSeleccionado, ['escala_glasgow', 'Glasgow', 'glasgow']) }}</div>
+            <div style="font-size: 11px; color: #9fc0d0; font-weight: 600;">/ 15</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pa-wizard">
+      <aside class="pa-sidebar" aria-label="Pasos de primera atención">
+        <div class="pa-sidebar-paciente">
+          <p class="pa-sidebar-eyebrow">Atendiendo a</p>
+          <p class="pa-sidebar-nombre">{{ nombrePaciente(pacienteSeleccionado) }}</p>
+          <p class="pa-sidebar-meta">HC {{ historia(pacienteSeleccionado) }} · Cuenta {{ cuenta(pacienteSeleccionado) }}</p>
+        </div>
+        @for (grupo of gruposPasosPa; track grupo.id) {
+          <div class="pa-sidebar-grupo">
+            <div class="pa-sidebar-grupo-titulo">{{ grupo.label }}</div>
+            @for (paso of grupo.pasos; track paso.id) {
+              <button type="button" class="pa-sidebar-item"
+                      [class.pa-sidebar-item--activo]="pasoActivo === paso.id"
+                      [class.pa-sidebar-item--completado]="pasoCompletadoPa(paso.id) && pasoActivo !== paso.id"
+                      [class.pa-sidebar-item--bloqueado]="!puedeNavegarAPasoPa(paso.id)"
+                      [class.pa-sidebar-item--cierre]="paso.id === 'cierre'"
+                      [disabled]="!puedeNavegarAPasoPa(paso.id)"
+                      [attr.title]="tituloPasoBloqueadoPa(paso.id) || null"
+                      (click)="seleccionarPasoPa(paso.id)">
+                <span class="pa-sidebar-num"
+                      [class.pa-sidebar-num--cierre]="paso.id === 'cierre'"
+                      [class.pa-sidebar-num--ok]="pasoCompletadoPa(paso.id) && pasoActivo !== paso.id">
+                  {{ pasoCompletadoPa(paso.id) && pasoActivo !== paso.id ? '✓' : (paso.id === 'cierre' ? '✓' : paso.num) }}
+                </span>
+                {{ paso.label }}
+              </button>
+            }
+          </div>
+        }
+      </aside>
+
+      <div class="pa-wizard-main">
+        <div class="pa-pasos-mobile" aria-label="Pasos">
+          @for (paso of pasosPa; track paso.id) {
+            <button type="button" class="pa-paso-chip"
+                    [class.pa-paso-chip--activo]="pasoActivo === paso.id"
+                    [class.pa-paso-chip--completado]="pasoCompletadoPa(paso.id) && pasoActivo !== paso.id"
+                    [class.pa-paso-chip--bloqueado]="!puedeNavegarAPasoPa(paso.id)"
+                    [disabled]="!puedeNavegarAPasoPa(paso.id)"
+                    [attr.title]="tituloPasoBloqueadoPa(paso.id) || null"
+                    (click)="seleccionarPasoPa(paso.id)">
+              <span>{{ pasoCompletadoPa(paso.id) && pasoActivo !== paso.id ? '✓' : (paso.id === 'cierre' ? '✓' : paso.num) }}</span>
+              {{ paso.label }}
+            </button>
+          }
+        </div>
+
+    <!-- Anamnesis -->
+    @if (pasoActivo === 'anamnesis') {
+    @let metaAnam = pasoPa('anamnesis');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaAnam.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaAnam.label }}</h3>
+          <p class="pa-paso-sub">{{ metaAnam.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        <div class="pa-anamnesis-toolbar">
+          <div style="display: flex; gap: 22px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13.5px; cursor: pointer;">
+              <input type="radio" name="anamnesis" [(ngModel)]="form.anamnesisTipo" value="directa" (ngModelChange)="onFormChange()" /> Directa
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13.5px; cursor: pointer;">
+              <input type="radio" name="anamnesis" [(ngModel)]="form.anamnesisTipo" value="indirecta" (ngModelChange)="onFormChange()" /> Indirecta
+            </label>
+          </div>
+          <!-- (2) Fecha y hora de atención — instante al abrir Iniciar/Continuar -->
+          <div style="font-size: 12.5px; color: #54617f; white-space: nowrap;">
+            Fecha y hora de atención:
+            <b style="color: #07153a; font-family: ui-monospace, Consolas, monospace; margin-left: 4px;">{{ fechaHoraAtencionTexto() }}</b>
+          </div>
+        </div>
+        <div>
+          <label for="tiempo-enf" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Tiempo de enfermedad</label>
+          <input id="tiempo-enf" [(ngModel)]="form.tiempoEnfermedad" (ngModelChange)="onCampoEditadoPa('tiempoEnfermedad')" placeholder="Ej. 2 días"
+                 class="pa-input-base" [class.gal-input--invalido]="campoInvalidoPa('tiempoEnfermedad')"
+                 style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc;" />
+          @if (mensajeCampoPa('tiempoEnfermedad'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+        <div>
+          <label for="signos" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Signos y síntomas</label>
+          <textarea id="signos" [(ngModel)]="form.signosSintomas" (ngModelChange)="onCampoEditadoPa('signosSintomas')" rows="2" placeholder="Describa los signos y síntomas..."
+                    [class.gal-input--invalido]="campoInvalidoPa('signosSintomas')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('signosSintomas'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+        <div>
+          <label for="relato" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Relato cronológico</label>
+          <textarea id="relato" [(ngModel)]="form.relatoCronologico" (ngModelChange)="onCampoEditadoPa('relatoCronologico')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('relatoCronologico')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('relatoCronologico'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+        <div>
+          <label for="antec" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Antecedentes</label>
+          <textarea id="antec" [(ngModel)]="form.antecedentes" (ngModelChange)="onCampoEditadoPa('antecedentes')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('antecedentes')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('antecedentes'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Examen clínico -->
+    @if (pasoActivo === 'examen') {
+    @let metaExamen = pasoPa('examen');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaExamen.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaExamen.label }}</h3>
+          <p class="pa-paso-sub">{{ metaExamen.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorCatalogosClinicos) {
+          <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 12.5px; padding: 8px 12px; border-radius: 10px;">
+            {{ errorCatalogosClinicos }}
+          </div>
+        }
+        <div class="pa-grid-examen">
+          <div>
+            <label for="est-gen" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado general</label>
+            <select id="est-gen" [(ngModel)]="form.estadoGeneral" (ngModelChange)="onCampoEditadoPa('estadoGeneral')" [disabled]="cargandoCatalogosClinicos"
+                    [class.gal-input--invalido]="campoInvalidoPa('estadoGeneral')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc;">
+              <option [ngValue]="''">Seleccionar...</option>
+              @for (o of opcionesEstadoGeneral; track o.id) {
+                <option [ngValue]="o.id">{{ o.descripcion }}</option>
+              }
+            </select>
+            @if (mensajeCampoPa('estadoGeneral'); as msg) {
+              <p class="gal-campo-msg">{{ msg }}</p>
+            }
+          </div>
+          <div>
+            <label for="hidrat" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado de hidratación</label>
+            <select id="hidrat" [(ngModel)]="form.hidratacion" (ngModelChange)="onCampoEditadoPa('hidratacion')" [disabled]="cargandoCatalogosClinicos"
+                    [class.gal-input--invalido]="campoInvalidoPa('hidratacion')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc;">
+              <option [ngValue]="''">Seleccionar...</option>
+              @for (o of opcionesHidratacion; track o.id) {
+                <option [ngValue]="o.id">{{ o.descripcion }}</option>
+              }
+            </select>
+            @if (mensajeCampoPa('hidratacion'); as msg) {
+              <p class="gal-campo-msg">{{ msg }}</p>
+            }
+          </div>
+          <div>
+            <label for="concien" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Nivel de conciencia</label>
+            <select id="concien" [(ngModel)]="form.conciencia" (ngModelChange)="onCampoEditadoPa('conciencia')" [disabled]="cargandoCatalogosClinicos"
+                    [class.gal-input--invalido]="campoInvalidoPa('conciencia')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc;">
+              <option [ngValue]="''">Seleccionar...</option>
+              @for (o of opcionesConciencia; track o.id) {
+                <option [ngValue]="o.id">{{ o.descripcion }}</option>
+              }
+            </select>
+            @if (mensajeCampoPa('conciencia'); as msg) {
+              <p class="gal-campo-msg">{{ msg }}</p>
+            }
+          </div>
+        </div>
+        <div>
+          <label for="piel" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Piel y anexos</label>
+          <textarea id="piel" [(ngModel)]="form.pielAnexos" (ngModelChange)="onCampoEditadoPa('pielAnexos')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('pielAnexos')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('pielAnexos'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+        <div>
+          <label for="ex-reg" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Examen clínico regional</label>
+          <textarea id="ex-reg" [(ngModel)]="form.examenRegional" (ngModelChange)="onCampoEditadoPa('examenRegional')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('examenRegional')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('examenRegional'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Diagnósticos -->
+    @if (pasoActivo === 'diagnosticos') {
+    @let metaDx = pasoPa('diagnosticos');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaDx.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaDx.label }}</h3>
+          <p class="pa-paso-sub">{{ metaDx.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorDx) {
+          <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorDx }}</div>
+        }
+
+        <div class="pa-tabla-scroll" style="margin-bottom: 12px;">
+          <div class="pa-tabla-dx pa-dx-alta">
+            <div class="pa-tabla-dx-header pa-dx-alta-grid">
+              <div>Diagnóstico</div>
+              <div>CIE-10</div>
+              <div>Tipo</div>
+              <div></div>
+            </div>
+            <div class="pa-tabla-dx-fila pa-dx-alta-grid">
+              <div style="position: relative; min-width: 0;">
+                <input
+                  id="dx-pa-buscar"
+                  type="text"
+                  name="dxPaBuscar"
+                  autocomplete="off"
+                  placeholder="Buscar por descripción o CIE-10..."
+                  [ngModel]="borradorDxPa.nombre"
+                  (ngModelChange)="onEscribeBorradorDxPa($event)"
+                  (focus)="posicionarSugerencia($event); buscarBorradorDxPa(borradorDxPa.nombre)"
+                  (blur)="cerrarSugerenciasBorradorDxPa()"
+                  [disabled]="guardandoDxPa"
+                  title="Buscar por descripción o CIE-10"
+                  style="width: 100%; padding: 7px 10px; border: 1px solid #e0e6f1; border-radius: 8px; font-size: 13px; background: #fff;" />
+                @if (mostrarSugerenciasBorradorDxPa()) {
+                  <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                    @if (cargandoBorradorDxPa) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                    } @else if (sugerenciasBorradorDxPa.length === 0) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                    } @else {
+                      @for (o of sugerenciasBorradorDxPa; track o.idDiagnostico) {
+                        <li>
+                          <button type="button" class="pa-exa-alta-opt"
+                                  (mousedown)="seleccionarBorradorDxPa(o)"
+                                  [disabled]="guardandoDxPa">
+                            <span class="pa-exa-alta-opt-nom">{{ o.descripcion }}</span>
+                            <span style="margin-left: 8px; font-family: ui-monospace, Consolas, monospace; color: #263c7a;">{{ o.codigoCIE10 }}</span>
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                }
+              </div>
+              <div class="pa-dx-cie-col">
+                <input
+                  type="text"
+                  class="pa-dx-cie-input"
+                  name="dxPaCie"
+                  [ngModel]="borradorDxPa.cie10"
+                  readonly
+                  tabindex="-1"
+                  maxlength="7"
+                  placeholder="CIE-10"
+                  title="Se completa al elegir el diagnóstico" />
+              </div>
+              <div class="pa-dx-tipo-col">
+                <select
+                  id="dx-pa-tipo"
+                  name="dxPaTipo"
+                  class="pa-dx-tipo-select"
+                  [ngModel]="borradorDxPa.idSubclasificacionDx"
+                  (ngModelChange)="cambiarTipoBorradorDxPa($event)"
+                  [disabled]="guardandoDxPa || opcionesSubclasificacionPa.length === 0"
+                  title="Tipo de diagnóstico">
+                  @for (o of opcionesSubclasificacionPa; track o.id) {
+                    <option [ngValue]="o.id">{{ nombreTipoDx(o) }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <button type="button" class="pa-exa-alta-btn pa-dx-add"
+                        (click)="agregarDiagnosticoDesdeBorrador()"
+                        [disabled]="guardandoDxPa || !borradorDxPaListo">
+                  {{ guardandoDxPa ? 'Guardando…' : 'Agregar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pa-tabla-scroll">
+          <div class="pa-tabla-dx">
+            <div class="pa-tabla-dx-header pa-dx-lista-grid">
+              <div>#</div><div>Diagnóstico</div><div>CIE-10</div><div>Tipo</div><div></div>
+            </div>
+            @if (diagnosticos.length === 0) {
+              <div class="pa-dx-empty" style="border-top: 1px solid #e6eaf2;">Sin diagnósticos. Complete la fila de arriba y pulse Agregar.</div>
+            } @else {
+              @for (dx of diagnosticos; track dx.idAtencionDiagnostico ?? $index; let i = $index) {
+                <div class="pa-tabla-dx-fila pa-dx-lista-grid" [class.pa-exa-row--busy]="eliminandoDxIndex === i">
+                  <div style="text-align: center; font-weight: 700; color: #263c7a;">{{ i + 1 }}</div>
+                  <div style="font-size: 13px; color: #07153a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ dx.nombre }}</div>
+                  <div class="pa-dx-cie-col">
+                    <span class="pa-exa-badge-dx">{{ dx.cie10 }}</span>
+                  </div>
+                  <div [title]="'Tipo guardado. Use ✕ y agregue de nuevo para corregir.'">
+                    <span class="pa-exa-badge-tipo">
+                      {{ etiquetaTipoDxPa(dx.idSubclasificacionDx) || nombreDesdeTipoLetra(dx.tipo) }}
+                    </span>
+                  </div>
+                  <button type="button"
+                          (click)="quitarDiagnostico(i)"
+                          [disabled]="guardandoDxPa || eliminandoDxIndex != null"
+                          style="background: none; border: none; color: #b91c1c; cursor: pointer; font-size: 16px;"
+                          aria-label="Quitar"
+                          title="Eliminar de BD">✕</button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+        <p style="margin: 10px 0 0; font-size: 11.5px; color: #7a86a1;">El tipo no se edita tras Agregar: elimine (✕) y vuelva a cargar.</p>
+      </div>
+    </div>
+    }
+
+
+    <!-- 4 Exámenes (por diagnóstico) -->
+    @if (pasoActivo === 'examenes') {
+    @let metaExa = pasoPa('examenes');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaExa.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaExa.label }}</h3>
+          <p class="pa-paso-sub">{{ metaExa.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorEx) {
+          <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorEx }}</div>
+        }
+
+        @if (diagnosticosConCie().length === 0) {
+          <div class="pa-dx-empty">Sin diagnósticos CIE. Regístrelos en el paso 3.</div>
+        } @else {
+          <div class="pa-exa-alta">
+            <div class="pa-exa-alta-campo">
+              <label class="pa-exa-alta-lbl" for="exa-dx">Diagnóstico</label>
+              <select
+                id="exa-dx"
+                class="pa-exa-alta-ctrl"
+                [ngModel]="indiceDxExamenActivo"
+                (ngModelChange)="seleccionarDxExamen(+$event)"
+                name="exaDx"
+                [disabled]="guardandoAltaEx">
+                @for (row of diagnosticosConCie(); track row.indice) {
+                  <option [ngValue]="row.indice">
+                    {{ row.dx.cie10 }} — {{ row.dx.nombre || 'Sin nombre' }} ({{ row.dx.tipo }})
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="pa-exa-alta-campo pa-exa-alta-buscar">
+              <label class="pa-exa-alta-lbl" for="exa-buscar">Buscar examen</label>
+              <div class="pa-exa-alta-suggest">
+                <input
+                  id="exa-buscar"
+                  type="text"
+                  class="pa-exa-alta-ctrl"
+                  name="exaBuscar"
+                  autocomplete="off"
+                  placeholder="Nombre del examen..."
+                  [ngModel]="textoBusquedaExamen"
+                  (ngModelChange)="onEscribeAltaExamen($event)"
+                  (focus)="posicionarSugerencia($event); abrirSugerenciasAltaEx()"
+                  (blur)="cerrarSugerenciasAltaEx()"
+                  [disabled]="guardandoAltaEx" />
+                @if (mostrarSugerenciasAltaEx()) {
+                  <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                    @if (cargandoAltaEx) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                    } @else if (sugerenciasAltaEx.length === 0) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                    } @else {
+                      @for (o of sugerenciasAltaEx; track o.idProducto) {
+                        <li>
+                          <button
+                            type="button"
+                            class="pa-exa-alta-opt"
+                            (mousedown)="agregarExamenDesdeCatalogo(o)"
+                            [disabled]="guardandoAltaEx">
+                            <span class="pa-exa-alta-opt-nom">{{ o.nombre }}</span>
+                            @if (o.puntoCarga) {
+                              <span class="pa-exa-alta-opt-pc">{{ o.puntoCarga }}</span>
+                            }
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="pa-exa-tabla">
+            <div class="pa-exa-thead">
+              <div>#</div>
+              <div>Examen</div>
+              <div>Diagnóstico</div>
+              <div>Tipo</div>
+              <div></div>
+            </div>
+            @if (gruposExamenVista.length === 0) {
+              <div class="pa-dx-empty" style="border-top: 1px solid #e6eaf2;">Sin exámenes. Busque y agregue arriba.</div>
+            } @else {
+              @for (g of gruposExamenVista; track g.clave) {
+                <div [class]="g.claseCss">
+                  <span>{{ g.etiqueta }}</span>
+                  <span class="pa-exa-grupo-n">{{ g.filas.length }} item(s)</span>
+                </div>
+                @for (f of g.filas; track f.indice) {
+                  <div class="pa-exa-row" [class.pa-exa-row--busy]="eliminandoExIndex === f.indice">
+                    <div class="pa-exa-row-num">{{ f.ordinal }}</div>
+                    <div class="pa-exa-row-nom">{{ examenes[f.indice].nombre }}</div>
+                    <div>
+                      @if (f.cie10) {
+                        <span class="pa-exa-badge-dx">{{ f.cie10 }}</span>
+                      } @else {
+                        <span class="pa-exa-badge-dx pa-exa-badge-dx--vacio">—</span>
+                      }
+                    </div>
+                    <div>
+                      <span class="pa-exa-badge-tipo">{{ f.tipo }}</span>
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        class="pa-exa-quitar"
+                        (click)="quitarExamen(f.indice)"
+                        [disabled]="guardandoAltaEx || eliminandoExIndex === f.indice"
+                        [attr.aria-label]="eliminandoExIndex === f.indice ? 'Eliminando' : 'Quitar'">
+                        {{ eliminandoExIndex === f.indice ? '…' : '✕' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            }
+          </div>
+          <p class="pa-exa-pie">Seleccionar de la lista guarda en BD. ✕ elimina en BD. La tabla agrupa por punto de carga.</p>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- 5 Interconsulta — mockup solicitud (estilos PA) -->
+    @if (pasoActivo === 'interconsulta') {
+    @let metaInterc = pasoPa('interconsulta');
+    <div class="pa-paso-card pa-interc-card">
+      <header class="pa-paso-head pa-paso-head--split">
+        <div class="pa-paso-head-main">
+          <span class="pa-paso-badge">{{ metaInterc.badge }}</span>
+          <div class="pa-paso-head-text">
+            <h3 class="pa-paso-titulo">{{ metaInterc.label }}</h3>
+            <p class="pa-paso-sub">{{ metaInterc.sub }}</p>
+            <div class="pa-interc-meta" style="margin-top: 8px;">
+              <span>
+                <span class="pa-interc-meta-label">Médico solicitante</span>
+                <strong>{{ nombreMedicoFirmantePa }}</strong>
+              </span>
+              <span>
+                <span class="pa-interc-meta-label">Fecha</span>
+                <strong>{{ fechaSolicitudInterconsulta }}</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="pa-interc-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorEspecialidades) {
+          <div class="pa-interc-error">{{ errorEspecialidades }}</div>
+        }
+        @if (mensajeInterc) {
+          <div class="pa-interc-aviso">{{ mensajeInterc }}</div>
+        }
+
+        <div class="pa-interc-grid-2">
+          <div>
+            <label class="pa-interc-label" for="interc-prio">Prioridad</label>
+            <select id="interc-prio" class="pa-interc-control"
+                    [(ngModel)]="intercPrioridad"
+                    [disabled]="cargandoPrioridades || guardandoInterc"
+                    name="intercPrioridad"
+                    (ngModelChange)="persistirBorradorIntercSession()">
+              <option [ngValue]="''">-- Seleccionar --</option>
+              @for (o of opcionesPrioridad; track o.id) {
+                <option [ngValue]="o.id">{{ o.descripcion || ('Prioridad ' + o.id) }}</option>
+              }
+            </select>
+            @if (errorPrioridades) {
+              <div class="pa-interc-error">{{ errorPrioridades }}</div>
+            }
+          </div>
+          <div>
+            <label class="pa-interc-label" for="interc">Especialidad</label>
+            <select id="interc" class="pa-interc-control"
+                    [(ngModel)]="form.interconsulta"
+                    (ngModelChange)="onInterconsultaChange($event); persistirBorradorIntercSession()"
+                    [disabled]="cargandoEspecialidades || guardandoInterc"
+                    name="interconsulta">
+              <option [ngValue]="''">-- Seleccionar --</option>
+              @for (o of opcionesEspecialidad; track o.id) {
+                <option [ngValue]="o.id">{{ o.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="pa-interc-motivos">
+          <div class="pa-interc-label">Motivo</div>
+          @if (cargandoCatalogosClinicos && opcionesMotivoInterconsulta.length === 0) {
+            <div class="pa-interc-dx-hint">Cargando motivos…</div>
+          }
+          <div class="pa-interc-motivos-grid">
+            @for (o of opcionesMotivoInterconsulta; track o.id) {
+              <label class="pa-interc-chk">
+                <input type="radio"
+                       name="motIntercUnico"
+                       [checked]="intercMotivoId === o.id"
+                       [disabled]="guardandoInterc"
+                       (change)="intercMotivoId = o.id; persistirBorradorIntercSession()" />
+                <span>{{ o.descripcion || ('Motivo ' + o.id) }}</span>
+              </label>
+            }
+          </div>
+          @if (!cargandoCatalogosClinicos && opcionesMotivoInterconsulta.length === 0) {
+            <div class="pa-interc-error">No hay motivos (IdGrupo=6 / ParametroClinico, orden por codigo).</div>
+          }
+        </div>
+
+        <div class="pa-interc-motivo-clinico">
+          <label class="pa-interc-label" for="interc-motivo-clinico">Motivo clínico</label>
+          <input
+            id="interc-motivo-clinico"
+            type="text"
+            class="pa-interc-control"
+            name="intercMotivoClinico"
+            maxlength="1000"
+            placeholder="Describa el motivo clínico de la solicitud..."
+            [(ngModel)]="intercMotivoClinico"
+            [disabled]="guardandoInterc"
+            (ngModelChange)="persistirBorradorIntercSession()" />
+        </div>
+
+        <!-- DX: una sola fila de alta (como paso 3) + pila local -->
+        <div class="pa-interc-dx-block">
+          <div class="pa-interc-dx-block-h">
+            <span class="pa-interc-label" style="margin: 0;">Diagnósticos de la solicitud</span>
+            <span class="pa-interc-dx-hint">Buscar · CIE bloqueado · Tipo · Agregar</span>
+          </div>
+          @if (errorDxInterc) {
+            <div class="pa-interc-error">{{ errorDxInterc }}</div>
+          }
+
+          <div class="pa-tabla-scroll" style="margin-bottom: 12px;">
+            <div class="pa-tabla-dx pa-interc-dx-alta">
+              <div class="pa-tabla-dx-header pa-interc-dx-alta-grid">
+                <div>Diagnóstico</div>
+                <div class="pa-interc-cie-head">CIE-10</div>
+                <div>Tipo</div>
+                <div></div>
+              </div>
+              <div class="pa-tabla-dx-fila pa-interc-dx-alta-grid">
+                <div style="position: relative; min-width: 0;">
+                  <input
+                    id="interc-dx-buscar"
+                    type="text"
+                    name="intercDxBuscar"
+                    autocomplete="off"
+                    placeholder="Buscar por descripción o CIE-10..."
+                    [ngModel]="borradorDxInterc.nombre"
+                    (ngModelChange)="onEscribeBorradorDxInterc($event)"
+                    (focus)="posicionarSugerencia($event); buscarBorradorDxInterc(borradorDxInterc.nombre)"
+                    (blur)="cerrarSugerenciasBorradorDxInterc()"
+                    [disabled]="guardandoInterc"
+                    title="Buscar por descripción o CIE-10"
+                    style="width: 100%; padding: 7px 10px; border: 1px solid #e0e6f1; border-radius: 8px; font-size: 13px; background: #fff;" />
+                  @if (mostrarSugerenciasBorradorDxInterc()) {
+                    <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                      @if (cargandoBorradorDxInterc) {
+                        <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                      } @else if (sugerenciasBorradorDxInterc.length === 0) {
+                        <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                      } @else {
+                        @for (o of sugerenciasBorradorDxInterc; track o.idDiagnostico) {
+                          <li>
+                            <button type="button" class="pa-exa-alta-opt"
+                                    (mousedown)="seleccionarBorradorDxInterc(o)"
+                                    [disabled]="guardandoInterc">
+                              <span class="pa-exa-alta-opt-nom">{{ o.descripcion }}</span>
+                              <span style="margin-left: 8px; font-family: ui-monospace, Consolas, monospace; color: #263c7a;">{{ o.codigoCIE10 }}</span>
+                            </button>
+                          </li>
+                        }
+                      }
+                    </ul>
+                  }
+                </div>
+                <div class="pa-interc-cie-col">
+                  <input
+                    type="text"
+                    class="pa-interc-cie-input"
+                    name="intercDxCie"
+                    [ngModel]="borradorDxInterc.cie10"
+                    readonly
+                    tabindex="-1"
+                    maxlength="7"
+                    placeholder="CIE-10"
+                    title="Se completa al elegir el diagnóstico (máx. 7)" />
+                </div>
+                <div class="pa-dx-tipo-col">
+                  <select
+                    id="interc-dx-tipo"
+                    name="intercDxTipo"
+                    class="pa-dx-tipo-select"
+                    [ngModel]="borradorDxInterc.idSubclasificacionDx"
+                    (ngModelChange)="cambiarTipoBorradorDxInterc($event)"
+                    [disabled]="guardandoInterc || opcionesSubclasificacionInterc.length === 0"
+                    title="Tipo de diagnóstico">
+                    @for (o of opcionesSubclasificacionInterc; track o.id) {
+                      <option [ngValue]="o.id">{{ nombreTipoDx(o) }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <button type="button" class="pa-exa-alta-btn pa-interc-dx-add"
+                          (click)="agregarDxInterconsultaDesdeBorrador()"
+                          [disabled]="guardandoInterc || !borradorDxIntercListo">
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pa-tabla-scroll">
+            <div class="pa-tabla-dx pa-interc-dx-lista">
+              <div class="pa-tabla-dx-header pa-interc-dx-lista-grid">
+                <div>#</div><div>Diagnóstico</div><div class="pa-interc-cie-head">CIE-10</div><div>Tipo</div><div></div>
+              </div>
+              @if (intercDxLista.length === 0) {
+                <div class="pa-interc-tabla-empty">Sin diagnósticos. Complete la fila de arriba y pulse Agregar.</div>
+              } @else {
+                @for (dx of intercDxLista; track $index; let i = $index) {
+                  <div class="pa-tabla-dx-fila pa-interc-dx-lista-grid">
+                    <div style="text-align: center; font-weight: 700; color: #263c7a;">{{ i + 1 }}</div>
+                    <div style="font-size: 13px; color: #07153a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ dx.nombre }}</div>
+                    <div class="pa-interc-cie-col">
+                      <span class="pa-interc-cie-text">{{ dx.cie10 }}</span>
+                    </div>
+                    <div class="pa-dx-tipo-lista">
+                      {{ etiquetaTipoDxInterc(dx.idSubclasificacionDx) || nombreDesdeTipoLetra(dx.tipo) }}
+                    </div>
+                    <button type="button" (click)="quitarDxInterconsulta(i)"
+                            [disabled]="guardandoInterc"
+                            style="background: none; border: none; color: #b91c1c; cursor: pointer; font-size: 16px;"
+                            aria-label="Quitar">✕</button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="pa-interc-footer">
+          <button type="button" class="pa-interc-btn-registrar"
+                  (click)="registrarSolicitudInterconsulta()"
+                  [disabled]="guardandoInterc">
+            {{ guardandoInterc ? 'Registrando…' : 'Registrar solicitud' }}
+          </button>
+        </div>
+
+        <!-- Pila B: solicitudes ya registradas -->
+        <div class="pa-interc-lista-reg" style="margin-top: 20px; border-top: 1px solid #e6eaf2; padding-top: 16px;">
+          <div class="pa-interc-dx-block-h" style="margin-bottom: 10px;">
+            <span class="pa-interc-label" style="margin: 0;">Interconsultas registradas</span>
+            <span class="pa-interc-dx-hint">FECHA · ESPECIALIDAD · MOTIVO · ESTADO</span>
+          </div>
+          @if (errorIntercLista) {
+            <div class="pa-interc-error">{{ errorIntercLista }}</div>
+          }
+          @if (cargandoIntercLista) {
+            <div class="pa-interc-dx-hint">Cargando…</div>
+          } @else {
+            <div class="pa-exa-tabla">
+              <div class="pa-exa-thead pa-interc-lista-head">
+                <div>Fecha</div><div>Especialidad</div><div>Motivo</div><div>Estado</div><div></div>
+              </div>
+              @if (intercListaRegistradas.length === 0) {
+                <div class="pa-interc-tabla-empty">Sin solicitudes registradas para esta atención.</div>
+              } @else {
+                @for (row of intercListaRegistradas; track row.idInterconsulta) {
+                  <div class="pa-exa-row pa-interc-lista-head" [class.pa-exa-row--busy]="eliminandoIntercId === row.idInterconsulta">
+                    <div style="font-size: 12px; white-space: nowrap;">{{ formatearFechaHoraInterc(row.fechaSolicitud) }}</div>
+                    <div class="pa-exa-row-nom">{{ row.especialidad || '—' }}</div>
+                    <div style="font-size: 12.5px; color: #54617f;">{{ motivoListaInterc(row) }}</div>
+                    <div style="font-size: 11.5px; font-weight: 700; color: #263c7a;">{{ row.estado || '—' }}</div>
+                    <button type="button"
+                            (click)="eliminarInterconsultaRegistrada(row)"
+                            [disabled]="!puedeEliminarInterc(row) || eliminandoIntercId != null || guardandoInterc"
+                            [style.opacity]="puedeEliminarInterc(row) ? 1 : 0.35"
+                            style="background: none; border: none; color: #b91c1c; cursor: pointer; font-size: 16px;"
+                            [title]="puedeEliminarInterc(row) ? 'Eliminar solicitud' : 'Solo SOLICITUD se puede eliminar'"
+                            aria-label="Eliminar">✕</button>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- 6 Procedimientos (por diagnóstico) -->
+    @if (pasoActivo === 'procedimientos') {
+    @let metaProc = pasoPa('procedimientos');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaProc.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaProc.label }}</h3>
+          <p class="pa-paso-sub">{{ metaProc.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorProc) {
+          <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorProc }}</div>
+        }
+
+        @if (diagnosticosConCie().length === 0) {
+          <div class="pa-dx-empty">Sin diagnósticos CIE. Regístrelos en el paso 3.</div>
+        } @else {
+          <div class="pa-exa-alta">
+            <div class="pa-exa-alta-campo">
+              <label class="pa-exa-alta-lbl" for="proc-dx">Diagnóstico</label>
+              <select
+                id="proc-dx"
+                class="pa-exa-alta-ctrl"
+                [ngModel]="indiceDxProcActivo"
+                (ngModelChange)="seleccionarDxProc(+$event)"
+                name="procDx"
+                [disabled]="guardandoAltaProc">
+                @for (row of diagnosticosConCie(); track row.indice) {
+                  <option [ngValue]="row.indice">
+                    {{ row.dx.cie10 }} — {{ row.dx.nombre || 'Sin nombre' }} ({{ row.dx.tipo }})
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="pa-exa-alta-campo pa-exa-alta-buscar">
+              <label class="pa-exa-alta-lbl" for="proc-buscar">Buscar procedimiento</label>
+              <div class="pa-exa-alta-suggest">
+                <input
+                  id="proc-buscar"
+                  type="text"
+                  class="pa-exa-alta-ctrl"
+                  name="procBuscar"
+                  autocomplete="off"
+                  placeholder="Nombre del procedimiento..."
+                  [ngModel]="textoBusquedaProc"
+                  (ngModelChange)="onEscribeAltaProc($event)"
+                  (focus)="posicionarSugerencia($event); abrirSugerenciasAltaProc()"
+                  (blur)="cerrarSugerenciasAltaProc()"
+                  [disabled]="guardandoAltaProc" />
+                @if (mostrarSugerenciasAltaProc()) {
+                  <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                    @if (cargandoAltaProc) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                    } @else if (sugerenciasAltaProc.length === 0) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                    } @else {
+                      @for (o of sugerenciasAltaProc; track o.idProducto) {
+                        <li>
+                          <button
+                            type="button"
+                            class="pa-exa-alta-opt"
+                            (mousedown)="agregarProcedimientoDesdeCatalogo(o)"
+                            [disabled]="guardandoAltaProc">
+                            <span class="pa-exa-alta-opt-nom">{{ o.nombre }}</span>
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="pa-exa-tabla">
+            <div class="pa-exa-thead">
+              <div>#</div>
+              <div>Procedimiento</div>
+              <div>Diagnóstico</div>
+              <div>Tipo</div>
+              <div></div>
+            </div>
+            @if (procedimientosVista.length === 0) {
+              <div class="pa-dx-empty" style="border-top: 1px solid #e6eaf2;">Sin procedimientos. Busque y seleccione arriba.</div>
+            } @else {
+              @for (f of procedimientosVista; track f.indice) {
+                <div class="pa-exa-row" [class.pa-exa-row--busy]="eliminandoProcIndex === f.indice">
+                  <div class="pa-exa-row-num">{{ f.ordinal }}</div>
+                  <div class="pa-exa-row-nom">{{ procedimientos[f.indice].nombre }}</div>
+                  <div>
+                    @if (f.cie10) {
+                      <span class="pa-exa-badge-dx">{{ f.cie10 }}</span>
+                    } @else {
+                      <span class="pa-exa-badge-dx pa-exa-badge-dx--vacio">—</span>
+                    }
+                  </div>
+                  <div>
+                    <span class="pa-exa-badge-tipo">{{ f.tipo }}</span>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      class="pa-exa-quitar"
+                      (click)="quitarProcedimiento(f.indice)"
+                      [disabled]="guardandoAltaProc || eliminandoProcIndex === f.indice"
+                      [attr.aria-label]="eliminandoProcIndex === f.indice ? 'Eliminando' : 'Quitar'">
+                      {{ eliminandoProcIndex === f.indice ? '…' : '✕' }}
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          <p class="pa-exa-pie">Seleccionar de la lista guarda en BD (punto 26). ✕ elimina en BD. Orden = orden de alta.</p>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Medicamentos (por diagnóstico) — layout A: cards 2 líneas -->
+    @if (pasoActivo === 'medicamentos') {
+    @let metaMed = pasoPa('medicamentos');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaMed.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaMed.label }}</h3>
+          <p class="pa-paso-sub">{{ metaMed.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        @if (errorCatalogosMed) {
+          <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorCatalogosMed }}</div>
+        }
+        @if (errorMedicamentos) {
+          <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorMedicamentos }}</div>
+        }
+
+        @if (diagnosticosConCie().length === 0) {
+          <div class="pa-dx-empty">Sin diagnósticos CIE. Regístrelos en el paso 3.</div>
+        } @else {
+          <div class="pa-med-alta">
+            <div class="pa-med-alta-dx">
+              <label class="pa-exa-alta-lbl" for="med-dx">Diagnóstico</label>
+              <select
+                id="med-dx"
+                class="pa-exa-alta-ctrl"
+                [ngModel]="indiceDxMedActivo"
+                (ngModelChange)="seleccionarDxMed(+$event)"
+                name="medDx"
+                [disabled]="guardandoAltaMed">
+                @for (row of diagnosticosConCie(); track row.indice) {
+                  <option [ngValue]="row.indice">
+                    {{ row.dx.cie10 }} — {{ row.dx.nombre || 'Sin nombre' }} ({{ row.dx.tipo }})
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="pa-med-alta-grid">
+              <div class="pa-med-fld pa-med-fld--nombre" style="position: relative;">
+                <label class="pa-med-lbl">Medicamento</label>
+                <input
+                  type="text"
+                  name="medAltaNom"
+                  class="pa-exa-input"
+                  autocomplete="off"
+                  placeholder="Buscar medicamento..."
+                  [ngModel]="borradorMed.nombre"
+                  (ngModelChange)="onEscribeAltaMed($event)"
+                  (focus)="posicionarSugerencia($event); abrirSugerenciasAltaMed()"
+                  (blur)="cerrarSugerenciasAltaMed()"
+                  [disabled]="guardandoAltaMed" />
+                @if (mostrarSugerenciasAltaMed()) {
+                  <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                    @if (cargandoAltaMed) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                    } @else if (sugerenciasAltaMed.length === 0) {
+                      <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                    } @else {
+                      @for (o of sugerenciasAltaMed; track o.idProducto) {
+                        <li>
+                          <button type="button" class="pa-exa-alta-opt" (mousedown)="seleccionarAltaMed(o)" [disabled]="guardandoAltaMed">
+                            <span class="pa-exa-alta-opt-nom">{{ o.nombre }}</span>
+                          </button>
+                        </li>
+                      }
+                    }
+                  </ul>
+                }
+              </div>
+
+              <div class="pa-med-fld">
+                <label class="pa-med-lbl">Cantidad</label>
+                <input
+                  name="medAltaCant"
+                  type="number"
+                  min="1"
+                  class="pa-exa-input"
+                  placeholder="Ej. 10"
+                  [ngModel]="borradorMed.cantidad"
+                  (ngModelChange)="borradorMed.cantidad = $event"
+                  [disabled]="guardandoAltaMed" />
+              </div>
+
+              <div class="pa-med-fld" style="position: relative;">
+                <label class="pa-med-lbl">Dosis</label>
+                <input
+                  type="text"
+                  name="medAltaDosis"
+                  class="pa-exa-input"
+                  autocomplete="off"
+                  placeholder="Dosis"
+                  [ngModel]="borradorMed.dosis"
+                  (ngModelChange)="onEscribeAltaDosis($event)"
+                  (focus)="posicionarSugerencia($event); filtrarAltaDosis(borradorMed.dosis)"
+                  (blur)="cerrarSugerenciasAltaMed()"
+                  [disabled]="guardandoAltaMed" />
+                @if (mostrarSugerenciasAltaCampo('dosis')) {
+                  <ul class="pa-sugerencias-list pa-sugerencias-list--compacta" [ngStyle]="estiloSugerenciaLista()">
+                    @for (o of sugerenciasAltaDosis; track o.idDosis) {
+                      <li>
+                        <button type="button" class="pa-exa-alta-opt" (mousedown)="seleccionarAltaDosis(o)">{{ o.numeroDosis }}</button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+
+              <div class="pa-med-fld" style="position: relative;">
+                <label class="pa-med-lbl">Unidad</label>
+                <input
+                  type="text"
+                  name="medAltaUnidad"
+                  class="pa-exa-input"
+                  autocomplete="off"
+                  placeholder="Unidad"
+                  [ngModel]="borradorMed.unidad"
+                  (ngModelChange)="onEscribeAltaUnidad($event)"
+                  (focus)="posicionarSugerencia($event); filtrarAltaUnidad(borradorMed.unidad)"
+                  (blur)="cerrarSugerenciasAltaMed()"
+                  [disabled]="guardandoAltaMed" />
+                @if (mostrarSugerenciasAltaCampo('unidad')) {
+                  <ul class="pa-sugerencias-list pa-sugerencias-list--compacta" [ngStyle]="estiloSugerenciaLista()">
+                    @for (o of sugerenciasAltaUnidad; track o.idUNIDDosis) {
+                      <li>
+                        <button type="button" class="pa-exa-alta-opt" (mousedown)="seleccionarAltaUnidad(o)">{{ o.numeroUNIDDosis }}</button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+
+              <div class="pa-med-fld" style="position: relative;">
+                <label class="pa-med-lbl">Frecuencia</label>
+                <input
+                  type="text"
+                  name="medAltaFreq"
+                  class="pa-exa-input"
+                  autocomplete="off"
+                  placeholder="Frecuencia"
+                  [ngModel]="borradorMed.frecuencia"
+                  (ngModelChange)="onEscribeAltaFrecuencia($event)"
+                  (focus)="posicionarSugerencia($event, 200); filtrarAltaFrecuencia(borradorMed.frecuencia)"
+                  (blur)="cerrarSugerenciasAltaMed()"
+                  [disabled]="guardandoAltaMed" />
+                @if (mostrarSugerenciasAltaCampo('frecuencia')) {
+                  <ul class="pa-sugerencias-list pa-sugerencias-list--compacta pa-sugerencias-list--ancha" [ngStyle]="estiloSugerenciaLista()">
+                    @for (o of sugerenciasAltaFrecuencia; track o.idFrecuencia) {
+                      <li>
+                        <button type="button" class="pa-exa-alta-opt" (mousedown)="seleccionarAltaFrecuencia(o)">{{ o.descripcion }}</button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+
+              <div class="pa-med-fld pa-med-fld--via">
+                <label class="pa-med-lbl">Vía</label>
+                <select
+                  name="medAltaVia"
+                  class="pa-exa-input"
+                  [ngModel]="borradorMed.idViaAdministracion"
+                  (ngModelChange)="borradorMed.idViaAdministracion = $event"
+                  [disabled]="cargandoCatalogosMed || guardandoAltaMed">
+                  <option [ngValue]="''">Vía...</option>
+                  @for (o of opcionesVia; track o.idViaAdministracion) {
+                    <option [ngValue]="o.idViaAdministracion">{{ o.descripcion }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="pa-med-fld pa-med-fld--dias">
+                <label class="pa-med-lbl">Días</label>
+                <input
+                  name="medAltaDias"
+                  type="number"
+                  min="1"
+                  class="pa-exa-input"
+                  placeholder="Ej. 7"
+                  title="Cantidad de días"
+                  [ngModel]="borradorMed.duracion"
+                  (ngModelChange)="borradorMed.duracion = $event"
+                  [disabled]="guardandoAltaMed" />
+              </div>
+
+              <div class="pa-med-alta-acciones">
+                <button
+                  type="button"
+                  class="pa-exa-alta-btn pa-med-alta-btn"
+                  (click)="confirmarAltaMedicamento()"
+                  [disabled]="guardandoAltaMed">
+                  {{ guardandoAltaMed ? 'Guardando…' : 'Agregar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pa-exa-tabla pa-med-tabla">
+            <div class="pa-med-thead">
+              <div>#</div>
+              <div>Medicamento</div>
+              <div>Cant.</div>
+              <div>Dosis</div>
+              <div>Unidad</div>
+              <div>Frec.</div>
+              <div>Vía</div>
+              <div>Días</div>
+              <div>DX</div>
+              <div></div>
+            </div>
+            @if (medicamentosVista.length === 0) {
+              <div class="pa-dx-empty" style="border-top: 1px solid #e6eaf2;">Sin medicamentos. Complete el formulario y pulse Agregar.</div>
+            } @else {
+              @for (f of medicamentosVista; track f.indice) {
+                <div class="pa-med-row">
+                  <div class="pa-exa-row-num">{{ f.ordinal }}</div>
+                  <div class="pa-exa-row-nom">{{ medicamentos[f.indice].nombre }}</div>
+                  <div>{{ medicamentos[f.indice].cantidad }}</div>
+                  <div>{{ f.dosis }}</div>
+                  <div>{{ f.unidad }}</div>
+                  <div>{{ f.frecuencia }}</div>
+                  <div>{{ f.via }}</div>
+                  <div>{{ medicamentos[f.indice].duracion }}</div>
+                  <div>
+                    @if (f.cie10) {
+                      <span class="pa-exa-badge-dx">{{ f.cie10 }}</span>
+                    } @else {
+                      <span class="pa-exa-badge-dx pa-exa-badge-dx--vacio">—</span>
+                    }
+                  </div>
+                  <div>
+                    <button type="button" class="pa-exa-quitar" (click)="quitarMedicamento(f.indice)" aria-label="Quitar">✕</button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          <p class="pa-exa-pie">Todos los campos son obligatorios. Agregar guarda en BD. ✕ elimina. Para corregir: elimine y vuelva a agregar.</p>
+        }
+
+        <div style="margin-top: 16px;">
+          <label for="evol" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Evolución</label>
+          <textarea id="evol" [(ngModel)]="form.evolucion" (ngModelChange)="onCampoEditadoPa('evolucion')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('evolucion')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('evolucion'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+        <div style="margin-top: 14px;">
+          <label for="enf" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Evaluación de enfermería y/o obstetricia</label>
+          <textarea id="enf" [(ngModel)]="form.evaluacionEnfermeria" (ngModelChange)="onCampoEditadoPa('evaluacionEnfermeria')" rows="2"
+                    [class.gal-input--invalido]="campoInvalidoPa('evaluacionEnfermeria')"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #e0e6f1; border-radius: 11px; font-size: 13.5px; background: #f8fafc; resize: vertical;"></textarea>
+          @if (mensajeCampoPa('evaluacionEnfermeria'); as msg) {
+            <p class="gal-campo-msg">{{ msg }}</p>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Condición de egreso -->
+    @if (pasoActivo === 'egreso') {
+    @let metaEgreso = pasoPa('egreso');
+    <div class="pa-paso-card">
+      <header class="pa-paso-head">
+        <span class="pa-paso-badge">{{ metaEgreso.badge }}</span>
+        <div class="pa-paso-head-text">
+          <h3 class="pa-paso-titulo">{{ metaEgreso.label }}</h3>
+          <p class="pa-paso-sub">{{ metaEgreso.sub }}</p>
+        </div>
+      </header>
+      <div class="pa-paso-body">
+        <app-resumen-errores
+          [errores]="erroresCamposPaso"
+          (irACampo)="enfocarAnclaPa($event)"
+        />
+        <div class="pa-egreso-destino-grid">
+          @for (d of destinosEgresoUi; track d.clave) {
+            <button
+              type="button"
+              class="pa-egreso-destino-card"
+              [class.pa-egreso-destino-card--selected]="destinoEgresoActivo === d.clave"
+              [class.pa-egreso-destino-card--blocked]="destinoEgresoTarjetaBloqueada(d.clave)"
+              [class.pa-egreso-destino-card--registrado]="egresoDestinoRegistrado === d.clave"
+              [class.pa-egreso-destino-card--fuga]="d.clave === 'fuga'"
+              [class.pa-egreso-destino-card--fallecido]="d.clave === 'fallecido'"
+              [disabled]="destinoEgresoTarjetaBloqueada(d.clave)"
+              (click)="seleccionarDestinoEgreso(d.clave)"
+              [title]="tituloTarjetaDestinoEgreso(d)">
+              <span class="pa-egreso-destino-icon">{{ d.icono }}</span>
+              <span class="pa-egreso-destino-name">{{ d.nombre }}</span>
+              <span class="pa-egreso-destino-sub">{{ d.subtitulo }}</span>
+              @if (egresoDestinoRegistrado === d.clave) {
+                <span class="pa-egreso-destino-badge pa-egreso-destino-badge--ok">Registrado</span>
+              } @else if (badgeDestinoEgreso(d.clave); as badge) {
+                <span class="pa-egreso-destino-badge">{{ badge }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (egresoYaRegistrado) {
+          <div class="pa-egreso-lock-banner" role="status">
+            Egreso registrado como «{{ egresoDestinoRegistradoNombre }}».
+            Los datos se mantienen visibles; no se puede cambiar el destino.
+          </div>
+        }
+
+        @if (destinoEgresoActivo === 'domicilio') {
+          <div class="pa-egreso-case pa-egreso-case--domicilio">
+            <div class="pa-egreso-case-h">Datos de alta a domicilio</div>
+            <fieldset class="pa-egreso-case-b" [disabled]="egresoCamposSoloLectura">
+              <div class="pa-egreso-field-grid">
+                <div class="pa-egreso-field">
+                  <label>Médico responsable del egreso</label>
+                  <div class="pa-egreso-ro">{{ medicoEgresoTexto() }}</div>
+                </div>
+                <div class="pa-egreso-field">
+                  <label>Servicio de egreso</label>
+                  <div class="pa-egreso-ro">{{ servicioEgresoTexto() }}</div>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-dom-fh">Fecha y hora de alta <span class="pa-egreso-req">*</span></label>
+                  <input
+                    id="eg-dom-fh"
+                    type="datetime-local"
+                    [ngModel]="combinarFechaHoraEgreso(egresoDomicilio.fecha, egresoDomicilio.hora)"
+                    (ngModelChange)="onFechaHoraEgresoPanelInput($event, 'domicilio')" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-dom-tipo">Tipo de alta <span class="pa-egreso-req">*</span></label>
+                  <select
+                    id="eg-dom-tipo"
+                    [(ngModel)]="egresoDomicilio.tipoAlta"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesTipoAltaEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesTipoAltaEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-dom-cond">Condición de alta <span class="pa-egreso-req">*</span></label>
+                  <select
+                    id="eg-dom-cond"
+                    [(ngModel)]="egresoDomicilio.condicionAlta"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesCondicionAltaEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesCondicionAltaEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-dom-pron">Pronóstico</label>
+                  <select
+                    id="eg-dom-pron"
+                    [(ngModel)]="egresoDomicilio.pronostico"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesPronosticoEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesPronosticoEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field pa-egreso-field--span3">
+                  <label for="eg-dom-rec">Recomendaciones e indicaciones al alta</label>
+                  <textarea id="eg-dom-rec" rows="3" placeholder="Indicaciones, tratamiento ambulatorio, signos de alarma…"
+                            [(ngModel)]="egresoDomicilio.recomendaciones" (ngModelChange)="onCampoEgresoLocalChange()"></textarea>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        }
+
+        @if (destinoEgresoActivo === 'hospitalizacion') {
+          <div class="pa-egreso-case pa-egreso-case--hosp">
+            <div class="pa-egreso-case-h">Transferencia a otro servicio</div>
+            <fieldset class="pa-egreso-case-b" [disabled]="egresoCamposSoloLectura">
+              <div class="pa-egreso-field-grid">
+                <div class="pa-egreso-field">
+                  <label for="eg-hos-fh">Fecha y hora de transferencia <span class="pa-egreso-req">*</span></label>
+                  <input
+                    id="eg-hos-fh"
+                    type="datetime-local"
+                    [ngModel]="combinarFechaHoraEgreso(egresoHospitalizacion.fecha, egresoHospitalizacion.hora)"
+                    (ngModelChange)="onFechaHoraEgresoPanelInput($event, 'hospitalizacion')" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-hos-srv">Servicio que recibe</label>
+                  <select
+                    id="eg-hos-srv"
+                    [(ngModel)]="egresoHospitalizacion.idServicioRecibe"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoServiciosEgreso || opcionesServicioEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesServicioEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.nombre }}</option>
+                    }
+                  </select>
+                  @if (errorServiciosEgreso) {
+                    <span style="font-size: 11.5px; color: #b91c1c;">{{ errorServiciosEgreso }}</span>
+                  }
+                </div>
+                <div class="pa-egreso-field pa-egreso-field--span2">
+                  <label for="eg-hos-mot">Motivo de la transferencia</label>
+                  <input id="eg-hos-mot" type="text" placeholder="Ej. requiere monitoreo hemodinámico"
+                         [(ngModel)]="egresoHospitalizacion.motivo" (ngModelChange)="onCampoEgresoLocalChange()" />
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        }
+
+        @if (destinoEgresoActivo === 'fuga') {
+          <div class="pa-egreso-case pa-egreso-case--fuga">
+            <div class="pa-egreso-case-h">Registro de fuga / abandono</div>
+            <fieldset class="pa-egreso-case-b" [disabled]="egresoCamposSoloLectura">
+              <div class="pa-egreso-field-grid">
+                <div class="pa-egreso-field">
+                  <label for="eg-fug-fh">Fecha y hora de la fuga <span class="pa-egreso-req">*</span></label>
+                  <input
+                    id="eg-fug-fh"
+                    type="datetime-local"
+                    [ngModel]="combinarFechaHoraEgreso(egresoFuga.fecha, egresoFuga.hora)"
+                    (ngModelChange)="onFechaHoraEgresoPanelInput($event, 'fuga')" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fug-uc">Fecha y hora de último contacto</label>
+                  <input
+                    id="eg-fug-uc"
+                    type="datetime-local"
+                    [ngModel]="combinarFechaHoraEgreso(egresoFuga.fechaUltimoContacto, egresoFuga.horaUltimoContacto)"
+                    (ngModelChange)="onFechaHoraUltimoContactoInput($event)" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fug-rep">Reportado por</label>
+                  <input id="eg-fug-rep" type="text" placeholder="Personal que detecta la fuga"
+                         [(ngModel)]="egresoFuga.reportadoPor" (ngModelChange)="onCampoEgresoLocalChange()" />
+                </div>
+                <div class="pa-egreso-field pa-egreso-field--span3">
+                  <label>Notificación</label>
+                  <div class="pa-egreso-radios">
+                    <label class="pa-egreso-radio">
+                      <input type="radio" name="egFugaNotif" value="seguridad"
+                             [(ngModel)]="egresoFuga.notificacion" (ngModelChange)="onCampoEgresoLocalChange()" />
+                      Se notificó a seguridad del hospital
+                    </label>
+                    <label class="pa-egreso-radio">
+                      <input type="radio" name="egFugaNotif" value="familiar"
+                             [(ngModel)]="egresoFuga.notificacion" (ngModelChange)="onCampoEgresoLocalChange()" />
+                      Se notificó al familiar / apoderado
+                    </label>
+                    <label class="pa-egreso-radio">
+                      <input type="radio" name="egFugaNotif" value="incidente"
+                             [(ngModel)]="egresoFuga.notificacion" (ngModelChange)="onCampoEgresoLocalChange()" />
+                      Se generó reporte de incidente
+                    </label>
+                  </div>
+                </div>
+                <div class="pa-egreso-field pa-egreso-field--span3">
+                  <label for="eg-fug-obs">Observaciones</label>
+                  <textarea id="eg-fug-obs" rows="3" placeholder="Circunstancias de la fuga, acciones realizadas…"
+                            [(ngModel)]="egresoFuga.observaciones" (ngModelChange)="onCampoEgresoLocalChange()"></textarea>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        }
+
+        @if (destinoEgresoActivo === 'fallecido') {
+          <div class="pa-egreso-case pa-egreso-case--fallecido">
+            <div class="pa-egreso-case-h">Certificación de defunción</div>
+            <fieldset class="pa-egreso-case-b" [disabled]="egresoCamposSoloLectura">
+              <div class="pa-egreso-field-grid">
+                <div class="pa-egreso-field">
+                  <label>Médico que certifica</label>
+                  <div class="pa-egreso-ro">{{ medicoEgresoTexto() }}</div>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fal-fh">Fecha y hora de fallecimiento <span class="pa-egreso-req">*</span></label>
+                  <input
+                    id="eg-fal-fh"
+                    type="datetime-local"
+                    [ngModel]="combinarFechaHoraEgreso(egresoFallecido.fecha, egresoFallecido.hora)"
+                    (ngModelChange)="onFechaHoraEgresoPanelInput($event, 'fallecido')" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fal-dest">Destino del cadáver</label>
+                  <select
+                    id="eg-fal-dest"
+                    [(ngModel)]="egresoFallecido.destinoCadaver"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesDestinoCadaverEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesDestinoCadaverEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fal-tipoc">Tipo de certificado</label>
+                  <select
+                    id="eg-fal-tipoc"
+                    [(ngModel)]="egresoFallecido.tipoCertificado"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesTipoCertificadoEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesTipoCertificadoEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fal-nro">N° de certificado</label>
+                  <input id="eg-fal-nro" type="text" placeholder="Serie y número"
+                         [(ngModel)]="egresoFallecido.nroCertificado" (ngModelChange)="onCampoEgresoLocalChange()" />
+                </div>
+                <div class="pa-egreso-field">
+                  <label for="eg-fal-estancia">Tiempo de estancia hasta el deceso</label>
+                  <select
+                    id="eg-fal-estancia"
+                    [(ngModel)]="egresoFallecido.tiempoEstanciaDeceso"
+                    (ngModelChange)="onCampoEgresoLocalChange()"
+                    [disabled]="cargandoCatalogosClinicos || opcionesTiempoEstanciaDecesoEgreso.length === 0">
+                    <option [ngValue]="''">Seleccionar...</option>
+                    @for (o of opcionesTiempoEstanciaDecesoEgreso; track o.id) {
+                      <option [ngValue]="o.id">{{ o.descripcion }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="pa-egreso-field">
+                  <label>Requiere necropsia</label>
+                  <div class="pa-egreso-radios pa-egreso-radios--inline">
+                    <label class="pa-egreso-radio">
+                      <input type="radio" name="egFalNec" value="si"
+                             [(ngModel)]="egresoFallecido.necropsia" (ngModelChange)="onCampoEgresoLocalChange()" />
+                      Sí
+                    </label>
+                    <label class="pa-egreso-radio">
+                      <input type="radio" name="egFalNec" value="no"
+                             [(ngModel)]="egresoFallecido.necropsia" (ngModelChange)="onCampoEgresoLocalChange()" />
+                      No
+                    </label>
+                  </div>
+                </div>
+                <div class="pa-egreso-field pa-egreso-field--span2">
+                  <label for="eg-fal-fam">Familiar informado</label>
+                  <input id="eg-fal-fam" type="text" placeholder="Nombre, DNI y parentesco del familiar notificado"
+                         [(ngModel)]="egresoFallecido.familiarInformado" (ngModelChange)="onCampoEgresoLocalChange()" />
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        }
+
+        @if (destinoEgresoActivo && destinoEgresoActivo !== 'referencia') {
+          <div class="pa-egreso-dx-block">
+            <div class="pa-egreso-dx-block-h">
+              <span>Diagnósticos de egreso</span>
+              <span class="pa-egreso-dx-hint">Solo un Principal; el resto Secundario</span>
+            </div>
+            @if (errorDxEgreso) {
+              <div style="margin-bottom: 10px; font-size: 12px; color: #b91c1c;">{{ errorDxEgreso }}</div>
+            }
+            <div class="pa-tabla-scroll" style="margin-bottom: 12px;">
+              <div class="pa-tabla-dx pa-dx-alta">
+                <div class="pa-tabla-dx-header pa-dx-alta-grid">
+                  <div>Diagnóstico</div>
+                  <div>CIE-10</div>
+                  <div>Tipo</div>
+                  <div></div>
+                </div>
+                <div class="pa-tabla-dx-fila pa-dx-alta-grid">
+                  <div style="position: relative; min-width: 0;">
+                    <input
+                      id="egreso-dx-buscar"
+                      type="text"
+                      name="egresoDxBuscar"
+                      autocomplete="off"
+                      placeholder="Buscar por descripción o CIE-10..."
+                      [ngModel]="borradorDxEgreso.nombre"
+                      (ngModelChange)="onEscribeBorradorDxEgreso($event)"
+                      (focus)="posicionarSugerencia($event); buscarBorradorDxEgreso(borradorDxEgreso.nombre)"
+                      (blur)="cerrarSugerenciasBorradorDxEgreso()"
+                      [disabled]="egresoDxEdicionBloqueada"
+                      style="width: 100%; padding: 7px 10px; border: 1px solid #e0e6f1; border-radius: 8px; font-size: 13px; background: #fff;" />
+                    @if (mostrarSugerenciasBorradorDxEgreso()) {
+                      <ul class="pa-sugerencias-list" [ngStyle]="estiloSugerenciaLista()">
+                        @if (cargandoBorradorDxEgreso) {
+                          <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Buscando...</li>
+                        } @else if (sugerenciasBorradorDxEgreso.length === 0) {
+                          <li style="padding: 8px 12px; font-size: 12px; color: #7a86a1;">Sin coincidencias</li>
+                        } @else {
+                          @for (o of sugerenciasBorradorDxEgreso; track o.idDiagnostico) {
+                            <li>
+                              <button type="button" class="pa-exa-alta-opt"
+                                      (mousedown)="seleccionarBorradorDxEgreso(o)">
+                                <span class="pa-exa-alta-opt-nom">{{ o.descripcion }}</span>
+                                <span style="margin-left: 8px; font-family: ui-monospace, Consolas, monospace; color: #263c7a;">{{ o.codigoCIE10 }}</span>
+                              </button>
+                            </li>
+                          }
+                        }
+                      </ul>
+                    }
+                  </div>
+                  <div class="pa-dx-cie-col">
+                    <input type="text" class="pa-dx-cie-input" name="egresoDxCie"
+                           [ngModel]="borradorDxEgreso.cie10" readonly tabindex="-1" maxlength="7" placeholder="CIE-10" />
+                  </div>
+                  <div class="pa-dx-tipo-col">
+                    <select id="egreso-dx-tipo" name="egresoDxTipo" class="pa-dx-tipo-select"
+                            [ngModel]="borradorDxEgreso.idSubclasificacionDx"
+                            (ngModelChange)="cambiarTipoBorradorDxEgreso($event)"
+                            [disabled]="egresoDxEdicionBloqueada || opcionesTipoDxEgresoActivas.length === 0"
+                            [title]="tienePrincipalDxEgreso() ? 'Ya hay un Principal; solo Secundario' : ''">
+                      @for (o of opcionesTipoDxEgresoActivas; track o.id) {
+                        <option
+                          [ngValue]="o.id"
+                          [disabled]="tipoDxEgresoOpcionBloqueada(o)">
+                          {{ nombreTipoDx(o) }}{{ tipoDxEgresoOpcionBloqueada(o) ? ' (ya usado)' : '' }}
+                        </option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <button type="button" class="pa-exa-alta-btn pa-dx-add"
+                            (click)="agregarDxEgresoDesdeBorrador()"
+                            [disabled]="egresoDxEdicionBloqueada || !borradorDxEgresoListo">
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pa-tabla-scroll">
+              <div class="pa-tabla-dx">
+                <div class="pa-tabla-dx-header pa-dx-lista-grid">
+                  <div>#</div><div>Diagnóstico</div><div>CIE-10</div><div>Tipo</div><div></div>
+                </div>
+                @if (egresoDxLista.length === 0) {
+                  <div class="pa-dx-empty" style="border-top: 1px solid #e6eaf2;">Sin diagnósticos de egreso. Complete la fila y pulse Agregar.</div>
+                } @else {
+                  @for (dx of egresoDxLista; track $index; let i = $index) {
+                    <div class="pa-tabla-dx-fila pa-dx-lista-grid">
+                      <div style="text-align: center; font-weight: 700; color: #263c7a;">{{ i + 1 }}</div>
+                      <div style="font-size: 13px; color: #07153a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ dx.nombre }}</div>
+                      <div class="pa-dx-cie-col">
+                        <span class="pa-exa-badge-dx">{{ dx.cie10 }}</span>
+                      </div>
+                      <div>
+                        <span class="pa-exa-badge-tipo">
+                          {{ etiquetaTipoDxEgreso(dx.idSubclasificacionDx) || nombreDesdeTipoLetra(dx.tipo) }}
+                        </span>
+                      </div>
+                      <button type="button" (click)="quitarDxEgreso(i)"
+                              [disabled]="egresoDxEdicionBloqueada || (dx.idAtencionDiagnostico != null && dx.idAtencionDiagnostico > 0)"
+                              style="background: none; border: none; color: #b91c1c; cursor: pointer; font-size: 16px;"
+                              [attr.aria-label]="dx.idAtencionDiagnostico ? 'Registrado' : 'Quitar'">
+                        {{ dx.idAtencionDiagnostico ? '✓' : '✕' }}
+                      </button>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="pa-egreso-acciones">
+          @if (errorEgreso) {
+            <span class="pa-egreso-mensaje pa-egreso-mensaje--error">{{ errorEgreso }}</span>
+          } @else if (mensajeEgreso) {
+            <span class="pa-egreso-mensaje">{{ mensajeEgreso }}</span>
+          }
+          <button
+            type="button"
+            class="pa-egreso-btn-guardar"
+            (click)="guardarEgresoLocal()"
+            [disabled]="egresoGuardarDeshabilitado">
+            {{ guardandoEgreso ? 'Guardando…' : (egresoYaRegistrado && egresoTieneDxPendientes ? 'Guardar DX pendientes' : 'Guardar Egreso') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (pasoActivo === 'cierre') {
+      @let metaCierre = pasoPa('cierre');
+      <div class="pa-paso-cierre pa-paso-card">
+        <div class="pa-paso-cierre-header">
+          <span class="pa-paso-cierre-num pa-paso-badge pa-paso-badge--cierre">{{ metaCierre.badge }}</span>
+          <div class="pa-paso-head-text">
+            <h3 class="pa-paso-cierre-titulo pa-paso-titulo">{{ metaCierre.label }}</h3>
+            <p class="pa-paso-cierre-sub pa-paso-sub">{{ metaCierre.sub }}</p>
+          </div>
+        </div>
+        <div class="pa-paso-cierre-body pa-paso-cierre-body--grid">
+          <div class="pa-cierre-col">
+            <h4 class="pa-cierre-col-titulo">Emisión de firma digital</h4>
+            <div class="pa-cierre-sello">
+              <div class="pa-cierre-sello-top">
+                <span>Sello digital a estampar</span>
+                <span class="pa-cierre-badge">FIRMA PERÚ · DNIe</span>
+              </div>
+
+              <div class="pa-cierre-sello-preview">
+                @if (logoInstitucion) {
+                  <img
+                    class="pa-cierre-logo"
+                    [src]="'data:image/png;base64,' + logoInstitucion"
+                    alt="Sello Hospital"
+                  />
+                } @else {
+                  <div class="pa-cierre-logo-fallback" aria-hidden="true">
+                    <span>MINSA</span>
+                    <span>HNSB</span>
+                  </div>
+                }
+                <div class="pa-cierre-sello-datos">
+                  <p class="pa-cierre-sello-label">Firmado digitalmente por:</p>
+                  <p class="pa-cierre-sello-nombre">{{ nombreMedicoFirmantePa }} FIR</p>
+                  @if (dniMedicoFirmantePa) {
+                    <p class="pa-cierre-sello-dni">{{ dniMedicoFirmantePa }}</p>
+                  }
+                  <p class="pa-cierre-sello-meta">Motivo: Soy el Autor</p>
+                  <p class="pa-cierre-sello-meta">Fecha: {{ fechaFirmaPreviewPa }} {{ horaFirmaPreviewPa }}-0500</p>
+                  <p class="pa-cierre-sello-meta pa-cierre-sello-meta--cargo">Cargo: {{ cargoCompletoFirmantePa }}</p>
+                </div>
+              </div>
+
+              <div class="pa-cierre-estado">
+                <span>Estado de validación:</span>
+                @if (listoParaSelladoPa) {
+                  <span class="pa-cierre-estado-ok">
+                    <span class="pa-cierre-estado-dot" aria-hidden="true"></span>
+                    Listo para sellado digital
+                  </span>
+                } @else {
+                  <span class="pa-cierre-estado-warn">Pendientes por completar</span>
+                }
+              </div>
+            </div>
+
+            <div class="pa-cierre-docs" aria-label="Documentos a firmar">
+              <div class="pa-cierre-docs-head">
+                <h5 class="pa-cierre-docs-titulo">Documentos a firmar</h5>
+                <span class="pa-cierre-docs-count">
+                  {{ documentosParaFirmarLista.length }}
+                  {{ documentosParaFirmarLista.length === 1 ? 'documento' : 'documentos' }}
+                </span>
+              </div>
+              <ul class="pa-cierre-docs-lista">
+                @for (doc of documentosParaFirmarLista; track doc.clave) {
+                  <li class="pa-cierre-docs-item" [attr.data-tipo]="doc.tipo">
+                    <span class="pa-cierre-docs-bullet" aria-hidden="true"></span>
+                    <span class="pa-cierre-docs-label">{{ doc.etiqueta }}</span>
+                    @if (doc.tipo !== 'pa') {
+                      <span class="pa-cierre-docs-meta">
+                        {{ doc.cantidadItems }}
+                        {{ doc.cantidadItems === 1 ? 'ítem' : 'ítems' }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+              <p class="pa-cierre-docs-hint">
+                Se firmarán en un solo lote con Firma Perú (DNIe).
+              </p>
+            </div>
+
+            @if (mensaje) {
+              <div class="pa-paso-cierre-msg">{{ mensaje }}</div>
+            }
+
+            <button
+              type="button"
+              class="pa-btn-firmar"
+              (click)="registrarAtencion()"
+              [disabled]="isSigning"
+            >
+              @if (isSigning) {
+                <span>Procesando firma con DNIe...</span>
+              } @else {
+                <span>Firmar</span>
+              }
+            </button>
+            <button type="button" class="pa-btn-secundario pa-btn-cancelar-cierre" (click)="volverBandeja()">
+              Cancelar
+            </button>
+          </div>
+
+          <div class="pa-cierre-col">
+            <div class="pa-verif-header">
+              <h4 class="pa-cierre-col-titulo">Verificación de contenido</h4>
+              <span class="pa-verif-count">
+                {{ totalSeccionesCompletadasPa }} / {{ resumenVerificacionPa.length }} completados
+              </span>
+            </div>
+            <div class="pa-verif-lista">
+              @for (item of resumenVerificacionPa; track item.pasoId) {
+                <button
+                  type="button"
+                  class="pa-verif-item"
+                  (click)="seleccionarPasoPa(item.pasoId)"
+                  [title]="'Clic para ir y editar: ' + item.titulo"
+                >
+                  <div class="pa-verif-item-main">
+                    @if (item.completado) {
+                      <span class="pa-verif-icon pa-verif-icon--ok" aria-hidden="true">
+                        <svg class="pa-verif-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    } @else {
+                      <span class="pa-verif-icon pa-verif-icon--warn" aria-hidden="true">
+                        <svg class="pa-verif-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </span>
+                    }
+                    <div class="pa-verif-textos">
+                      <div class="pa-verif-titulo-row">
+                        <span class="pa-verif-num">{{ item.numero }}</span>
+                        <p class="pa-verif-titulo">{{ item.titulo }}</p>
+                      </div>
+                      <p class="pa-verif-detalle">{{ item.detalle }}</p>
+                    </div>
+                  </div>
+                  <span class="pa-verif-accion">
+                    Ver / Editar
+                    <svg class="pa-verif-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="pa-wizard-nav">
+      <button type="button" class="pa-nav-anterior" (click)="irAnteriorPasoPa()" [disabled]="esPrimerPasoPa">
+        ← Anterior
+      </button>
+      <button type="button" class="pa-nav-siguiente" (click)="irSiguientePasoPa()" [disabled]="esUltimoPasoPa">
+        Siguiente →
+      </button>
+    </div>
+      </div>
+    </div>
+  }
+</div>
+
+@if (fichaCargando || fichaVista || fichaError) {
+  <div
+    class="fixed inset-0 bg-[#07153a]/60 flex items-center justify-center p-4 z-[110] backdrop-blur-sm"
+    (click)="cerrarFicha()"
+    (keydown.escape)="cerrarFicha()"
+  >
+    <div
+      class="w-full max-w-6xl max-h-[92vh] overflow-hidden bg-white rounded-lg shadow-2xl flex flex-col"
+      (click)="$event.stopPropagation()"
+      (keydown.enter)="$event.stopPropagation()"
+    >
+      <div class="flex items-start justify-between px-5 py-3 border-b border-slate-200 bg-[#07153a] rounded-t-lg shrink-0 gap-3">
+        <div class="min-w-0">
+          <div class="text-white font-bold text-base">Primera atención — Emergencia</div>
+          <div class="text-blue-300 text-[12.5px] mt-0.5">
+            @if (fichaVista) {
+              @if (fichaVista.firmado) {
+                Firmada · {{ fichaVista.documentos.length }}
+                {{ fichaVista.documentos.length === 1 ? 'documento' : 'documentos' }}
+                · {{ fichaVista.fechaHoraFirma }}
+              } @else {
+                Registro clínico (sin firma)
+              }
+            } @else {
+              Cargando ficha...
+            }
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          @if (fichaVista?.firmado) {
+            <div class="inline-flex rounded-md overflow-hidden border border-white/25 text-[12px] font-semibold">
+              <button
+                type="button"
+                class="px-3 py-1.5 transition-colors cursor-pointer"
+                [class.bg-white]="fichaModo === 'documentos'"
+                [class.text-[#07153a]]="fichaModo === 'documentos'"
+                [class.text-white]="fichaModo !== 'documentos'"
+                [class.bg-white/10]="fichaModo !== 'documentos'"
+                (click)="cambiarModoFicha('documentos'); $event.stopPropagation()"
+              >
+                Documentos
+              </button>
+              <button
+                type="button"
+                class="px-3 py-1.5 transition-colors cursor-pointer border-l border-white/25"
+                [class.bg-white]="fichaModo === 'resumen'"
+                [class.text-[#07153a]]="fichaModo === 'resumen'"
+                [class.text-white]="fichaModo !== 'resumen'"
+                [class.bg-white/10]="fichaModo !== 'resumen'"
+                (click)="cambiarModoFicha('resumen'); $event.stopPropagation()"
+              >
+                Resumen
+              </button>
+            </div>
+          }
+          @if (fichaModo === 'documentos' && fichaVista?.firmado) {
+            <button
+              type="button"
+              (click)="imprimirDocumentoFicha(); $event.stopPropagation()"
+              [disabled]="!fichaPdfObjectUrl || fichaPdfCargando"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white text-[12px] font-semibold transition-colors cursor-pointer border border-white/20"
+            >
+              Imprimir
+            </button>
+          }
+          <button
+            type="button"
+            (click)="descargarPdfFicha(); $event.stopPropagation()"
+            [disabled]="!fichaVista || fichaDescargando || (fichaModo === 'documentos' && fichaPdfCargando)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[12px] font-semibold transition-colors cursor-pointer"
+          >
+            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {{ fichaDescargando ? 'Descargando...' : 'Descargar' }}
+          </button>
+          <button
+            type="button"
+            (click)="cerrarFicha()"
+            class="w-8 h-8 rounded-md border border-white/20 bg-white/10 cursor-pointer flex items-center justify-center text-white shrink-0 transition-colors hover:bg-white/20"
+            aria-label="Cerrar"
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="overflow-hidden min-w-0 flex-1 flex flex-col"
+        [class.bg-[#e2e8f0]]="fichaModo === 'resumen' || !fichaVista?.firmado"
+        [class.bg-slate-100]="fichaModo === 'documentos' && fichaVista?.firmado"
+      >
+        @if (fichaCargando) {
+          <p class="text-center text-[13px] text-[#54617f] py-10 px-6">Cargando ficha clínica...</p>
+        } @else if (fichaError) {
+          <p class="text-center text-[13px] text-red-700 py-10 px-6">{{ fichaError }}</p>
+        } @else if (fichaVista) {
+          @if (fichaModo === 'documentos' && fichaVista.firmado) {
+            <div class="flex flex-col sm:flex-row min-h-0 flex-1 overflow-hidden">
+              <aside class="sm:w-56 shrink-0 border-b sm:border-b-0 sm:border-r border-slate-200 bg-white overflow-y-auto max-h-[28vh] sm:max-h-none">
+                <p class="px-3 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  Documentos del encuentro
+                </p>
+                <ul class="px-2 pb-3 space-y-1">
+                  @for (doc of fichaVista.documentos; track doc.clave) {
+                    <li>
+                      <button
+                        type="button"
+                        class="w-full text-left px-3 py-2 rounded-md text-[12.5px] transition-colors cursor-pointer border"
+                        [class.bg-[#0d9488]]="fichaDocActivo?.clave === doc.clave"
+                        [class.text-white]="fichaDocActivo?.clave === doc.clave"
+                        [class.border-[#0d9488]]="fichaDocActivo?.clave === doc.clave"
+                        [class.bg-slate-50]="fichaDocActivo?.clave !== doc.clave"
+                        [class.text-slate-800]="fichaDocActivo?.clave !== doc.clave"
+                        [class.border-slate-200]="fichaDocActivo?.clave !== doc.clave"
+                        [class.hover:bg-slate-100]="fichaDocActivo?.clave !== doc.clave"
+                        (click)="seleccionarDocumentoFicha(doc); $event.stopPropagation()"
+                      >
+                        <span class="font-semibold block leading-snug">{{ doc.etiqueta }}</span>
+                        <span
+                          class="text-[10px] uppercase tracking-wide"
+                          [class.text-teal-100]="fichaDocActivo?.clave === doc.clave"
+                          [class.text-slate-500]="fichaDocActivo?.clave !== doc.clave"
+                        >
+                          {{ doc.tipo === 'pa' ? 'Principal' : doc.tipo === 'examen' ? 'Examen' : 'Medicamentos' }}
+                          @if (fichaDocActivo?.clave === doc.clave && fichaPdfOrigen === 'copia') {
+                            · copia
+                          } @else {
+                            · firmado
+                          }
+                        </span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </aside>
+              <div class="flex-1 min-w-0 min-h-[50vh] relative bg-slate-200 flex flex-col">
+                @if (fichaPdfOrigen === 'copia' && fichaPdfUrl && !fichaPdfCargando) {
+                  <p class="shrink-0 px-3 py-2 text-[12px] text-amber-900 bg-amber-50 border-b border-amber-200">
+                    Copia no firmada (sin acceso al documento del FTP). Solo para visualizar o imprimir.
+                  </p>
+                }
+                <div class="relative flex-1 min-h-0">
+                  @if (fichaPdfCargando) {
+                    <p class="absolute inset-0 flex items-center justify-center text-[13px] text-slate-600">
+                      Cargando PDF...
+                    </p>
+                  } @else if (fichaPdfError) {
+                    <p class="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-red-700">
+                      {{ fichaPdfError }}
+                    </p>
+                  } @else if (fichaPdfUrl) {
+                    <iframe
+                      class="w-full h-full min-h-[60vh] border-0 bg-white"
+                      [src]="fichaPdfUrl"
+                      [title]="
+                        fichaPdfOrigen === 'copia'
+                          ? 'Copia no firmada de primera atención'
+                          : 'Documento firmado de primera atención'
+                      "
+                    ></iframe>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="p-6 overflow-y-auto min-w-0">
+              <app-ver-ficha-pa [vista]="fichaVista" />
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}
