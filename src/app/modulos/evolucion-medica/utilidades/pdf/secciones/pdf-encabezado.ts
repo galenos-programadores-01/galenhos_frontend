@@ -16,11 +16,11 @@ export function dibujarEncabezadoInstitucion(
   lienzo.dibujarBandaSuperior();
   lienzo.posicionVertical = 7;
 
-  const tieneLogoMinsa = Boolean(institucion?.logoMinsa);
-  if (tieneLogoMinsa && institucion?.logoMinsa) {
+  const logoPrincipal = institucion?.logoMinsa || institucion?.logoHospi;
+  if (logoPrincipal) {
     try {
       lienzo.doc.addImage(
-        `data:image/png;base64,${institucion.logoMinsa}`,
+        `data:image/png;base64,${logoPrincipal}`,
         'PNG',
         lienzo.margenIzquierdo,
         lienzo.posicionVertical + 1,
@@ -28,27 +28,14 @@ export function dibujarEncabezadoInstitucion(
         18,
       );
     } catch {
-      /* Continuar sin logo */
     }
   }
 
-  const tieneLogoHospi = Boolean(institucion?.logoHospi);
-  if (tieneLogoHospi && institucion?.logoHospi) {
-    try {
-      lienzo.doc.addImage(
-        `data:image/png;base64,${institucion.logoHospi}`,
-        'PNG',
-        lienzo.anchoPagina - lienzo.margenDerecho - 18,
-        lienzo.posicionVertical + 1,
-        18,
-        18,
-      );
-    } catch {
-      /* Continuar sin logo */
-    }
-  }
-
-  const posXCentro = lienzo.anchoPagina / 2;
+  const anchoEspacioFirma = 40;
+  const coordenadaFinContenido =
+    lienzo.anchoPagina - lienzo.margenDerecho - anchoEspacioFirma;
+  const coordenadaInicioContenido = lienzo.margenIzquierdo + 19;
+  const posXCentro = (coordenadaInicioContenido + coordenadaFinContenido) / 2;
 
   lienzo.doc.setFont('helvetica', 'bold');
   lienzo.doc.setFontSize(5.8);
@@ -61,29 +48,32 @@ export function dibujarEncabezadoInstitucion(
   );
 
   lienzo.doc.setFont('helvetica', 'bold');
-  lienzo.doc.setFontSize(11);
+  lienzo.doc.setFontSize(10.5);
   lienzo.doc.setTextColor(...COLOR_TEXTO_TITULO);
   lienzo.doc.text(
     'HOSPITAL NACIONAL SERGIO E. BERNALES',
     posXCentro,
-    lienzo.posicionVertical + 8.5,
+    lienzo.posicionVertical + 8.2,
     { align: 'center' },
   );
 
   lienzo.doc.setFont('helvetica', 'bold');
-  lienzo.doc.setFontSize(6.2);
+  lienzo.doc.setFontSize(6.0);
   lienzo.doc.setTextColor(...COLOR_PRIMARIO_OSCURO);
   lienzo.doc.text(
     'COMPLEJO HOSPITALARIO DE ALTA COMPLEJIDAD — LIMA NORTE',
     posXCentro,
-    lienzo.posicionVertical + 12.2,
+    lienzo.posicionVertical + 11.8,
     { align: 'center' },
   );
 
-  const anchoBannerDoc = 110;
-  const altoBannerDoc = 5;
+  const anchoBannerDoc = Math.min(
+    104,
+    coordenadaFinContenido - coordenadaInicioContenido - 4,
+  );
+  const altoBannerDoc = 5.2;
   const xBannerDoc = posXCentro - anchoBannerDoc / 2;
-  const yBannerDoc = lienzo.posicionVertical + 14.5;
+  const yBannerDoc = lienzo.posicionVertical + 13.8;
 
   lienzo.doc.setFillColor(...COLOR_PRIMARIO_OSCURO);
   lienzo.doc.roundedRect(
@@ -97,12 +87,12 @@ export function dibujarEncabezadoInstitucion(
   );
 
   lienzo.doc.setFont('helvetica', 'bold');
-  lienzo.doc.setFontSize(7);
+  lienzo.doc.setFontSize(6.5);
   lienzo.doc.setTextColor(...COLOR_FONDO_BLANCO);
   lienzo.doc.text(
     'HISTORIA CLÍNICA ELECTRÓNICA — EVOLUCIÓN MÉDICA (SOAP)',
     posXCentro,
-    yBannerDoc + 3.6,
+    yBannerDoc + 3.7,
     { align: 'center' },
   );
 

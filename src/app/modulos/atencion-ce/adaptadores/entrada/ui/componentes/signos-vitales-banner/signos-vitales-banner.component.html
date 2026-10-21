@@ -16,8 +16,6 @@
     </div>
   } @else {
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
-      
-      <!-- Presión Arterial -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">P.A.</span>
         <span class="text-base font-black text-slate-900 block my-0.5">
@@ -26,7 +24,6 @@
         <span class="text-xs text-slate-500 block font-medium">mmHg</span>
       </div>
 
-      <!-- Frecuencia Cardíaca -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">F.C.</span>
         <span class="text-base font-black text-slate-900 block my-0.5">
@@ -35,7 +32,6 @@
         <span class="text-xs text-slate-500 block font-medium">lpm</span>
       </div>
 
-      <!-- Frecuencia Respiratoria -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">F.R.</span>
         <span class="text-base font-black text-slate-900 block my-0.5">
@@ -44,7 +40,6 @@
         <span class="text-xs text-slate-500 block font-medium">rpm</span>
       </div>
 
-      <!-- Temperatura -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Temp.</span>
         <span class="text-base font-black block my-0.5" [ngClass]="obtenerClaseTemperatura(triaje()?.temperatura)">
@@ -53,7 +48,6 @@
         <span class="text-xs text-slate-500 block font-medium">Axilar</span>
       </div>
 
-      <!-- Saturación O2 -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Sat O₂</span>
         <span class="text-base font-black block my-0.5" [ngClass]="obtenerClaseSaturacion(triaje()?.saturacion)">
@@ -62,7 +56,6 @@
         <span class="text-xs text-slate-500 block font-medium">Oxímetro</span>
       </div>
 
-      <!-- Peso -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Peso</span>
         <span class="text-base font-black text-slate-900 block my-0.5">
@@ -71,7 +64,6 @@
         <span class="text-xs text-slate-500 block font-medium">Masa</span>
       </div>
 
-      <!-- Talla -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">Talla</span>
         <span class="text-base font-black text-slate-900 block my-0.5">
@@ -80,7 +72,6 @@
         <span class="text-xs text-slate-500 block font-medium">Estatura</span>
       </div>
 
-      <!-- IMC -->
       <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
         <span class="text-xs uppercase font-bold text-slate-600 block tracking-wide">IMC</span>
         <span class="text-base font-black text-slate-900 block my-0.5">

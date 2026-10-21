@@ -1,0 +1,13 @@
+.fila-clickeable {
+  cursor: pointer;
+}
+
+.fila-clickeable:hover,
+.fila-clickeable:focus-visible {
+  background: #f8fafc;
+}
+
+.fila-clickeable:focus-visible {
+  outline: 2px solid #263c7a;
+  outline-offset: -2px;
+}

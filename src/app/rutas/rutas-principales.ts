@@ -3,6 +3,16 @@ import { ContenedorPrincipal } from '../compartido/ui/contenedor-principal/conte
 import { PaginaConstruccionComponent } from '../compartido/ui/pagina-construccion/pagina-construccion';
 import { LoginComponent } from '../modulos/auth/adaptadores/entrada/ui/paginas/login.component';
 import { authGuard, unauthGuard } from '../modulos/auth/aplicacion/auth.guard';
+import { CitasComponent } from '../modulos/citas/adaptadores/entrada/ui/paginas/citas.component';
+import { ConfiguracionComponent } from '../modulos/configuracion/adaptadores/entrada/ui/paginas/configuracion.component';
+import { DashboardComponent } from '../modulos/dashboard/adaptadores/entrada/ui/paginas/dashboard.component';
+import { DashrefconComponent } from '../modulos/dashrefcon/adaptadores/entrada/ui/paginas/dashrefcon.component';
+import { PacientesListaComponent } from '../modulos/pacientes/adaptadores/entrada/ui/paginas/pacientes-lista/pacientes-lista.component';
+import { TriajeComponent } from '../modulos/triaje/adaptadores/entrada/ui/paginas/triaje/triaje.component';
+import { TriajeConsultaComponent } from '../modulos/triaje/adaptadores/entrada/ui/paginas/triaje-consulta/triaje-consulta.component';
+import { TriajeObstetricoComponent } from '../modulos/triaje-obstetrico/adaptadores/entrada/ui/paginas/triaje-obstetrico/triaje-obstetrico.component';
+import { TriajeObstetricoConsultaComponent } from '../modulos/triaje-obstetrico/adaptadores/entrada/ui/paginas/triaje-obstetrico-consulta/triaje-obstetrico-consulta.component';
+import { PrimeraAtencionComponent } from '../modulos/primera-atencion/adaptadores/entrada/ui/paginas/primera-atencion.component';
 
 export const rutasPrincipales: Routes = [
   {
@@ -81,6 +91,11 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Admisiones' },
       },
       {
+        path: 'primeraatencionemergencia',
+        component: PrimeraAtencionComponent,
+        data: { title: 'Primera Atención' },
+      },
+      {
         path: 'sis',
         loadComponent: () =>
           import(
@@ -135,8 +150,9 @@ export const rutasPrincipales: Routes = [
             '../modulos/bandeja-ref/adaptadores/entrada/ui/paginas/bandeja-ref.component'
           ).then((m) => m.BandejaRefComponent),
         data: { title: 'Bandeja de Referencias' },
-      }, 
-      { path: 'catalogos/bienes-insumos',
+      },
+      {
+        path: 'catalogos/bienes-insumos',
         loadComponent: () =>
           import(
             '../modulos/catalogos/bienes-insumos/adaptadores/entrada/ui/paginas/bienes-insumos-lista/bienes-insumos-lista.component'

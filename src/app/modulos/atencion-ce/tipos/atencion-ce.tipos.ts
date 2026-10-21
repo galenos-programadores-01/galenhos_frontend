@@ -89,11 +89,17 @@ export interface FichaAtencionCEDetalle {
   readonly especialidadNombre?: string;
   readonly medicoNombre?: string;
   readonly iafa?: string;
+  readonly telefono?: string;
+  referenciaEstablecimiento?: string;
+  referenciaServicio?: string;
+  referenciaMotivo?: string;
+  referenciaCondicion?: string;
   diagnosticos: AtencionDiagnosticoCEItem[];
   procedimientos?: AtencionProcedimientoCEItem[];
   ordenesApoyoDiagnostico?: OrdenApoyoDiagnosticoItem[];
   interconsultas?: InterconsultaCEItem[];
   ordenesProcedimientos?: OrdenProcedimientoCEItem[];
+  itemsReceta?: ItemRecetaPrescripcion[];
 }
 
 export interface AtencionProcedimientoCEItem {
@@ -167,6 +173,7 @@ export interface AtencionCEGuardarPayload {
   readonly ordenesApoyoDiagnostico?: readonly OrdenApoyoDiagnosticoItem[];
   readonly interconsultas?: readonly InterconsultaCEItem[];
   readonly ordenesProcedimientos?: readonly OrdenProcedimientoCEItem[];
+  readonly itemsReceta?: readonly ItemRecetaPrescripcion[];
 }
 
 export interface DestinoAtencionItem {
@@ -190,6 +197,7 @@ export interface TriajeConsultaSignosVitales {
   readonly peso?: number;
   readonly talla?: number;
   readonly imc?: number;
+  readonly perimetroCefalico?: number | string;
   readonly fechaRegistro?: string;
   readonly observacion?: string;
 }
@@ -355,4 +363,3 @@ export interface PacienteHistorialTriajeItem {
   readonly hemoglobina: string;
   readonly observacion: string;
 }
-

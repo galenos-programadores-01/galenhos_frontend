@@ -79,24 +79,24 @@ export class TriajeCeModalComponent {
     if (valor < 18.5) {
       return {
         texto: 'Bajo Peso',
-        clase: 'text-amber-700 bg-amber-50 border-amber-200',
+        clase: 'text-white bg-amber-600 border-amber-600',
       };
     }
     if (valor < 25.0) {
       return {
         texto: 'Normal',
-        clase: 'text-blue-700 bg-blue-50 border-blue-200',
+        clase: 'text-white bg-slate-800 border-slate-800',
       };
     }
     if (valor < 30.0) {
       return {
         texto: 'Sobrepeso',
-        clase: 'text-orange-700 bg-orange-50 border-orange-200',
+        clase: 'text-white bg-amber-700 border-amber-700',
       };
     }
     return {
       texto: 'Obesidad',
-      clase: 'text-red-700 bg-red-50 border-red-200',
+      clase: 'text-white bg-red-700 border-red-700',
     };
   });
 
@@ -321,7 +321,6 @@ export class TriajeCeModalComponent {
     const hbStr = this.hemoglobina().trim();
     const obsStr = this.observaciones().trim();
 
-    // 1. Campo Obligatorio General: Requiere al menos un signo vital registrado
     const tieneSignosVitales =
       sistolicaStr ||
       diastolicaStr ||
@@ -339,7 +338,6 @@ export class TriajeCeModalComponent {
         'Registro obligatorio: Debe ingresar al menos un parámetro de signos vitales (P.A., Pulso, Temp, etc.).';
     }
 
-    // 2. Presión Arterial: Consistencia de campos y reglas condicionales
     if (sistolicaStr || diastolicaStr) {
       if (!sistolicaStr) {
         errores.paSistolica = 'Requerido: Ingrese la presión sistólica';
@@ -499,7 +497,6 @@ export class TriajeCeModalComponent {
         this.cargarDatosExistentes(triajeExistente);
       }
     } catch {
-      // Si no existe, se mantiene formulario limpio para nuevo registro
     } finally {
       this.cargandoDatos.set(false);
     }
@@ -529,7 +526,6 @@ export class TriajeCeModalComponent {
         if (v !== null && v !== undefined) {
           let s = String(v).trim();
           if (s !== '') {
-            // Decodificación de emergencia Base64 en caso de buffer binario heredado
             if (
               /^[A-Za-z0-9+/=]+$/.test(s) &&
               s.length % 4 === 0 &&
@@ -540,9 +536,7 @@ export class TriajeCeModalComponent {
                 if (!Number.isNaN(Number(dec))) {
                   s = dec;
                 }
-              } catch {
-                // No es Base64
-              }
+              } catch {}
             }
             return s;
           }
