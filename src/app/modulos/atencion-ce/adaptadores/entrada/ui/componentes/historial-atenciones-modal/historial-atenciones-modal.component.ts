@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
   EventEmitter,
   Input,
-  Output,
-  computed,
   inject,
+  Output,
   signal,
 } from '@angular/core';
 import type {
@@ -93,20 +93,26 @@ export class HistorialAtencionesModalComponent {
   readonly examenLaboratorioSeleccionadoNombre = signal<string>('');
 
   readonly submodalReporteOperatorioVisible = signal<boolean>(false);
-  readonly submodalReporteOperatorioItem = signal<HistorialReporteOperatorioItem | null>(null);
+  readonly submodalReporteOperatorioItem =
+    signal<HistorialReporteOperatorioItem | null>(null);
 
   readonly submodalProcedimientoVisible = signal<boolean>(false);
-  readonly submodalProcedimientoItem = signal<HistorialProcedimientoItem | null>(null);
+  readonly submodalProcedimientoItem =
+    signal<HistorialProcedimientoItem | null>(null);
 
   readonly consultoriosExternos = computed(() => {
     return this.atenciones().filter(
-      (a) => a.idTipoServicio === 1 || a.tipoServicioNombre === 'CONSULTORIOS EXTERNOS',
+      (a) =>
+        a.idTipoServicio === 1 ||
+        a.tipoServicioNombre === 'CONSULTORIOS EXTERNOS',
     );
   });
 
   readonly emergencias = computed(() => {
     return this.atenciones().filter(
-      (a) => a.idTipoServicio !== 1 && a.tipoServicioNombre !== 'CONSULTORIOS EXTERNOS',
+      (a) =>
+        a.idTipoServicio !== 1 &&
+        a.tipoServicioNombre !== 'CONSULTORIOS EXTERNOS',
     );
   });
 
@@ -123,7 +129,11 @@ export class HistorialAtencionesModalComponent {
   }
 
   cambiarPestana(
-    pestana: 'ATENCIONES' | 'IMAGENIOLOGIA_LAB' | 'REPORTE_OPERATORIO' | 'PROCEDIMIENTOS',
+    pestana:
+      | 'ATENCIONES'
+      | 'IMAGENIOLOGIA_LAB'
+      | 'REPORTE_OPERATORIO'
+      | 'PROCEDIMIENTOS',
   ): void {
     this.pestanaActiva.set(pestana);
   }
@@ -136,7 +146,10 @@ export class HistorialAtencionesModalComponent {
     this.seccionEmergenciaAbierta.update((v) => !v);
   }
 
-  async cargarDatosGenerales(idPaciente: number, idAtencionActual?: number): Promise<void> {
+  async cargarDatosGenerales(
+    idPaciente: number,
+    idAtencionActual?: number,
+  ): Promise<void> {
     this.cargandoAtenciones.set(true);
     this.cargandoResultados.set(true);
     this.cargandoQuirurgicos.set(true);
@@ -164,7 +177,11 @@ export class HistorialAtencionesModalComponent {
       this.procedimientos.set(listaProcedimientos);
 
       const idSeleccionar =
-        idAtencionActual && listaAtenciones.some((atencion: HistorialAtencionItem) => atencion.idAtencion === idAtencionActual)
+        idAtencionActual &&
+        listaAtenciones.some(
+          (atencion: HistorialAtencionItem) =>
+            atencion.idAtencion === idAtencionActual,
+        )
           ? idAtencionActual
           : listaAtenciones.length > 0
             ? listaAtenciones[0].idAtencion
@@ -185,7 +202,8 @@ export class HistorialAtencionesModalComponent {
     this.atencionSeleccionadaId.set(idAtencion);
     this.cargandoDetalle.set(true);
     try {
-      const detalle = await this.atencionApi.obtenerHistorialAtencionDetalle(idAtencion);
+      const detalle =
+        await this.atencionApi.obtenerHistorialAtencionDetalle(idAtencion);
       this.detalleAtencion.set(detalle);
     } finally {
       this.cargandoDetalle.set(false);
@@ -197,7 +215,10 @@ export class HistorialAtencionesModalComponent {
     this.submodalImagenVisible.set(true);
     this.submodalImagenCargando.set(true);
     try {
-      const data = await this.resultadoService.obtenerDetalleImagen(item.idOrden, item.idProducto);
+      const data = await this.resultadoService.obtenerDetalleImagen(
+        item.idOrden,
+        item.idProducto,
+      );
       this.submodalImagenData.set(data);
     } finally {
       this.submodalImagenCargando.set(false);
@@ -214,7 +235,10 @@ export class HistorialAtencionesModalComponent {
     this.submodalLaboratorioVisible.set(true);
     this.submodalLaboratorioCargando.set(true);
     try {
-      const data = await this.resultadoService.obtenerDetalleLaboratorio(item.idOrden, item.idProducto);
+      const data = await this.resultadoService.obtenerDetalleLaboratorio(
+        item.idOrden,
+        item.idProducto,
+      );
       this.submodalLaboratorioItems.set(data);
     } finally {
       this.submodalLaboratorioCargando.set(false);
@@ -280,7 +304,10 @@ export class HistorialAtencionesModalComponent {
     const detalle = await this.obtenerDetalleParaDocumento(atencion);
     if (!detalle) return;
 
-    const tipoServicio = atencion.tipoServicioNombre || atencion.servicioNombre || 'CONSULTA MÉDICA';
+    const tipoServicio =
+      atencion.tipoServicioNombre ||
+      atencion.servicioNombre ||
+      'CONSULTA MÉDICA';
     await imprimirPdfHistorialAtencion(detalle, tipoServicio);
   }
 
@@ -288,7 +315,10 @@ export class HistorialAtencionesModalComponent {
     const detalle = await this.obtenerDetalleParaDocumento(atencion);
     if (!detalle) return;
 
-    const tipoServicio = atencion.tipoServicioNombre || atencion.servicioNombre || 'CONSULTA MÉDICA';
+    const tipoServicio =
+      atencion.tipoServicioNombre ||
+      atencion.servicioNombre ||
+      'CONSULTA MÉDICA';
     await descargarPdfHistorialAtencion(detalle, tipoServicio);
   }
 
@@ -300,7 +330,11 @@ export class HistorialAtencionesModalComponent {
     const pacienteNombre = paciente?.pacienteNombre || 'PACIENTE';
     const historiaClinica = String(paciente?.nroHistoriaClinica || 'S/N');
 
-    await imprimirPdfReporteOperatorio(reporte, pacienteNombre, historiaClinica);
+    await imprimirPdfReporteOperatorio(
+      reporte,
+      pacienteNombre,
+      historiaClinica,
+    );
   }
 
   async imprimirInformeProcedimiento(): Promise<void> {
@@ -311,7 +345,11 @@ export class HistorialAtencionesModalComponent {
     const pacienteNombre = paciente?.pacienteNombre || 'PACIENTE';
     const historiaClinica = String(paciente?.nroHistoriaClinica || 'S/N');
 
-    await imprimirPdfInformeProcedimiento(procedimiento, pacienteNombre, historiaClinica);
+    await imprimirPdfInformeProcedimiento(
+      procedimiento,
+      pacienteNombre,
+      historiaClinica,
+    );
   }
 
   private async obtenerDetalleParaDocumento(
@@ -322,9 +360,10 @@ export class HistorialAtencionesModalComponent {
       return detalleActual;
     }
 
-    const detalleRemoto = await this.atencionApi.obtenerHistorialAtencionDetalle(
-      atencion.idAtencion,
-    );
+    const detalleRemoto =
+      await this.atencionApi.obtenerHistorialAtencionDetalle(
+        atencion.idAtencion,
+      );
     if (detalleRemoto) {
       return detalleRemoto;
     }

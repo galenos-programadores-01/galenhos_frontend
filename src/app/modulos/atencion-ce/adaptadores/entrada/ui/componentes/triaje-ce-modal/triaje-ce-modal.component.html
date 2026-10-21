@@ -51,13 +51,13 @@
         } @else {
           
           @if (erroresValidacion()['general']) {
-            <div class="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold flex items-center justify-between">
+            <div class="p-3.5 rounded-md bg-white border border-red-600 border-l-4 text-red-700 text-xs sm:text-sm font-bold shadow-2xs flex items-center justify-between">
               <span>{{ erroresValidacion()['general'] }}</span>
             </div>
           }
 
           @if (mensajeError()) {
-            <div class="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold">
+            <div class="p-3.5 rounded-md bg-white border border-red-600 border-l-4 text-red-700 text-xs sm:text-sm font-bold shadow-2xs">
               {{ mensajeError() }}
             </div>
           }
@@ -87,7 +87,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['paSistolica'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['paSistolica'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['paSistolica']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['paSistolica'] }}</span>
@@ -113,7 +113,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['paDiastolica'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['paDiastolica'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['paDiastolica']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['paDiastolica'] }}</span>
@@ -139,7 +139,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['pulso'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['pulso'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['pulso']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['pulso'] }}</span>
@@ -165,7 +165,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['frecCardiaca'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['frecCardiaca'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['frecCardiaca']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['frecCardiaca'] }}</span>
@@ -200,7 +200,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['temperatura'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['temperatura'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['temperatura']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['temperatura'] }}</span>
@@ -226,7 +226,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['satO2'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['satO2'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['satO2']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['satO2'] }}</span>
@@ -252,7 +252,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['frecRespiratoria'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['frecRespiratoria'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['frecRespiratoria']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['frecRespiratoria'] }}</span>
@@ -278,7 +278,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['fiO2'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['fiO2'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['fiO2']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['fiO2'] }}</span>
@@ -313,7 +313,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['peso'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['peso'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['peso']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['peso'] }}</span>
@@ -339,7 +339,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['talla'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['talla'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['talla']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['talla'] }}</span>
@@ -388,7 +388,7 @@
                   class="w-full border text-slate-900 text-sm rounded-md px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none font-semibold transition-colors"
                   [ngClass]="[
                     esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                    erroresValidacion()['hemoglobina'] ? 'border-red-500 bg-red-50/30' : ''
+                    erroresValidacion()['hemoglobina'] ? 'border-red-600 ring-1 ring-red-600' : ''
                   ]" />
                 @if (erroresValidacion()['hemoglobina']) {
                   <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['hemoglobina'] }}</span>
@@ -405,7 +405,7 @@
                 <label class="flex items-center gap-2.5 px-3 py-2 rounded-md border transition-colors h-[38px]"
                        [ngClass]="[
                           esModoLectura() ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-50 cursor-pointer border-slate-300',
-                          erroresValidacion()['esGestante'] ? 'border-red-500 bg-red-50/30' : ''
+                          erroresValidacion()['esGestante'] ? 'border-red-600 ring-1 ring-red-600' : ''
                        ]">
                   <input
                     type="checkbox"
@@ -445,7 +445,7 @@
               class="w-full border text-slate-900 text-xs sm:text-sm rounded-md p-3 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors resize-none"
               [ngClass]="[
                 esModoLectura() ? 'bg-slate-100 text-slate-700 cursor-not-allowed border-slate-200' : 'bg-white border-slate-300',
-                erroresValidacion()['observaciones'] ? 'border-red-500 bg-red-50/30' : ''
+                erroresValidacion()['observaciones'] ? 'border-red-600 ring-1 ring-red-600' : ''
               ]"></textarea>
             @if (erroresValidacion()['observaciones']) {
               <span class="text-xs font-bold text-red-600 mt-1 block">{{ erroresValidacion()['observaciones'] }}</span>

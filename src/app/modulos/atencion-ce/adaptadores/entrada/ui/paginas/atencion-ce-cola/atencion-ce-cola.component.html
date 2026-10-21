@@ -22,7 +22,7 @@
     <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Sin Triaje</span>
-        <span class="text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-300 uppercase">Prioridad</span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-700 text-white uppercase">Prioridad</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
         <span class="text-3xl font-black text-rose-700">{{ totalSinTriaje() }}</span>
@@ -55,7 +55,7 @@
     <div class="bg-white p-3.5 rounded-md border border-slate-300 shadow-xs col-span-2 sm:col-span-1">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Atendidos</span>
-        <span class="text-xs font-bold text-slate-700">Firmados</span>
+        <span class="text-xs font-bold text-slate-700">Completados</span>
       </div>
       <div class="mt-2 flex items-baseline gap-2">
         <span class="text-3xl font-black text-slate-800">{{ totalAtendidos() }}</span>
@@ -95,7 +95,7 @@
             <button
               type="button"
               (click)="alIrAHoy()"
-              class="px-3 py-2 text-xs font-bold text-blue-800 hover:text-blue-950 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-md transition-colors cursor-pointer whitespace-nowrap"
+              class="px-3 py-2 text-xs font-bold text-white bg-[#07153a] hover:bg-blue-900 rounded-md transition-colors cursor-pointer whitespace-nowrap shadow-2xs"
               title="Restablecer filtro a la fecha de hoy">
               Hoy
             </button>
@@ -141,12 +141,12 @@
             [ngModel]="filtroTexto()"
             (ngModelChange)="alEscribirFiltro($event)"
             (keyup.enter)="alBuscar()"
-            class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-600 outline-none font-medium" />
+            class="w-full bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-600 outline-none font-medium" />
           <button
             type="button"
             (click)="cargarCola()"
             [disabled]="cargando()"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg border border-slate-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 disabled:opacity-50">
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-md border border-slate-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 disabled:opacity-50">
             {{ cargando() ? 'Buscando' : 'Buscar' }}
           </button>
         </div>
@@ -166,28 +166,28 @@
         type="button"
         (click)="alCambiarEstado('SIN_TRIAJE')"
         class="px-3.5 py-1.5 rounded-md border text-xs font-bold transition-colors cursor-pointer"
-        [ngClass]="estadoFiltro() === 'SIN_TRIAJE' ? 'bg-rose-700 text-white border-rose-700' : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'">
+        [ngClass]="estadoFiltro() === 'SIN_TRIAJE' ? 'bg-red-700 text-white border-red-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
         Sin Triaje ({{ totalSinTriaje() }})
       </button>
       <button
         type="button"
         (click)="alCambiarEstado('PENDIENTE')"
         class="px-3.5 py-1.5 rounded-md border text-xs font-bold transition-colors cursor-pointer"
-        [ngClass]="estadoFiltro() === 'PENDIENTE' ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'">
+        [ngClass]="estadoFiltro() === 'PENDIENTE' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
         En Espera ({{ totalPendientes() }})
       </button>
       <button
         type="button"
         (click)="alCambiarEstado('EN_ATENCION')"
         class="px-3.5 py-1.5 rounded-md border text-xs font-bold transition-colors cursor-pointer"
-        [ngClass]="estadoFiltro() === 'EN_ATENCION' ? 'bg-blue-700 text-white border-blue-700' : 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100'">
+        [ngClass]="estadoFiltro() === 'EN_ATENCION' ? 'bg-blue-700 text-white border-blue-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
         En Consulta ({{ totalEnAtencion() }})
       </button>
       <button
         type="button"
         (click)="alCambiarEstado('ATENDIDO')"
         class="px-3.5 py-1.5 rounded-md border text-xs font-bold transition-colors cursor-pointer"
-        [ngClass]="estadoFiltro() === 'ATENDIDO' ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'">
+        [ngClass]="estadoFiltro() === 'ATENDIDO' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
         Atendidos ({{ totalAtendidos() }})
       </button>
     </div>
@@ -207,145 +207,145 @@
     } @else {
       <div class="w-full overflow-x-auto">
         <table class="w-full text-left border-collapse">
-          <thead class="bg-slate-100 border-b-2 border-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider">
+          <thead class="bg-slate-50 border-b border-slate-300 text-slate-700 text-xs font-bold uppercase tracking-wider">
             <tr>
-              <th class="px-3.5 py-3.5 text-center w-12">#</th>
-              <th class="px-3.5 py-3.5 min-w-[110px]">Hora / Turno</th>
-              <th class="px-3.5 py-3.5 min-w-[150px]">H.C. / Documento</th>
-              <th class="px-4 py-3.5 min-w-[260px]">Paciente / Filiación</th>
-              <th class="px-4 py-3.5 min-w-[200px]">Consultorio / Médico</th>
-              <th class="px-3.5 py-3.5 min-w-[130px]">Financiador</th>
-              <th class="px-3.5 py-3.5 min-w-[140px] text-center">Triaje</th>
-              <th class="px-3.5 py-3.5 min-w-[130px] text-center">Estado</th>
-              <th class="px-4 py-3.5 text-right min-w-[120px]">Atención</th>
+              <th class="px-3 py-3.5 text-center w-12">#</th>
+              <th class="px-3.5 py-3.5 text-center min-w-[110px]">Hora / Turno</th>
+              <th class="px-4 py-3.5 text-left min-w-[260px]">Paciente / Filiación</th>
+              <th class="px-3.5 py-3.5 text-left min-w-[160px]">Identificación</th>
+              <th class="px-4 py-3.5 text-left min-w-[200px]">Consultorio / Médico</th>
+              <th class="px-3.5 py-3.5 text-center min-w-[130px]">Financiador</th>
+              <th class="px-3.5 py-3.5 text-center min-w-[145px]">Triaje</th>
+              <th class="px-3.5 py-3.5 text-center min-w-[125px]">Estado</th>
+              <th class="px-4 py-3.5 text-center min-w-[160px]">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
             @for (item of pacientesPaginados(); track item.idAtencion; let indice = $index) {
-              <tr class="hover:bg-slate-50 transition-colors bg-white">
-                <td class="px-3.5 py-3.5 text-center font-bold text-slate-500 text-sm">
+              <tr class="hover:bg-slate-50/80 transition-colors bg-white">
+                <td class="px-3 py-3.5 text-center align-middle font-bold text-slate-500 text-xs">
                   {{ (paginaActual() - 1) * elementosPorPagina() + indice + 1 }}
                 </td>
-                <td class="px-3.5 py-3.5 align-top">
-                  <div class="space-y-1">
-                    <span class="font-bold text-slate-900 text-sm sm:text-base block">
-                      {{ item.horaIngreso || '--:--' }}
-                    </span>
-                    <span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 text-slate-800 border border-slate-300">
-                      {{ item.turno || 'MAÑANA' }}
-                    </span>
-                  </div>
+
+                <td class="px-3.5 py-3.5 text-center align-middle">
+                  <span class="font-extrabold text-slate-900 text-sm font-mono block leading-none">
+                    {{ item.horaIngreso || '--:--' }}
+                  </span>
+                  <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                    {{ item.turno || 'MAÑANA' }}
+                  </span>
                 </td>
-                <td class="px-3.5 py-3.5 align-top">
+
+                <td class="px-4 py-3.5 text-left align-middle">
                   <div class="space-y-1">
-                    <div class="text-sm font-bold text-blue-900">
-                      Historia Clínica: {{ item.nroHistoriaClinica || '-' }}
-                    </div>
-                    <div class="text-sm text-slate-800 font-medium">
-                      Documento: <strong class="font-bold text-slate-900">{{ item.nroDocumento || '-' }}</strong>
-                    </div>
-                    <div class="text-xs font-bold text-slate-600">
-                      Cuenta: {{ item.idCuentaAtencion }}
-                    </div>
-                  </div>
-                </td>
-                <td class="px-4 py-3.5 align-top">
-                  <div class="space-y-1">
-                    <span class="font-bold text-slate-900 block text-base sm:text-lg leading-snug">
+                    <span class="font-bold text-slate-900 block text-sm leading-snug break-words">
                       {{ item.pacienteNombre }}
                     </span>
-                    <div class="flex items-center gap-2 text-sm text-slate-800">
-                      <span>Edad: <strong class="font-bold text-slate-900">{{ item.edad }} años</strong></span>
-                      <span class="text-slate-400">•</span>
-                      <span>Sexo: <strong class="font-bold text-slate-900">{{ item.sexo === 'F' ? 'Femenino' : 'Masculino' }}</strong></span>
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-600 font-medium">
+                      <span>{{ item.edad }} años</span>
+                      <span class="text-slate-300">•</span>
+                      <span>{{ item.sexo === 'F' ? 'Femenino' : 'Masculino' }}</span>
+                      @if (item.telefono) {
+                        <span class="text-slate-300">•</span>
+                        <span class="text-slate-500">Tel: {{ item.telefono }}</span>
+                      }
                     </div>
-                    @if (item.telefono) {
-                      <div class="pt-0.5">
-                        <span class="inline-block text-xs font-bold text-slate-800 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded">
-                          Teléfono: {{ item.telefono }}
-                        </span>
-                      </div>
-                    }
                   </div>
                 </td>
-                <td class="px-4 py-3.5 align-top">
+
+                <td class="px-3.5 py-3.5 text-left align-middle">
                   <div class="space-y-1">
-                    <span class="font-bold text-slate-900 block text-sm">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#07153a] text-white text-xs font-bold font-mono">
+                      H.C. {{ item.nroHistoriaClinica || '—' }}
+                    </span>
+                    <div class="text-xs text-slate-600 font-medium">
+                      Documento: <strong class="font-bold text-slate-900 font-mono">{{ item.nroDocumento || '—' }}</strong>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-medium">
+                      Cuenta: <span class="font-semibold text-slate-700 font-mono">{{ item.idCuentaAtencion }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="px-4 py-3.5 text-left align-middle">
+                  <div class="space-y-0.5">
+                    <span class="font-bold text-slate-900 block text-xs sm:text-sm leading-tight break-words">
                       {{ item.servicioNombre }}
                     </span>
-                    <span class="text-sm text-slate-800 block font-medium">
+                    <span class="text-xs text-slate-600 font-medium block leading-normal break-words">
                       {{ item.medicoNombre || 'Médico Asignado' }}
                     </span>
                   </div>
                 </td>
 
-                <td class="px-3.5 py-3.5 align-top">
-                  <span class="inline-block px-2.5 py-1 rounded text-xs sm:text-sm font-bold uppercase border"
-                        [ngClass]="item.tipoFinanciador.toUpperCase().includes('SIS') ? 'bg-blue-50 text-blue-900 border-blue-200' : 'bg-slate-50 text-slate-800 border-slate-200'">
+                <td class="px-3.5 py-3.5 text-center align-middle">
+                  <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide"
+                        [ngClass]="item.tipoFinanciador.toUpperCase().includes('SIS') ? 'bg-blue-700 text-white' : 'bg-slate-800 text-white'">
                     {{ item.tipoFinanciador }}
                   </span>
                 </td>
 
-                <td class="px-3.5 py-3.5 align-top text-center">
+                <td class="px-3.5 py-3.5 text-center align-middle">
                   <div class="flex flex-col items-center gap-1.5">
                     @if (item.tieneTriaje) {
-                      <span class="inline-block px-2.5 py-0.5 rounded text-xs sm:text-sm font-bold bg-blue-50 text-blue-800 border border-blue-200 uppercase tracking-wide">
-                        Triaje: Registrado
-                      </span>
-                      <div class="flex items-center gap-1.5 w-full">
-                        <button
-                          type="button"
-                          (click)="abrirTriaje(item, true)"
-                          class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded border border-slate-300 text-xs font-bold uppercase transition-colors cursor-pointer flex-1"
-                          title="Ver signos vitales en modo consulta">
-                          Ver
-                        </button>
-                        <button
-                          type="button"
-                          (click)="abrirTriaje(item, false)"
-                          class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded border border-amber-300 text-xs font-bold uppercase transition-colors cursor-pointer flex-1"
-                          title="Modificar o corregir signos vitales del triaje">
-                          Editar
-                        </button>
-                      </div>
-                    } @else {
-                      <span class="inline-block px-2.5 py-0.5 rounded text-xs sm:text-sm font-bold bg-rose-100 text-rose-900 border border-rose-300 uppercase tracking-wide">
-                        Triaje: Pendiente
+                      <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase bg-emerald-700 text-white tracking-wide">
+                        Registrado
                       </span>
                       <button
                         type="button"
                         (click)="abrirTriaje(item, false)"
-                        class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded border border-amber-600 text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer w-full shadow-xs"
-                        title="Tomar y registrar signos vitales del paciente">
+                        class="w-full px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-md border border-slate-300 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                        title="Consultar o actualizar signos vitales del triaje">
                         Triaje
+                      </button>
+                    } @else {
+                      <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase bg-red-700 text-white tracking-wide">
+                        Pendiente
+                      </span>
+                      <button
+                        type="button"
+                        (click)="abrirTriaje(item, false)"
+                        class="w-full px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md border border-amber-600 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
+                        title="Tomar y registrar signos vitales del paciente">
+                        Registrar
                       </button>
                     }
                   </div>
                 </td>
 
-                <td class="px-3.5 py-3.5 align-top text-center">
-                  <span class="inline-block px-2.5 py-1 rounded text-xs sm:text-sm font-bold border uppercase"
+                <td class="px-3.5 py-3.5 text-center align-middle">
+                  <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold border uppercase tracking-wide"
                         [ngClass]="obtenerClaseEstado(item.estadoAtencion)">
-                    {{ item.estadoAtencion === 'ATENDIDO' ? 'Firmado' : item.estadoAtencion === 'EN_ATENCION' ? 'En Atención' : 'En Espera' }}
+                    {{ item.estadoAtencion === 'ATENDIDO' ? 'Atendido' : item.estadoAtencion === 'EN_ATENCION' ? 'En Consulta' : 'En Espera' }}
                   </span>
                 </td>
 
-                <td class="px-4 py-3.5 align-middle text-right">
-                  <div class="flex items-center justify-end gap-1.5">
+                <td class="px-4 py-3.5 text-center align-middle">
+                  <div class="flex items-center justify-center gap-1.5 flex-wrap">
                     <button
                       type="button"
                       (click)="abrirHistorialPaciente(item)"
-                      class="px-2.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 shadow-2xs"
+                      class="px-2.5 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs"
                       title="Consultar historial clínico y atenciones anteriores del paciente">
                       Historial
                     </button>
-                    <button
-                      type="button"
-                      (click)="atenderPaciente(item)"
-                      class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer border shadow-xs"
-                      [ngClass]="item.estadoAtencion === 'ATENDIDO' ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-[#07153a] hover:bg-blue-900 text-white border-[#07153a]'">
-                      {{ item.estadoAtencion === 'ATENDIDO' ? 'Ficha' : 'Atender' }}
-                    </button>
+                    @if (item.estadoAtencion === 'ATENDIDO') {
+                      <button
+                        type="button"
+                        (click)="verFichaPaciente(item)"
+                        class="px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-[#07153a] bg-[#07153a] hover:bg-blue-950 text-white shadow-xs"
+                        title="Ver o editar la ficha clínica de la atención médica">
+                        Ver Ficha
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        (click)="atenderPaciente(item)"
+                        class="px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border border-[#07153a] bg-[#07153a] hover:bg-blue-950 text-white shadow-xs"
+                        title="Iniciar la atención clínica del paciente">
+                        Atender
+                      </button>
+                    }
                   </div>
                 </td>
 
@@ -366,7 +366,7 @@
               id="selector-elementos-pagina"
               [ngModel]="elementosPorPagina()"
               (ngModelChange)="cambiarElementosPorPagina($event)"
-              class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer">
+              class="bg-white border border-slate-300 rounded-md px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer">
               @for (opcion of opcionesElementosPorPagina; track opcion) {
                 <option [value]="opcion">{{ opcion }}</option>
               }

@@ -116,7 +116,7 @@ export class PrimeraAtencionFirmaService {
             contexto.institucion?.logoHospi ||
             contexto.institucion?.logoMinsa ||
             undefined,
-          positionX: 430,
+          positionX: 435,
           positionY: 10,
         },
       );

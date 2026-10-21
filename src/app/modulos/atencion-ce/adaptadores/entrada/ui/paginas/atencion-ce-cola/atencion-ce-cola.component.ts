@@ -63,7 +63,8 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   readonly pacienteSeleccionadoTriaje = signal<ColaPacienteCEItem | null>(null);
 
   readonly modalHistorialVisible = signal<boolean>(false);
-  readonly pacienteSeleccionadoHistorial = signal<PacienteHistorialDatos | null>(null);
+  readonly pacienteSeleccionadoHistorial =
+    signal<PacienteHistorialDatos | null>(null);
 
   readonly paginaActual = signal<number>(1);
   readonly elementosPorPagina = signal<number>(10);
@@ -370,6 +371,15 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
     });
   }
 
+  verFichaPaciente(item: ColaPacienteCEItem): void {
+    this.router.navigate(['/atencion-ce', item.idAtencion], {
+      queryParams: {
+        fecha: this.fechaSeleccionada(),
+        estado: this.estadoFiltro() || undefined,
+      },
+    });
+  }
+
   obtenerIniciales(nombre: string): string {
     if (!nombre) return 'PX';
     const partes = nombre.trim().split(/\s+/);
@@ -380,11 +390,11 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   obtenerClaseEstado(estado: string): string {
     switch (estado) {
       case 'ATENDIDO':
-        return 'bg-slate-100 text-slate-800 border-slate-300';
+        return 'bg-slate-800 text-white border-slate-800';
       case 'EN_ATENCION':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-700 text-white border-blue-700';
       default:
-        return 'bg-amber-50 text-amber-700 border-amber-200';
+        return 'bg-amber-600 text-white border-amber-600';
     }
   }
 
