@@ -304,6 +304,8 @@ export interface MedicamentoRegistrarBody {
   idCuentaAtencion: number;
   idPuntoCarga: number;
   idServicioReceta: number;
+  /** IdMedico de bandeja → RecetaCabecera.idMedicoReceta */
+  idMedicoReceta: number;
   idPaciente: number;
   idUsuarioAuditoria?: number;
   idProducto: number;
@@ -355,6 +357,8 @@ export interface ExamenRegistrarBody {
   idCuentaAtencion: number;
   idPuntoCarga: number;
   idServicioReceta: number;
+  /** IdMedico de bandeja → RecetaCabecera.idMedicoReceta */
+  idMedicoReceta: number;
   idPaciente: number;
   idUsuarioAuditoria?: number;
   idProducto: number;
@@ -383,6 +387,8 @@ export interface ProcedimientoRegistrarBody {
   idPrimeraAtencion: number;
   idCuentaAtencion: number;
   idServicioReceta: number;
+  /** IdMedico de bandeja → RecetaCabecera.idMedicoReceta */
+  idMedicoReceta: number;
   idPaciente: number;
   idUsuarioAuditoria?: number;
   idProducto: number;

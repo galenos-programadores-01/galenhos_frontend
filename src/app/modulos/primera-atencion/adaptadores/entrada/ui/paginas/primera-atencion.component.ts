@@ -4719,6 +4719,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
         idCuentaAtencion: ctx.idCuentaAtencion,
         idPuntoCarga: ctx.idPuntoCarga,
         idServicioReceta: ctx.idServicioReceta,
+        idMedicoReceta: ctx.idMedicoReceta,
         idPaciente: ctx.idPaciente,
         idUsuarioAuditoria: this.authService.getIdEmpleado() || 0,
         idProducto,
@@ -4819,6 +4820,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     idCuentaAtencion: number;
     idPuntoCarga: number;
     idServicioReceta: number;
+    idMedicoReceta: number;
     idPaciente: number;
   } | null {
     const p = this.pacienteSeleccionado;
@@ -4831,11 +4833,23 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       'IdServicioReceta',
       'idServicioReceta',
     ]);
+    const idMedicoReceta = campoNum(p, ['IdMedico', 'idMedico']);
     const idPaciente = campoNum(p, ['IdPaciente', 'idPaciente']);
-    if (!idCuentaAtencion || !idServicioReceta || !idPaciente) {
+    if (
+      !idCuentaAtencion ||
+      !idServicioReceta ||
+      !idMedicoReceta ||
+      !idPaciente
+    ) {
       return null;
     }
-    return { idCuentaAtencion, idPuntoCarga, idServicioReceta, idPaciente };
+    return {
+      idCuentaAtencion,
+      idPuntoCarga,
+      idServicioReceta,
+      idMedicoReceta,
+      idPaciente,
+    };
   }
 
   registrarAtencion() {
@@ -6362,6 +6376,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
         idCuentaAtencion: ctx.idCuentaAtencion,
         idPuntoCarga,
         idServicioReceta: ctx.idServicioReceta,
+        idMedicoReceta: ctx.idMedicoReceta,
         idPaciente: ctx.idPaciente,
         idUsuarioAuditoria: this.authService.getIdEmpleado() || 0,
         idProducto,
@@ -6476,6 +6491,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   private idsContextoExamenGuardar(): {
     idCuentaAtencion: number;
     idServicioReceta: number;
+    idMedicoReceta: number;
     idPaciente: number;
   } | null {
     const p = this.pacienteSeleccionado;
@@ -6487,13 +6503,20 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       'IdServicioReceta',
       'idServicioReceta',
     ]);
+    const idMedicoReceta = campoNum(p, ['IdMedico', 'idMedico']);
     const idPaciente = campoNum(p, ['IdPaciente', 'idPaciente']);
-    if (!idCuentaAtencion || !idServicioReceta || !idPaciente) {
+    if (
+      !idCuentaAtencion ||
+      !idServicioReceta ||
+      !idMedicoReceta ||
+      !idPaciente
+    ) {
       return null;
     }
     return {
       idCuentaAtencion,
       idServicioReceta,
+      idMedicoReceta,
       idPaciente,
     };
   }
@@ -6716,6 +6739,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
         idPrimeraAtencion: idPrimera,
         idCuentaAtencion: ctx.idCuentaAtencion,
         idServicioReceta: ctx.idServicioReceta,
+        idMedicoReceta: ctx.idMedicoReceta,
         idPaciente: ctx.idPaciente,
         idUsuarioAuditoria: this.authService.getIdEmpleado() || 0,
         idProducto,
