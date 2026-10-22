@@ -89,6 +89,15 @@ export class BarraLateral {
       return '/atencion-ce';
     }
 
+    if (
+      claveMin.includes('despens') ||
+      claveMin.includes('dispens') ||
+      menuMin.includes('despens') ||
+      menuMin.includes('dispens')
+    ) {
+      return '/dispensacionreceta';
+    }
+
     if (!clave) {
       return `/${menuMin.replace(/\s+/g, '-')}`;
     }

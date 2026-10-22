@@ -89,6 +89,14 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Auditoría QF' },
       },
       {
+        path: 'dispensacionreceta',
+        loadComponent: () =>
+          import(
+            '../modulos/farmacia/dispensacion-receta/adaptadores/entrada/ui/paginas/dispensacion-receta.component'
+          ).then((m) => m.DispensacionRecetaComponent),
+        data: { title: 'Dispensación' },
+      },
+      {
         path: 'sis',
         loadComponent: () =>
           import(

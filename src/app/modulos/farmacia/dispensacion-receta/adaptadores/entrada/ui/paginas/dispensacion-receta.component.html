@@ -1,0 +1,207 @@
+@if (!recetaAbierta) {
+<div class="gp-in" style="display: flex; flex-direction: column; gap: 18px;">
+
+  <p style="margin: 0; font-size: 13px; color: #54617f;">
+    Dispense las recetas aprobadas. La bandeja muestra 10 recetas por página.
+  </p>
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div class="dr-filtros">
+      <div>
+        <label for="dr-estado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado</label>
+        <select id="dr-estado" class="dr-campo" [ngModel]="estado" (ngModelChange)="estado = $event; aplicarFiltros()">
+          <option value="">Todas</option>
+          <option value="por_atender">Por atender</option>
+          <option value="atendido">Atendido</option>
+        </select>
+      </div>
+      <div>
+        <label for="dr-servicio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Servicio</label>
+        <select id="dr-servicio" class="dr-campo" [ngModel]="servicio" (ngModelChange)="servicio = $event; aplicarFiltros()">
+          <option value="">Todos</option>
+          @for (opcion of servicios; track opcion) {
+            <option [value]="opcion">{{ opcion }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="dr-prioridad" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Prioridad</label>
+        <select id="dr-prioridad" class="dr-campo" [ngModel]="prioridad" (ngModelChange)="prioridad = $event; aplicarFiltros()">
+          <option value="">Todas</option>
+          <option value="urgente">Urgente</option>
+          <option value="normal">Normal</option>
+        </select>
+      </div>
+      <div>
+        <label for="dr-buscar" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Buscar</label>
+        <input id="dr-buscar" class="dr-campo" type="text" [ngModel]="buscar" (ngModelChange)="buscar = $event; aplicarFiltros()" autocomplete="off"
+               placeholder="Paciente, DNI o N° de receta" />
+      </div>
+      <div class="dr-filtros-acciones">
+        <button type="button" (click)="cargarBandeja()" [disabled]="cargando" class="dr-btn-actualizar">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          Actualizar
+        </button>
+        <button type="button" (click)="limpiarFiltros()" [disabled]="cargando" class="dr-btn-secundario">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e6eaf2; border-radius: 16px; padding: 18px 20px;">
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px;">
+      <span style="font-size: 15px; font-weight: 700; color: #07153a;">{{ tituloBandeja() }}</span>
+      <span style="font-size: 12.5px; color: #7a86a1;">{{ resumenBandeja() }}</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <app-tabla [columnas]="columnas" [datos]="recetasPagina()" [cargando]="cargando"
+                 [filasClickeables]="true" (filaSeleccionada)="abrirDetalle($event)"
+                 mensajeCargando="Consultando bandeja..."
+                 mensajeVacio="No se encontraron recetas para los filtros aplicados.">
+
+        <ng-template appColumnaTemplate="recetaCustom" let-receta>
+          <span style="font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; font-weight: 700; color: #263c7a;">{{ receta.numReceta }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="pacienteCustom" let-receta>
+          <span style="font-weight: 600; color: #07153a; font-size: 13.5px;">{{ receta.paciente }}</span>
+          <span style="display: block; margin-top: 2px; color: #7a86a1; font-size: 11.5px;">DNI {{ receta.dni }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="servicioCustom" let-receta>
+          <span style="color: #54617f;">{{ receta.servicio }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="prioridadCustom" let-receta>
+          <span class="dr-prio" [class.dr-prio-urgente]="receta.prioridad === 'urgente'">{{ textoPrioridad(receta) }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="medicoCustom" let-receta>
+          <span style="color: #07153a;">{{ receta.medico }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="itemsCustom" let-receta>
+          <span style="font-weight: 700; color: #07153a;">{{ receta.medicamentos.length }}</span>
+        </ng-template>
+
+        <ng-template appColumnaTemplate="estadoCustom" let-receta>
+          <span class="dr-estado" [class.dr-estado-ok]="receta.estado === 'atendido'" [class.dr-estado-pend]="receta.estado === 'por_atender'">{{ textoEstado(receta) }}</span>
+        </ng-template>
+
+      </app-tabla>
+    </div>
+
+    @if (mostrarPaginacion()) {
+      <div class="dr-paginacion">
+        <span class="dr-paginacion-resumen">
+          Mostrando <strong>{{ rangoVisible() }}</strong> de <strong>{{ recetas.length }}</strong>
+        </span>
+        <div class="dr-paginacion-controles">
+          <button type="button" class="dr-pagina" title="Primera página" [disabled]="pagina <= 1" (click)="irAPagina(1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+          </button>
+          <button type="button" class="dr-pagina" title="Anterior" [disabled]="pagina <= 1" (click)="irAPagina(pagina - 1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          @for (numero of paginasVisibles(); track numero) {
+            <button type="button" class="dr-pagina" [class.dr-pagina-activa]="numero === pagina" (click)="irAPagina(numero)">{{ numero }}</button>
+          }
+          <button type="button" class="dr-pagina" title="Siguiente" [disabled]="pagina >= totalPaginas()" (click)="irAPagina(pagina + 1)">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <button type="button" class="dr-pagina" title="Última página" [disabled]="pagina >= totalPaginas()" (click)="irAPagina(totalPaginas())">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>
+}
+
+@if (recetaAbierta; as receta) {
+  <section class="dr-pantalla">
+    <div class="dr-pantalla-cabecera">
+      <button type="button" class="dr-volver" (click)="cerrarDetalle()">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Volver a la bandeja
+      </button>
+      <div class="dr-pantalla-titulo">
+        <h2>Receta #{{ receta.numReceta }}</h2>
+        <span class="dr-pantalla-especialidad">{{ receta.servicio }}</span>
+        <span class="dr-estado" [class.dr-estado-ok]="receta.estado === 'atendido'" [class.dr-estado-pend]="receta.estado === 'por_atender'">{{ textoEstado(receta) }}</span>
+      </div>
+    </div>
+
+    <div class="dr-pantalla-cuerpo">
+      <aside class="dr-pantalla-lado">
+        <div class="dr-lado-titulo">Resumen de la receta</div>
+        <div class="dr-resumen-fila"><span>Prioridad</span><span>{{ textoPrioridad(receta) }}</span></div>
+        <div class="dr-resumen-fila"><span>Servicio</span><span>{{ receta.servicio }}</span></div>
+        <div class="dr-resumen-fila"><span>Entregar en</span><span>{{ receta.destino }}</span></div>
+        <div class="dr-resumen-fila"><span>Médico</span><span>{{ receta.medico }}</span></div>
+        <div class="dr-resumen-fila"><span>Estado</span><span>{{ textoEstado(receta) }}</span></div>
+      </aside>
+
+      <div class="dr-pantalla-principal">
+        <div class="dr-detalle-caja">
+          <div class="dr-paciente">
+            <div class="dr-paciente-avatar" aria-hidden="true">{{ inicialesPaciente(receta.paciente) }}</div>
+            <div>
+              <div class="dr-paciente-nombre">{{ receta.paciente }}</div>
+              <div class="dr-paciente-meta">
+                <span>DNI {{ receta.dni }}</span>
+                <span>{{ receta.edad }}</span>
+                <span>{{ receta.medico }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dr-seccion-titulo">
+            Medicamentos
+            <span>{{ etiquetaItems(receta) }}</span>
+          </div>
+
+          @for (medicamento of receta.medicamentos; track medicamento.id) {
+            <article class="dr-med">
+              <label class="dr-med-fila">
+                <input type="checkbox" [checked]="estaSeleccionado(medicamento)" [disabled]="yaAtendida(receta)" (change)="alternarMedicamento(medicamento, $any($event.target).checked)" />
+                <span class="dr-med-cuerpo">
+                  <span class="dr-med-nombre">{{ medicamento.nombre }}</span>
+                  <span class="dr-med-indicacion">{{ medicamento.presentacion }} · {{ medicamento.indicacion }}</span>
+                </span>
+                <span class="dr-med-etiquetas">
+                  <span class="dr-med-etiqueta">Vía<strong>{{ medicamento.via }}</strong></span>
+                  <span class="dr-med-etiqueta">Cantidad<strong>{{ medicamento.cantidad }} {{ medicamento.unidad }}</strong></span>
+                </span>
+              </label>
+            </article>
+          }
+        </div>
+
+        <div class="dr-pantalla-pie">
+          @if (avisoAccion) {
+            <p class="dr-aviso">{{ avisoAccion }}</p>
+          }
+          <div class="dr-decision-fila">
+            <label for="dr-entregado">Entregado a</label>
+            <input id="dr-entregado" type="text" [(ngModel)]="entregadoA" [disabled]="yaAtendida(receta)" autocomplete="off" />
+          </div>
+          <div class="dr-decision-fila">
+            <label for="dr-observacion">Observación</label>
+            <input id="dr-observacion" type="text" [(ngModel)]="observacion" [disabled]="yaAtendida(receta)" autocomplete="off" />
+          </div>
+          <div class="dr-decision-fila">
+            <span></span>
+            <div class="dr-decision-fin">
+              <button type="button" class="dr-btn-atendido" [disabled]="yaAtendida(receta)" (click)="marcarAtendido()">Atendido</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+}
