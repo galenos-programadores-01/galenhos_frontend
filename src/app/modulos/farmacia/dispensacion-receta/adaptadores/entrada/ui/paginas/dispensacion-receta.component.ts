@@ -57,7 +57,7 @@ export class DispensacionRecetaComponent implements OnInit {
   recetas: RecetaDispensacion[] = [];
   pagina = 1;
   recetaAbierta: RecetaDispensacion | null = null;
-  private seleccion = new Set<number>();
+  private sinStock = new Set<number>();
   entregadoA = '';
   observacion = '';
   avisoAccion = '';
@@ -130,7 +130,7 @@ export class DispensacionRecetaComponent implements OnInit {
   abrirDetalle(fila: unknown): void {
     if (!fila || typeof fila !== 'object') return;
     this.recetaAbierta = fila as RecetaDispensacion;
-    this.seleccion = new Set<number>();
+    this.sinStock = new Set<number>();
     this.entregadoA = '';
     this.observacion = '';
     this.avisoAccion = '';
@@ -139,7 +139,7 @@ export class DispensacionRecetaComponent implements OnInit {
 
   cerrarDetalle(): void {
     this.recetaAbierta = null;
-    this.seleccion = new Set<number>();
+    this.sinStock = new Set<number>();
     this.entregadoA = '';
     this.observacion = '';
     this.avisoAccion = '';
@@ -156,24 +156,30 @@ export class DispensacionRecetaComponent implements OnInit {
     return receta.estado === 'atendido';
   }
 
-  estaSeleccionado(medicamento: MedicamentoDispensacion): boolean {
-    return this.seleccion.has(medicamento.id);
+  estaSinStock(medicamento: MedicamentoDispensacion): boolean {
+    return this.sinStock.has(medicamento.id);
   }
 
-  alternarMedicamento(medicamento: MedicamentoDispensacion, marcado: boolean): void {
+  stockInsuficiente(medicamento: MedicamentoDispensacion): boolean {
+    const pedida = Number(medicamento.cantidad);
+    return Number.isFinite(pedida) && medicamento.stock < pedida;
+  }
+
+  marcarSinStock(medicamento: MedicamentoDispensacion): void {
     if (this.recetaAbierta && this.yaAtendida(this.recetaAbierta)) return;
-    if (marcado) this.seleccion.add(medicamento.id);
-    else this.seleccion.delete(medicamento.id);
+    this.sinStock.add(medicamento.id);
+    this.avisoAccion = '';
+  }
+
+  deshacerSinStock(medicamento: MedicamentoDispensacion): void {
+    if (this.recetaAbierta && this.yaAtendida(this.recetaAbierta)) return;
+    this.sinStock.delete(medicamento.id);
     this.avisoAccion = '';
   }
 
   marcarAtendido(): void {
     const receta = this.recetaAbierta;
     if (!receta || this.yaAtendida(receta)) return;
-    if (this.seleccion.size === 0) {
-      this.avisoAccion = 'Seleccione al menos un medicamento.';
-      return;
-    }
     this.avisoAccion = 'El guardado se conecta cuando exista el procedimiento.';
   }
 

@@ -11,8 +11,12 @@ function med(
   via: string,
   cantidad: string,
   unidad: string,
+  ubicacion: string,
+  lote: string,
+  vence: string,
+  stock: number,
 ): MedicamentoDispensacion {
-  return { id, nombre, presentacion, indicacion, via, cantidad, unidad };
+  return { id, nombre, presentacion, indicacion, via, cantidad, unidad, ubicacion, lote, vence, stock };
 }
 
 /** Copia nueva en cada llamada. Actualizar vuelve a este conjunto. */
@@ -29,9 +33,9 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Tópico 2',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Paracetamol 500 mg', 'Tableta', '1 tableta cada 8 horas, por 7 días', 'Oral', '20', 'tabletas'),
-        med(2, 'Amoxicilina 500 mg', 'Cápsula', '1 cápsula cada 8 horas, por 7 días', 'Oral', '21', 'cápsulas'),
-        med(3, 'Omeprazol 20 mg', 'Cápsula', '1 cápsula antes del desayuno, por 14 días', 'Oral', '14', 'cápsulas'),
+        med(1, 'Paracetamol 500 mg', 'Tableta', '1 tableta cada 8 horas, por 7 días', 'Oral', '20', 'tabletas', 'A-12 · Estante 2', 'PC2407', '08/2027', 340),
+        med(2, 'Amoxicilina 500 mg', 'Cápsula', '1 cápsula cada 8 horas, por 7 días', 'Oral', '21', 'cápsulas', 'B-04 · Estante 1', 'AX2311', '03/2027', 180),
+        med(3, 'Omeprazol 20 mg', 'Cápsula', '1 cápsula antes del desayuno, por 14 días', 'Oral', '14', 'cápsulas', 'B-09 · Estante 3', 'OM2405', '11/2026', 95),
       ],
     },
     {
@@ -45,8 +49,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Hospitalización · Cama 212',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Ibuprofeno suspensión 100 mg/5 mL', 'Frasco 120 mL', '5 mL cada 8 horas, por 5 días', 'Oral', '1', 'frasco'),
-        med(2, 'Suero oral', 'Sobre', '1 sobre diluido en 1 L de agua', 'Oral', '6', 'sobres'),
+        med(1, 'Ibuprofeno suspensión 100 mg/5 mL', 'Frasco 120 mL', '5 mL cada 8 horas, por 5 días', 'Oral', '1', 'frasco', 'C-02 · Estante 1', 'IB2406', '02/2027', 42),
+        med(2, 'Suero oral', 'Sobre', '1 sobre diluido en 1 L de agua', 'Oral', '6', 'sobres', 'C-10 · Estante 4', 'SO2402', '12/2027', 300),
       ],
     },
     {
@@ -60,8 +64,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Hospitalización · Cama 304',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Enoxaparina 40 mg/0.4 mL', 'Jeringa prellenada', '1 aplicación subcutánea cada 24 horas', 'Subcutánea', '10', 'jeringas'),
-        med(2, 'Atorvastatina 20 mg', 'Tableta', '1 tableta por la noche, por 30 días', 'Oral', '30', 'tabletas'),
+        med(1, 'Enoxaparina 40 mg/0.4 mL', 'Jeringa prellenada', '1 aplicación subcutánea cada 24 horas', 'Subcutánea', '10', 'jeringas', 'Refrigerador R-01', 'EN2404', '09/2026', 60),
+        med(2, 'Atorvastatina 20 mg', 'Tableta', '1 tableta por la noche, por 30 días', 'Oral', '30', 'tabletas', 'A-21 · Estante 2', 'AT2403', '05/2027', 210),
       ],
     },
     {
@@ -75,8 +79,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Tópico 1',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Tramadol 50 mg/mL', 'Ampolla 2 mL', '1 ampolla IV cada 8 horas, por 2 días', 'Intravenosa', '6', 'ampollas'),
-        med(2, 'Metoclopramida 10 mg/2 mL', 'Ampolla', '1 ampolla IV cada 8 horas, por 2 días', 'Intravenosa', '6', 'ampollas'),
+        med(1, 'Tramadol 50 mg/mL', 'Ampolla 2 mL', '1 ampolla IV cada 8 horas, por 2 días', 'Intravenosa', '6', 'ampollas', 'Caja fuerte CF-01', 'TR2401', '07/2027', 4),
+        med(2, 'Metoclopramida 10 mg/2 mL', 'Ampolla', '1 ampolla IV cada 8 horas, por 2 días', 'Intravenosa', '6', 'ampollas', 'D-03 · Estante 2', 'MT2410', '01/2028', 75),
       ],
     },
     {
@@ -90,9 +94,9 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 2',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Losartán 50 mg', 'Tableta', '1 tableta cada 24 horas, por 30 días', 'Oral', '30', 'tabletas'),
-        med(2, 'Metformina 850 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas'),
-        med(3, 'Aspirina 100 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas'),
+        med(1, 'Losartán 50 mg', 'Tableta', '1 tableta cada 24 horas, por 30 días', 'Oral', '30', 'tabletas', 'A-18 · Estante 1', 'LO2408', '10/2027', 500),
+        med(2, 'Metformina 850 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas', 'A-19 · Estante 1', 'MF2402', '04/2027', 38),
+        med(3, 'Aspirina 100 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas', 'A-05 · Estante 3', 'AS2409', '12/2027', 800),
       ],
     },
     {
@@ -106,8 +110,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 1',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Ácido fólico 5 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas'),
-        med(2, 'Sulfato ferroso 300 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas'),
+        med(1, 'Ácido fólico 5 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas', 'A-02 · Estante 4', 'AF2405', '06/2027', 260),
+        med(2, 'Sulfato ferroso 300 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas', 'A-03 · Estante 4', 'SF2404', '08/2027', 410),
       ],
     },
     {
@@ -121,7 +125,7 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 1',
       estado: 'atendido',
       medicamentos: [
-        med(1, 'Carvedilol 6.25 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas'),
+        med(1, 'Carvedilol 6.25 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas', 'A-15 · Estante 2', 'CV2401', '09/2027', 150),
       ],
     },
     {
@@ -135,8 +139,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Tópico 3',
       estado: 'atendido',
       medicamentos: [
-        med(1, 'Diclofenaco 75 mg/3 mL', 'Ampolla', '1 ampolla IM, dosis única', 'Intramuscular', '1', 'ampolla'),
-        med(2, 'Ketorolaco 30 mg/mL', 'Ampolla', '1 ampolla IV cada 8 horas, por 1 día', 'Intravenosa', '3', 'ampollas'),
+        med(1, 'Diclofenaco 75 mg/3 mL', 'Ampolla', '1 ampolla IM, dosis única', 'Intramuscular', '1', 'ampolla', 'D-01 · Estante 1', 'DC2406', '05/2027', 12),
+        med(2, 'Ketorolaco 30 mg/mL', 'Ampolla', '1 ampolla IV cada 8 horas, por 1 día', 'Intravenosa', '3', 'ampollas', 'D-02 · Estante 1', '—', '—', 0),
       ],
     },
     {
@@ -150,8 +154,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 3',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Ácido fólico 5 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas'),
-        med(2, 'Calcio 600 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas'),
+        med(1, 'Ácido fólico 5 mg', 'Tableta', '1 tableta al día, por 30 días', 'Oral', '30', 'tabletas', 'A-02 · Estante 4', 'AF2405', '06/2027', 260),
+        med(2, 'Calcio 600 mg', 'Tableta', '1 tableta cada 12 horas, por 30 días', 'Oral', '60', 'tabletas', 'A-08 · Estante 2', 'CA2407', '03/2028', 120),
       ],
     },
     {
@@ -165,8 +169,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Hospitalización · Cama 118',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Furosemida 40 mg', 'Tableta', '1 tableta cada 24 horas, por 7 días', 'Oral', '7', 'tabletas'),
-        med(2, 'Cloruro de potasio 20 mEq', 'Ampolla', '1 ampolla IV, según indicación', 'Intravenosa', '3', 'ampollas'),
+        med(1, 'Furosemida 40 mg', 'Tableta', '1 tableta cada 24 horas, por 7 días', 'Oral', '7', 'tabletas', 'A-11 · Estante 3', 'FU2402', '11/2027', 90),
+        med(2, 'Cloruro de potasio 20 mEq', 'Ampolla', '1 ampolla IV, según indicación', 'Intravenosa', '3', 'ampollas', 'D-06 · Estante 1', 'KP2408', '06/2027', 40),
       ],
     },
     {
@@ -180,7 +184,7 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Hospitalización · Cama 205',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Amoxicilina suspensión 250 mg/5 mL', 'Frasco', '5 mL cada 8 horas, por 7 días', 'Oral', '1', 'frasco'),
+        med(1, 'Amoxicilina suspensión 250 mg/5 mL', 'Frasco', '5 mL cada 8 horas, por 7 días', 'Oral', '1', 'frasco', 'C-01 · Estante 2', 'AS2411', '01/2027', 28),
       ],
     },
     {
@@ -194,8 +198,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 2',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Ibuprofeno 400 mg', 'Tableta', '1 tableta cada 8 horas, por 5 días', 'Oral', '15', 'tabletas'),
-        med(2, 'Omeprazol 20 mg', 'Cápsula', '1 cápsula antes del desayuno, por 5 días', 'Oral', '5', 'cápsulas'),
+        med(1, 'Ibuprofeno 400 mg', 'Tableta', '1 tableta cada 8 horas, por 5 días', 'Oral', '15', 'tabletas', 'A-07 · Estante 1', 'IB2409', '04/2027', 220),
+        med(2, 'Omeprazol 20 mg', 'Cápsula', '1 cápsula antes del desayuno, por 5 días', 'Oral', '5', 'cápsulas', 'B-09 · Estante 3', 'OM2405', '11/2026', 95),
       ],
     },
     {
@@ -209,8 +213,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 1',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Losartán 50 mg', 'Tableta', '1 tableta cada 24 horas, por 30 días', 'Oral', '30', 'tabletas'),
-        med(2, 'Atorvastatina 20 mg', 'Tableta', '1 tableta por la noche, por 30 días', 'Oral', '30', 'tabletas'),
+        med(1, 'Losartán 50 mg', 'Tableta', '1 tableta cada 24 horas, por 30 días', 'Oral', '30', 'tabletas', 'A-18 · Estante 1', 'LO2408', '10/2027', 500),
+        med(2, 'Atorvastatina 20 mg', 'Tableta', '1 tableta por la noche, por 30 días', 'Oral', '30', 'tabletas', 'A-21 · Estante 2', 'AT2403', '05/2027', 210),
       ],
     },
     {
@@ -224,8 +228,8 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Tópico 4',
       estado: 'por_atender',
       medicamentos: [
-        med(1, 'Cloruro de sodio 0.9%', 'Frasco 1000 mL', 'Infusión IV, según indicación', 'Intravenosa', '2', 'frascos'),
-        med(2, 'Metoclopramida 10 mg/2 mL', 'Ampolla', '1 ampolla IV, dosis única', 'Intravenosa', '1', 'ampolla'),
+        med(1, 'Cloruro de sodio 0.9%', 'Frasco 1000 mL', 'Infusión IV, según indicación', 'Intravenosa', '2', 'frascos', 'E-01 · Estante 1', 'CS2406', '12/2027', 80),
+        med(2, 'Metoclopramida 10 mg/2 mL', 'Ampolla', '1 ampolla IV, dosis única', 'Intravenosa', '1', 'ampolla', 'D-03 · Estante 2', 'MT2410', '01/2028', 75),
       ],
     },
     {
@@ -239,7 +243,7 @@ export function recetasEjemplo(): RecetaDispensacion[] {
       destino: 'Ventanilla 3',
       estado: 'atendido',
       medicamentos: [
-        med(1, 'Loratadina 10 mg', 'Tableta', '1 tableta al día, por 10 días', 'Oral', '10', 'tabletas'),
+        med(1, 'Loratadina 10 mg', 'Tableta', '1 tableta al día, por 10 días', 'Oral', '10', 'tabletas', 'A-14 · Estante 3', 'LR2403', '07/2027', 160),
       ],
     },
   ];

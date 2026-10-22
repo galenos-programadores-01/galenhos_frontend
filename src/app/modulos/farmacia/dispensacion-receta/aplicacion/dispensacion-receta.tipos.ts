@@ -11,6 +11,10 @@ export interface MedicamentoDispensacion {
   via: string;
   cantidad: string;
   unidad: string;
+  ubicacion: string;
+  lote: string;
+  vence: string;
+  stock: number;
 }
 
 export interface RecetaDispensacion {
