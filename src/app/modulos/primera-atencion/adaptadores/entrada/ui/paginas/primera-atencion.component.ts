@@ -893,6 +893,9 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   logoInstitucion = '';
   datosInstitucionPa: DatosInstitucionPdf | null = null;
   isSigning = false;
+  /** Edición de una atención ya firmada. El PDF vigente no cambia hasta re-firmar. */
+  modoRectificacion = false;
+  private recetasTocadasRectificacion = new Set<number>();
 
   /** Posición fixed de la lista de sugerencias activa (evita clip por overflow-x). */
   sugerenciaPos: { top: number; left: number; width: number } | null = null;
@@ -1422,7 +1425,56 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   }
 
   continuarAtencion(item: IFilaBackend) {
+    this.modoRectificacion = false;
     void this.abrirAtencion(item, 'continuar');
+  }
+
+  editarAtencionFirmada(item: IFilaBackend) {
+    this.modoRectificacion = true;
+    this.recetasTocadasRectificacion.clear();
+    void this.abrirAtencion(item, 'continuar');
+  }
+
+  private tocarRecetaRectificacion(idReceta: number | null | undefined): void {
+    if (!this.modoRectificacion || idReceta == null || idReceta <= 0) {
+      return;
+    }
+    this.recetasTocadasRectificacion.add(idReceta);
+  }
+
+  /** Ficha siempre. Receta solo si cambió o es nueva. -N solo si ese nombre ya existió. */
+  private async loteRectificacion(docs: DocumentoFirmaPa[]): Promise<DocumentoFirmaPa[]> {
+    const idAtencion = this.idAtencionActivo() ?? 0;
+    let nro = 1;
+    const firmadas = new Set<number>();
+    try {
+      const lista = await this.api.listarDocumentosFirmados(idAtencion);
+      const nroVig = lista.nroEdicionVigente ?? lista.NroEdicionVigente ?? 0;
+      nro = nroVig + 1;
+      for (const d of lista.documentos ?? []) {
+        if ((d.nroEdicion ?? d.NroEdicion ?? 0) !== nroVig) continue;
+        const id = d.idReceta ?? d.IdReceta ?? 0;
+        if (id > 0) firmadas.add(id);
+      }
+    } catch {
+      nro = 1;
+    }
+    const incluir = docs.filter((d) => {
+      if (d.tipo === 'pa') return true;
+      const id = d.idReceta ?? 0;
+      if (id <= 0) return false;
+      if (this.recetasTocadasRectificacion.has(id)) return true;
+      return !firmadas.has(id);
+    });
+    return incluir.map((d) => {
+      const base = d.nombreArchivoSugerido.replace(/\.pdf$/i, '');
+      const yaFirmada = d.tipo !== 'pa' && firmadas.has(d.idReceta ?? 0);
+      const conEdicion = d.tipo === 'pa' || yaFirmada;
+      return {
+        ...d,
+        nombreArchivoSugerido: conEdicion ? `${base}-${nro}.pdf` : `${base}.pdf`,
+      };
+    });
   }
 
   private async abrirAtencion(item: IFilaBackend, modo: 'iniciar' | 'continuar') {
@@ -3514,6 +3566,56 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     this.fichaPdfOrigen = null;
   }
 
+  private async partirHistorialFicha(
+    idAtencion: number,
+    vigentesActuales: VerFichaDocumentoItem[],
+  ): Promise<{ vigentes: VerFichaDocumentoItem[]; historial: VerFichaDocumentoItem[] }> {
+    try {
+      const resp = await this.api.listarDocumentosFirmados(idAtencion);
+      const nro = Number(resp.nroEdicionVigente ?? resp.NroEdicionVigente ?? 0);
+      const filas = resp.documentos ?? [];
+      if (filas.length === 0) {
+        return { vigentes: vigentesActuales, historial: [] };
+      }
+      const mapItem = (row: (typeof filas)[number], reemplazado: boolean): VerFichaDocumentoItem => {
+        const tipoRaw = String(row.TipoDocumento ?? row.tipoDocumento ?? 'PA').toUpperCase();
+        const tipo =
+          tipoRaw === 'MEDICAMENTO' ? 'medicamentos' : tipoRaw === 'EXAMEN' ? 'examen' : 'pa';
+        const idReceta = Number(row.IdReceta ?? row.idReceta ?? 0) || null;
+        const nroEdicion = Number(row.NroEdicion ?? row.nroEdicion ?? 0);
+        const punto = String(row.IdPuntoCarga ?? row.idPuntoCarga ?? '');
+        return {
+          clave: `${nroEdicion}:${tipo}:${idReceta ?? 'pa'}:${punto}`,
+          etiqueta:
+            tipo === 'pa' ? 'Ficha clínica' : tipo === 'medicamentos' ? 'Medicamentos' : 'Examen',
+          tipo,
+          idReceta,
+          nroEdicion,
+          reemplazado,
+        };
+      };
+      const orden = (a: VerFichaDocumentoItem, b: VerFichaDocumentoItem) => {
+        const peso = (t: VerFichaDocumentoItem['tipo']) =>
+          t === 'pa' ? 0 : t === 'medicamentos' ? 1 : 2;
+        return peso(a.tipo) - peso(b.tipo) || a.etiqueta.localeCompare(b.etiqueta, 'es');
+      };
+      const vigentes = filas
+        .filter((row) => Number(row.NroEdicion ?? row.nroEdicion ?? 0) === nro)
+        .map((row) => mapItem(row, false))
+        .sort(orden);
+      const historial = filas
+        .filter((row) => Number(row.NroEdicion ?? row.nroEdicion ?? 0) !== nro)
+        .map((row) => mapItem(row, true))
+        .sort((a, b) => (b.nroEdicion ?? 0) - (a.nroEdicion ?? 0) || orden(a, b));
+      return {
+        vigentes: vigentes.length > 0 ? vigentes : vigentesActuales,
+        historial,
+      };
+    } catch {
+      return { vigentes: vigentesActuales, historial: [] };
+    }
+  }
+
   /**
    * Preferencia: PDF firmado (FTP). Si no hay acceso remoto, regenera
    * el mismo documento (PA / examen / meds) desde datos clínicos de BD.
@@ -3755,6 +3857,12 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       tipo: d.tipo,
       idReceta: d.idReceta,
     }));
+    let historialDocumentos: VerFichaDocumentoItem[] = [];
+    if (firmado) {
+      const partido = await this.partirHistorialFicha(idAtencion, documentos);
+      documentos.splice(0, documentos.length, ...partido.vigentes);
+      historialDocumentos = partido.historial;
+    }
 
     return {
       idAtencion,
@@ -3764,6 +3872,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       firmado,
       ubicacionArchivo,
       documentos,
+      historialDocumentos,
       loteDocumentos: docsLote,
       financiamiento:
         campo(item, [
@@ -4735,6 +4844,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       });
 
       const idReceta = resp.idReceta ?? null;
+      this.tocarRecetaRectificacion(idReceta);
       if (idReceta == null || idReceta <= 0) {
         this.errorMedicamentos =
           'El servidor no devolvió IdReceta al registrar el medicamento.';
@@ -4794,6 +4904,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
           'No se pudo eliminar: faltan datos de cuenta / primera atención.',
         );
       }
+      this.tocarRecetaRectificacion(snapshot.idReceta);
       await this.api.eliminarMedicamento(
         idAtencion,
         snapshot.idReceta,
@@ -4916,13 +5027,16 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
             'No se pudo guardar el borrador antes de firmar.',
         );
       }
+      const loteFirma = this.modoRectificacion
+        ? await this.loteRectificacion(documentos)
+        : documentos;
       const resultado = await this.firmaService.procesarFirmaDigital({
         idAtencion,
         datosPdf: mapearPrimeraAtencionPdfData(this.construirContextoMapperPdfPa()),
         institucion: this.datosInstitucionPa,
         nombreUsuario: this.authService.username() ?? '',
         cargoFirma: this.cargoCompletoFirmantePa,
-        documentos,
+        documentos: loteFirma,
       });
 
       if (!resultado.exito) {
@@ -4939,7 +5053,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       const nFirmados = resultado.cantidadDocumentos ?? nDocs;
       this.modalGlobal.exito(
         nFirmados > 1
-          ? `Se firmaron ${nFirmados} documentos en lote y la primera atención quedó cerrada. Ya no se puede editar.`
+          ? `Se firmaron ${nFirmados} documentos en lote. La ficha vigente es la nueva edición; las anteriores siguen en Ver ficha.`
           : 'La primera atención fue firmada con el DNIe y cerrada. Ya no se puede editar.',
         'Primera atención firmada',
       );
@@ -6386,6 +6500,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       });
 
       const idReceta = resp.idReceta ?? null;
+      this.tocarRecetaRectificacion(idReceta);
       if (idReceta == null || idReceta <= 0) {
         this.errorEx = 'El servidor no devolvió IdReceta al registrar el examen.';
         return;
@@ -6454,6 +6569,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
           'No se pudo eliminar: faltan IdAtencion, IdPrimeraAtencion o cuenta.',
         );
       }
+      this.tocarRecetaRectificacion(snapshot.idReceta);
       await this.api.eliminarExamen(
         idAtencion,
         snapshot.idReceta,
@@ -6749,6 +6865,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
       });
 
       const idReceta = resp.idReceta ?? null;
+      this.tocarRecetaRectificacion(idReceta);
       if (idReceta == null || idReceta <= 0) {
         this.errorProc =
           'El servidor no devolvió IdReceta al registrar el procedimiento.';
@@ -6818,6 +6935,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
           'No se pudo eliminar: faltan IdAtencion, IdPrimeraAtencion o cuenta.',
         );
       }
+      this.tocarRecetaRectificacion(snapshot.idReceta);
       await this.api.eliminarProcedimiento(
         idAtencion,
         snapshot.idReceta,

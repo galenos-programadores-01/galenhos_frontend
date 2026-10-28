@@ -7,6 +7,8 @@ export interface VerFichaDocumentoItem {
   etiqueta: string;
   tipo: 'pa' | 'examen' | 'medicamentos';
   idReceta: number | null;
+  nroEdicion?: number;
+  reemplazado?: boolean;
 }
 
 /** Vista HTML de ficha PA + documentos firmados del encuentro. */
@@ -20,6 +22,8 @@ export interface VerFichaPaVista {
   ubicacionArchivo: string;
   /** Lista UI del lateral (misma clave que loteDocumentos). */
   documentos: VerFichaDocumentoItem[];
+  /** Ediciones anteriores, de la más reciente a la original. */
+  historialDocumentos: VerFichaDocumentoItem[];
   /**
    * Lote completo (ítems de examen/meds) para regenerar PDF si falla el FTP.
    * Misma forma que el armado de firma.

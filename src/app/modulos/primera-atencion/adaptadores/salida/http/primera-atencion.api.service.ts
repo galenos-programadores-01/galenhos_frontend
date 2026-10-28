@@ -45,8 +45,31 @@ export interface PrimeraAtencionIniciarBody {
   tipoAnamnesis?: 'D' | 'I';
 }
 
+export interface DocumentoFirmadoCierreBody {
+  tipoDocumento: 'PA' | 'EXAMEN' | 'MEDICAMENTO';
+  idPuntoCarga?: number | null;
+  idReceta?: number | null;
+  nombreArchivo: string;
+}
+
 export interface PrimeraAtencionCerrarFirmaBody {
   uuidFirma: string;
+  documentos?: DocumentoFirmadoCierreBody[];
+}
+
+export interface DocumentoFirmadoPaApi {
+  NroEdicion?: number;
+  nroEdicion?: number;
+  TipoDocumento?: string;
+  tipoDocumento?: string;
+  IdPuntoCarga?: number | null;
+  idPuntoCarga?: number | null;
+  IdReceta?: number | null;
+  idReceta?: number | null;
+  NombreArchivo?: string;
+  nombreArchivo?: string;
+  UbicacionArchivo?: string;
+  ubicacionArchivo?: string;
 }
 
 export interface PrimeraAtencionCerrarFirmaResponse {
@@ -101,6 +124,16 @@ export class PrimeraAtencionApiService {
     return this.apiClient.request<PrimeraAtencionIniciarResponse>(
       `/api/v1/primera-atencion/${idAtencion}`,
       { method: 'PATCH', body: JSON.stringify(payload) },
+    );
+  }
+
+  listarDocumentosFirmados(idAtencion: number): Promise<{
+    nroEdicionVigente?: number;
+    NroEdicionVigente?: number;
+    documentos?: DocumentoFirmadoPaApi[];
+  }> {
+    return this.apiClient.request(
+      `/api/v1/primera-atencion/${idAtencion}/documentos-firmados`,
     );
   }
 

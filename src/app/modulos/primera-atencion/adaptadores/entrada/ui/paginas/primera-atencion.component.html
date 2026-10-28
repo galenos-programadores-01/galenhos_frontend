@@ -132,6 +132,10 @@
                         style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: transparent; color: #263c7a; border: 1px solid #263c7a; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
                   Ver ficha
                 </button>
+                <button type="button" (click)="editarAtencionFirmada(p)"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #263c7a; color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                  Editar
+                </button>
               }
               @default {
                 <button type="button" (click)="iniciarAtencion(p)"
@@ -2200,6 +2204,31 @@
                     </li>
                   }
                 </ul>
+                @if (fichaVista.historialDocumentos.length > 0) {
+                  <p class="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    Historial
+                  </p>
+                  <ul class="px-2 pb-3 space-y-1">
+                    @for (doc of fichaVista.historialDocumentos; track doc.clave) {
+                      <li>
+                        <button
+                          type="button"
+                          class="w-full text-left px-3 py-2 rounded-md text-[12.5px] border bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100 cursor-pointer"
+                          [class.bg-[#0d9488]]="fichaDocActivo?.clave === doc.clave"
+                          [class.text-white]="fichaDocActivo?.clave === doc.clave"
+                          [class.border-[#0d9488]]="fichaDocActivo?.clave === doc.clave"
+                          (click)="seleccionarDocumentoFicha(doc); $event.stopPropagation()"
+                        >
+                          <span class="font-semibold block leading-snug">{{ doc.etiqueta }}</span>
+                          <span class="text-[10px] uppercase tracking-wide text-slate-500">
+                            Edición {{ doc.nroEdicion === 0 ? 'original' : doc.nroEdicion }}
+                            @if (doc.reemplazado) { · reemplazado }
+                          </span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
               </aside>
               <div class="flex-1 min-w-0 min-h-[50vh] relative bg-slate-200 flex flex-col">
                 @if (fichaPdfOrigen === 'copia' && fichaPdfUrl && !fichaPdfCargando) {

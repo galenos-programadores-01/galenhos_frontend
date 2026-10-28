@@ -141,6 +141,17 @@ export class PrimeraAtencionFirmaService {
     try {
       const cierre = await this.api.cerrarFirma(contexto.idAtencion, {
         uuidFirma: resultadoFirma.uuid,
+        documentos: pdfs.map((p) => ({
+          tipoDocumento:
+            p.documento.tipo === 'pa'
+              ? 'PA'
+              : p.documento.tipo === 'medicamentos'
+                ? 'MEDICAMENTO'
+                : 'EXAMEN',
+          idPuntoCarga: p.documento.idPuntoCarga,
+          idReceta: p.documento.idReceta,
+          nombreArchivo: p.documento.nombreArchivoSugerido,
+        })),
       });
       return {
         exito: true,
