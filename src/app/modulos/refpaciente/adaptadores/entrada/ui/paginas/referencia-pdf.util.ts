@@ -6,6 +6,15 @@ import type {
 
 const AMARILLO: [number, number, number] = [250, 250, 218];
 
+// Logo institucional. El PNG debe estar en public/ del frontend
+// (public/logo-minsa.png) para servirse en la raíz del sitio.
+const ARCHIVO_LOGO_MENSA = 'logo-minsa.png';
+
+// Ancho máximo (en px) al que se reduce el logo antes de incrustarlo.
+// El logo se imprime a 26 mm, así que 600 px sobran con creces y el PDF
+// se mantiene pequeño.
+const ANCHO_MAXIMO_LOGO_PX = 600;
+
 interface UbigeoHoja {
   departamento?: string;
   provincia?: string;
@@ -35,6 +44,61 @@ interface OpcionMarca {
 
 function s(valor: string | null | undefined): string {
   return valor ?? '';
+}
+
+// Carga el logo institucional y lo devuelve como bytes para incrustarlo en el
+// PDF. jsPDF no acepta data URLs en addImage/getImageProperties, por eso se
+// pasa el Uint8Array crudo. La imagen se reduce al tamaño en que se imprime
+// para no inflar el PDF (un PNG de 500 KB lo convertía en un PDF de 2 MB).
+async function cargarLogoBytes(
+  ruta: string,
+  anchoMaximo: number,
+): Promise<Uint8Array | null> {
+  try {
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), 5000);
+    let respuesta: Response;
+    try {
+      respuesta = await fetch(ruta, { signal: controlador.signal });
+    } finally {
+      clearTimeout(temporizador);
+    }
+    const tipo = respuesta.headers.get('content-type') ?? '';
+    if (!respuesta.ok || !tipo.startsWith('image/')) return null;
+    const blob = await respuesta.blob();
+
+    try {
+      if (
+        typeof createImageBitmap === 'function' &&
+        typeof OffscreenCanvas !== 'undefined'
+      ) {
+        const bitmap = await createImageBitmap(blob);
+        try {
+          if (bitmap.width > anchoMaximo) {
+            const escala = anchoMaximo / bitmap.width;
+            const lienzo = new OffscreenCanvas(
+              Math.round(bitmap.width * escala),
+              Math.round(bitmap.height * escala),
+            );
+            const contexto = lienzo.getContext('2d');
+            if (contexto) {
+              contexto.drawImage(bitmap, 0, 0, lienzo.width, lienzo.height);
+              const salida = await lienzo.convertToBlob({ type: 'image/png' });
+              return new Uint8Array(await salida.arrayBuffer());
+            }
+          }
+        } finally {
+          bitmap.close?.();
+        }
+      }
+    } catch {
+      // Si no se puede reducir, se usa la imagen original.
+    }
+
+    return new Uint8Array(await blob.arrayBuffer());
+  } catch {
+    return null;
+  }
 }
 
 function descripcionServicioUps(
@@ -202,6 +266,9 @@ export async function construirPdfHojaReferencia(
   const ancho = pageW - margenIzq - margenDer;
   let y = 8;
 
+  const rutaLogo = new URL(ARCHIVO_LOGO_MENSA, document.baseURI).toString();
+  const logoMinsa = await cargarLogoBytes(rutaLogo, ANCHO_MAXIMO_LOGO_PX);
+
   const paciente = item.paciente ?? {};
   const ref = item.datos_referencia ?? {};
   const fecha = desglosarFecha(ref.fecha_referencia);
@@ -216,22 +283,27 @@ export async function construirPdfHojaReferencia(
     const filas = opciones.length;
     const paso = filas > 0 ? (alto - 1) / filas : 0;
     const lado = 2.4;
-    let top = y + 1;
+    // Con una sola opción se centra verticalmente; con varias se reparten.
+    let top = filas === 1 ? y + (alto - lado) / 2 : y + 1;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6);
     doc.setTextColor(0);
     for (const opcion of opciones) {
-      doc.setLineWidth(0.3);
-      doc.rect(x + 1, top, lado, lado);
-      if (opcion.marca) {
-        doc.line(x + 1.4, top + 0.4, x + 1 + lado - 0.4, top + lado - 0.4);
-        doc.line(x + 1 + lado - 0.4, top + 0.4, x + 1.4, top + lado - 0.4);
+      const texto = opcion.texto.toUpperCase();
+      const anchoTexto = doc.getTextWidth(texto);
+      let cajaX = x + 1;
+      if (alinear === 'centro') {
+        const contenido = lado + 1 + anchoTexto;
+        cajaX = x + Math.max(0.8, (anchoCelda - contenido) / 2);
       }
-      const tx =
-        alinear === 'centro'
-          ? x + (anchoCelda + lado) / 2 + 0.5
-          : x + 1 + lado + 1;
-      doc.text(opcion.texto.toUpperCase(), tx, top + 2.4);
+      const textoX = cajaX + lado + 1;
+      doc.setLineWidth(0.3);
+      doc.rect(cajaX, top, lado, lado);
+      if (opcion.marca) {
+        doc.line(cajaX + 0.4, top + 0.4, cajaX + lado - 0.4, top + lado - 0.4);
+        doc.line(cajaX + lado - 0.4, top + 0.4, cajaX + 0.4, top + lado - 0.4);
+      }
+      doc.text(texto, textoX, top + 2.4);
       top += paso;
     }
   }
@@ -315,18 +387,73 @@ export async function construirPdfHojaReferencia(
     y += altura;
   }
 
+  // Alto necesario para que un texto entre completo en una celda, según el
+  // ajuste de línea que usa dibujarFila (ancho - 2, interlineado 0.42).
+  function altoTexto(
+    texto: string,
+    anchoCelda: number,
+    tamano: number,
+  ): number {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(tamano);
+    const lineas = doc.splitTextToSize(
+      texto.trim().toUpperCase(),
+      Math.max(anchoCelda - 2, 1),
+    ) as string[];
+    return lineas.length * tamano * 0.42 + 2.5;
+  }
+
+  // Reduce el tamaño de fuente lo justo para que el texto no exceda altoMaximo.
+  function ajustarTamanoTexto(
+    texto: string,
+    anchoCelda: number,
+    tamanoBase: number,
+    altoMaximo: number,
+  ): number {
+    let tamano = tamanoBase;
+    while (tamano > 4.5 && altoTexto(texto, anchoCelda, tamano) > altoMaximo) {
+      tamano -= 0.25;
+    }
+    return tamano;
+  }
+
   // Cabecera
-  doc.setFillColor(192, 57, 43);
-  doc.roundedRect(margenIzq, y, 8, 8, 1.5, 1.5, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(0);
-  doc.text('PERÚ', margenIzq + 11, y + 3);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
-  doc.text('Ministerio de Salud', margenIzq + 11, y + 6.5);
-  doc.setLineWidth(0.5);
   const xTitulo = margenIzq + 27;
+  let logoDibujado = false;
+  if (logoMinsa) {
+    try {
+      const props = doc.getImageProperties(logoMinsa);
+      const cajaAlto = 8;
+      const cajaAncho = xTitulo - margenIzq - 1;
+      const escala = Math.min(cajaAncho / props.width, cajaAlto / props.height);
+      const anchoLogo = props.width * escala;
+      const altoLogo = props.height * escala;
+      doc.addImage(
+        logoMinsa,
+        'PNG',
+        margenIzq,
+        y + (cajaAlto - altoLogo) / 2,
+        anchoLogo,
+        altoLogo,
+      );
+      logoDibujado = true;
+    } catch {
+      // Si el logo no se puede incrustar, se usa el encabezado de respaldo.
+      logoDibujado = false;
+    }
+  }
+  if (!logoDibujado) {
+    doc.setFillColor(192, 57, 43);
+    doc.roundedRect(margenIzq, y, 8, 8, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(0);
+    doc.text('PERÚ', margenIzq + 11, y + 3);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text('Ministerio de Salud', margenIzq + 11, y + 6.5);
+  }
+  doc.setLineWidth(0.5);
   doc.rect(xTitulo, y, pageW - margenDer - xTitulo, 8);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
@@ -376,7 +503,6 @@ export async function construirPdfHojaReferencia(
         ancho: wSis,
         texto: s(ref.tipo_financiador) || 'S.I.S',
         tipo: 'valor',
-        alinear: 'centro',
       },
       { ancho: wNro, texto: 'Nro. hoja referencia', tipo: 'etiqueta' },
     ],
@@ -386,9 +512,9 @@ export async function construirPdfHojaReferencia(
 
   dibujarFila(
     [
-      { ancho: wTriada[0], texto: fecha.d, tipo: 'valor', alinear: 'centro' },
-      { ancho: wTriada[1], texto: fecha.m, tipo: 'valor', alinear: 'centro' },
-      { ancho: wTriada[2], texto: fecha.a, tipo: 'valor', alinear: 'centro' },
+      { ancho: wTriada[0], texto: fecha.d, tipo: 'valor' },
+      { ancho: wTriada[1], texto: fecha.m, tipo: 'valor' },
+      { ancho: wTriada[2], texto: fecha.a, tipo: 'valor' },
       { ancho: wHora, texto: '', tipo: 'vacia' },
       { ancho: wHoraVal, texto: '', tipo: 'vacia' },
       { ancho: wEntidad, texto: 'Codigo del asegurado', tipo: 'etiqueta' },
@@ -396,13 +522,11 @@ export async function construirPdfHojaReferencia(
         ancho: wSis,
         texto: s(paciente.numero_seguro),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: wNro,
         texto: s(ref.numero_referencia),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
     7,
@@ -437,9 +561,7 @@ export async function construirPdfHojaReferencia(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(0);
-  doc.text(horaTexto, xHoraVal + wHoraVal / 2, yIniDatos + 8, {
-    align: 'center',
-  });
+  doc.text(horaTexto, xHoraVal + 1.2, yIniDatos + 8);
 
   const cu8Est = ancho / 8;
   const cCodIp = cu8Est;
@@ -455,7 +577,7 @@ export async function construirPdfHojaReferencia(
         tipo: 'etiqueta',
       },
     ],
-    6,
+    5,
   );
 
   const establecimientoOrigen = resolverEstablecimiento(
@@ -469,28 +591,24 @@ export async function construirPdfHojaReferencia(
         ancho: cCodIp,
         texto: establecimientoOrigen.codigoIpress,
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cEstab,
         texto: establecimientoOrigen.nombre,
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cCodIp,
         texto: CODIGO_IPRESS_REFERENCIA,
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cEstab,
         texto: NOMBRE_ESTABLECIMIENTO_REFERENCIA,
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
-    9,
+    6,
   );
 
   dibujarFila(
@@ -506,7 +624,7 @@ export async function construirPdfHojaReferencia(
         tipo: 'etiqueta',
       },
     ],
-    5,
+    4.5,
   );
 
   dibujarFila(
@@ -515,16 +633,14 @@ export async function construirPdfHojaReferencia(
         ancho: cCodIp + cEstab,
         texto: descripcionServicioUps(ref.servicio_origen, ups),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cCodIp + cEstab,
         texto: descripcionServicioUps(ref.servicio_destino, ups),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
-    7,
+    5.5,
   );
 
   // 2.- IDENTIFICACIÓN DEL PACIENTE
@@ -562,7 +678,6 @@ export async function construirPdfHojaReferencia(
         ancho: cu8,
         texto: s(paciente.numero_documento),
         tipo: 'valor',
-        alinear: 'centro',
       },
       { ancho: cu8 * 3, texto: s(paciente.nombres), tipo: 'valor' },
       { ancho: cu8 * 2, texto: s(paciente.primer_apellido), tipo: 'valor' },
@@ -588,19 +703,16 @@ export async function construirPdfHojaReferencia(
         ancho: cu8 * 2,
         texto: s(paciente.fecha_nacimiento),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cu8 * 2,
         texto: calcularEdad(paciente.fecha_nacimiento),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cu8,
         texto: mapearSexo(paciente.sexo),
         tipo: 'valor',
-        alinear: 'centro',
       },
       { ancho: cu8 * 2, texto: s(paciente.celular), tipo: 'valor' },
       { ancho: cu8, texto: '', tipo: 'valor' },
@@ -625,19 +737,16 @@ export async function construirPdfHojaReferencia(
         ancho: cu8 * 1.2,
         texto: s(ubigeo?.departamento),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cu8 * 1.4,
         texto: s(ubigeo?.provincia),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: cu8 * 1.4,
         texto: s(ubigeo?.distrito),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
     7,
@@ -660,6 +769,8 @@ export async function construirPdfHojaReferencia(
   const wYellow = cu9 * 1.5;
   const wResto = ancho - wYellow;
 
+  const textoAnamnesis = s(ref.resume_anamnesis);
+  const tamAnamnesis = ajustarTamanoTexto(textoAnamnesis, wResto, 7, 24);
   dibujarFila(
     [
       {
@@ -670,15 +781,23 @@ export async function construirPdfHojaReferencia(
       },
       {
         ancho: wResto,
-        texto: s(ref.resume_anamnesis),
+        texto: textoAnamnesis,
         tipo: 'valor',
-        alinear: 'centro',
+        tamano: tamAnamnesis,
       },
     ],
-    12,
+    Math.max(12, Math.min(24, altoTexto(textoAnamnesis, wResto, tamAnamnesis))),
   );
 
-  const altoExfisico = 6 + 10;
+  const textoExfisico = s(ref.resume_exfisico);
+  const altoVitales = 6;
+  const tamExfisico = ajustarTamanoTexto(textoExfisico, wResto, 7, 18);
+  const altoExfValor = Math.max(
+    10,
+    Math.min(18, altoTexto(textoExfisico, wResto, tamExfisico)),
+  );
+  const altoExfisico = altoVitales + altoExfValor;
+
   doc.setFillColor(AMARILLO[0], AMARILLO[1], AMARILLO[2]);
   doc.rect(margenIzq, y, wYellow, altoExfisico, 'F');
   doc.rect(margenIzq, y, wYellow, altoExfisico);
@@ -697,23 +816,28 @@ export async function construirPdfHojaReferencia(
     });
   });
 
-  const vitales: { label: string; anchoLabel: number }[] = [
-    { label: '(T°)', anchoLabel: 0.85 * cu9 },
-    { label: '(PA)', anchoLabel: 0.85 * cu9 },
-    { label: '(FR)', anchoLabel: 0.85 * cu9 },
-    { label: '(FC)', anchoLabel: 0.85 * cu9 },
-  ];
+  // Signos vitales: cada par etiqueta/valor ocupa exactamente wResto para
+  // quedar alineado al margen derecho de la hoja.
+  const etiquetasVitales = ['(T°)', '(PA)', '(FR)', '(FC)'];
+  const anchoParVital = wResto / etiquetasVitales.length;
+  const anchoLabelVital = anchoParVital * 0.45;
+  const anchoValorVital = anchoParVital - anchoLabelVital;
   dibujarFila(
-    vitales.flatMap((v) => [
+    etiquetasVitales.flatMap((label) => [
       {
-        ancho: v.anchoLabel,
-        texto: v.label,
-        tipo: 'etiqueta',
-        alinear: 'centro',
+        ancho: anchoLabelVital,
+        texto: label,
+        tipo: 'etiqueta' as const,
+        alinear: 'centro' as const,
       },
-      { ancho: 1 * cu9, texto: '', tipo: 'valor', alinear: 'centro' },
+      {
+        ancho: anchoValorVital,
+        texto: '',
+        tipo: 'valor' as const,
+        alinear: 'centro' as const,
+      },
     ]),
-    6,
+    altoVitales,
     margenIzq + wYellow,
   );
 
@@ -721,16 +845,16 @@ export async function construirPdfHojaReferencia(
     [
       {
         ancho: wResto,
-        texto: s(ref.resume_exfisico),
+        texto: textoExfisico,
         tipo: 'valor',
-        alinear: 'centro',
+        tamano: tamExfisico,
       },
     ],
-    10,
+    altoExfValor,
     margenIzq + wYellow,
   );
 
-  const altoAux = 5 + 10;
+  const altoAux = 5 + 16;
   doc.setFillColor(AMARILLO[0], AMARILLO[1], AMARILLO[2]);
   doc.rect(margenIzq, y, wYellow, altoAux, 'F');
   doc.rect(margenIzq, y, wYellow, altoAux);
@@ -771,22 +895,19 @@ export async function construirPdfHojaReferencia(
         ancho: wAuxResto * 0.3,
         texto: s(item.cpt_procedimiento),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: wAuxResto * 0.3,
         texto: s(item.cpt_laboratorio),
         tipo: 'valor',
-        alinear: 'centro',
       },
       {
         ancho: wAuxResto * 0.4,
         texto: s(item.cpt_imagenes),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
-    10,
+    16,
     margenIzq + wYellow,
   );
 
@@ -802,7 +923,6 @@ export async function construirPdfHojaReferencia(
         ancho: wResto,
         texto: diagnosticosTexto(item),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
     8,
@@ -820,7 +940,6 @@ export async function construirPdfHojaReferencia(
         ancho: wResto,
         texto: s(item.tratamiento),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
     11,
@@ -852,12 +971,11 @@ export async function construirPdfHojaReferencia(
         ancho: cu6 * 2.5,
         texto: s(ref.motivo_referencia),
         tipo: 'valor',
-        alinear: 'centro',
       },
       { ancho: cu6, texto: 'Nota / observaciones', tipo: 'etiqueta' },
       { ancho: cu6, texto: '', tipo: 'valor' },
     ],
-    8,
+    6.5,
   );
 
   dibujarFila(
@@ -871,7 +989,7 @@ export async function construirPdfHojaReferencia(
       { ancho: cu6 * 3.5, texto: '', tipo: 'valor' },
       { ancho: cu6, texto: '', tipo: 'valor' },
     ],
-    7,
+    5.5,
   );
 
   dibujarFila(
@@ -886,10 +1004,9 @@ export async function construirPdfHojaReferencia(
         ancho: cu6 * 4.5,
         texto: s(ref.codigo_especialidad),
         tipo: 'valor',
-        alinear: 'centro',
       },
     ],
-    7,
+    5.5,
   );
 
   const estado = condicionMarcas(ref.condicion);

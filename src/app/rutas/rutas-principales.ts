@@ -1,4 +1,4 @@
-import type { Routes } from '@angular/router';
+﻿import type { Routes } from '@angular/router';
 import { ContenedorPrincipal } from '../compartido/ui/contenedor-principal/contenedor-principal';
 import { PaginaConstruccionComponent } from '../compartido/ui/pagina-construccion/pagina-construccion';
 import { LoginComponent } from '../modulos/auth/adaptadores/entrada/ui/paginas/login.component';
@@ -109,7 +109,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/configuracion/adaptadores/entrada/ui/paginas/configuracion.component'
           ).then((m) => m.ConfiguracionComponent),
-        data: { title: 'Configuración' },
+        data: { title: 'ConfiguraciÃ³n' },
       },
       {
         path: 'hospitalizacion',
@@ -117,7 +117,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/evolucion-medica/componentes/evolucion-raiz/evolucion-raiz'
           ).then((m) => m.EvolucionRaizComponent),
-        data: { title: 'Evolución Médica' },
+        data: { title: 'EvoluciÃ³n MÃ©dica' },
       },
       {
         path: 'dashrefcon',
@@ -144,6 +144,14 @@ export const rutasPrincipales: Routes = [
         data: { title: 'Lista de Espera QX' },
       },
       {
+        path: 'AdmisionHospitalizacion',
+        loadComponent: () =>
+          import(
+            '../modulos/Hospitalizacion/Admision/admision-hospitalizacion.component'
+          ).then((m) => m.AdmisionHospitalizacionComponent),
+        data: { title: 'Admisión a Hospitalización' },
+      },
+      {
         path: 'BandejaRef',
         loadComponent: () =>
           import(
@@ -157,7 +165,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/catalogos/bienes-insumos/adaptadores/entrada/ui/paginas/bienes-insumos-lista/bienes-insumos-lista.component'
           ).then((m) => m.BienesInsumosListaComponent),
-        data: { title: 'Catálogo de Bienes e Insumos' },
+        data: { title: 'CatÃ¡logo de Bienes e Insumos' },
       },
       {
         path: 'bienes-insumos',
@@ -180,7 +188,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/catalogos/servicios/adaptadores/entrada/ui/paginas/servicios-lista/servicios-lista.component'
           ).then((m) => m.ServiciosListaComponent),
-        data: { title: 'Catálogo de Servicios y Tarifario' },
+        data: { title: 'CatÃ¡logo de Servicios y Tarifario' },
       },
       {
         path: 'catalogo-servicios',
@@ -246,7 +254,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/atencion-ce/adaptadores/entrada/ui/paginas/atencion-ce-cola/atencion-ce-cola.component'
           ).then((m) => m.AtencionCeColaComponent),
-        data: { title: 'Atención Médica CE' },
+        data: { title: 'AtenciÃ³n MÃ©dica CE' },
       },
       {
         path: 'atencion-ce/:id',
@@ -254,7 +262,7 @@ export const rutasPrincipales: Routes = [
           import(
             '../modulos/atencion-ce/adaptadores/entrada/ui/paginas/atencion-ce-ficha/atencion-ce-ficha.component'
           ).then((m) => m.AtencionCeFichaComponent),
-        data: { title: 'Ficha Médica CE' },
+        data: { title: 'Ficha MÃ©dica CE' },
       },
       {
         path: 'consulta-externa',
@@ -269,9 +277,13 @@ export const rutasPrincipales: Routes = [
       {
         path: '**',
         component: PaginaConstruccionComponent,
-        data: { title: 'Módulo en desarrollo' },
+        data: { title: 'MÃ³dulo en desarrollo' },
       },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
 ];
+
+
+
+

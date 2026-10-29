@@ -12,13 +12,25 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
       <div>
         <label for="dashrefcon-fecha-inicio" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha inicio</label>
-        <input autocomplete="off" id="dashrefcon-fecha-inicio" type="date" [value]="fechaInicio" (change)="fechaInicio = $any($event.target).value"
-               style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        <div style="position: relative;">
+          <input #fechaInicioInput autocomplete="off" id="dashrefcon-fecha-inicio" type="date" class="campo-fecha" [value]="fechaInicio" (change)="fechaInicio = $any($event.target).value"
+                 style="width: 100%; padding: 9px 40px 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <button type="button" (click)="abrirCalendario(fechaInicioInput)" title="Abrir calendario"
+                  style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; background: transparent; color: #263c7a; cursor: pointer; border-radius: 8px;">
+            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          </button>
+        </div>
       </div>
       <div>
         <label for="dashrefcon-fecha-fin" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Fecha fin</label>
-        <input autocomplete="off" id="dashrefcon-fecha-fin" type="date" [value]="fechaFin" (change)="fechaFin = $any($event.target).value"
-               style="width: 100%; padding: 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+        <div style="position: relative;">
+          <input #fechaFinInput autocomplete="off" id="dashrefcon-fecha-fin" type="date" class="campo-fecha" [value]="fechaFin" (change)="fechaFin = $any($event.target).value"
+                 style="width: 100%; padding: 9px 40px 9px 14px; border: 1px solid #d5dceb; border-radius: 11px; font-size: 14px; background: #f8fafc; color: #07153a;" />
+          <button type="button" (click)="abrirCalendario(fechaFinInput)" title="Abrir calendario"
+                  style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; background: transparent; color: #263c7a; cursor: pointer; border-radius: 8px;">
+            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          </button>
+        </div>
       </div>
       <div>
         <label for="dashrefcon-estado" style="display: block; font-size: 12px; font-weight: 600; color: #54617f; margin-bottom: 6px;">Estado</label>
@@ -30,10 +42,10 @@
           }
         </select>
       </div>
-      <button type="button" (click)="buscar()" [disabled]="buscando"
+      <button type="button" (click)="buscar()" [disabled]="buscando()"
               style="display: flex; align-items: center; gap: 7px; height: 42px; padding: 0 20px; background: #263c7a; color: #fff; border: none; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;"
-              [style.opacity]="buscando ? 0.7 : 1">
-        @if (buscando) {
+              [style.opacity]="buscando() ? 0.7 : 1">
+        @if (buscando()) {
           <svg aria-hidden="true" style="animation: gp-spin 1s linear infinite;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
           <span>Buscando...</span>
         } @else {
@@ -43,16 +55,55 @@
       </button>
     </div>
 
-    @if (error) {
+    @if (error()) {
       <div style="margin-top: 14px; background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
-        {{ error }}
+        {{ error() }}
       </div>
     }
 
-    @if (resultado) {
+    @if (resultado()) {
       <div style="margin-top: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 13px; font-weight: 500; padding: 10px 13px; border-radius: 11px;">
-        {{ resultado }}
+        {{ resultado() }}
       </div>
     }
   </div>
+
+  @if (hayDatos()) {
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+      <div style="background: #fff; border: 1px solid #e6eaf2; border-left: 4px solid #263c7a; border-radius: 14px; padding: 14px 16px;">
+        <div style="font-size: 12px; font-weight: 700; color: #54617f; text-transform: uppercase; letter-spacing: .3px;">Total</div>
+        <div style="font-size: 26px; font-weight: 800; color: #07153a; margin-top: 4px;">{{ totalGeneral().toLocaleString('es-PE') }}</div>
+        <div style="font-size: 11.5px; color: #94a0bd; margin-top: 2px;">referencias / contrarreferencias</div>
+      </div>
+      @for (item of resumen(); track item.estado) {
+        <div style="background: #fff; border: 1px solid #e6eaf2; border-left: 4px solid {{ item.color }}; border-radius: 14px; padding: 14px 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: #54617f; text-transform: uppercase; letter-spacing: .3px;">{{ item.estado }}</div>
+          <div style="font-size: 26px; font-weight: 800; color: #07153a; margin-top: 4px;">{{ item.total.toLocaleString('es-PE') }}</div>
+          <div style="font-size: 11.5px; color: #94a0bd; margin-top: 2px;">{{ item.porcentaje }}% del total</div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (hayDatos()) {
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <app-grafico-barras
+        titulo="Referencias por mes"
+        subtitulo="Cantidad agrupada por estado"
+        [categorias]="barCategorias()"
+        [series]="barSeries()"
+        [horizontal]="false"
+        [cargando]="buscando()"
+        unidad="referencias">
+      </app-grafico-barras>
+
+      <app-grafico-dona
+        titulo="Distribución por estado"
+        subtitulo="Cantidad según estado de la referencia"
+        [datos]="donaDatos()"
+        radioInterno="0%"
+        [cargando]="buscando()">
+      </app-grafico-dona>
+    </div>
+  }
 </div>

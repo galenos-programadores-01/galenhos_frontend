@@ -38,6 +38,13 @@ export class ApiClientService {
       return `http://${hostname}:8080`;
     }
 
+    // Cuando se accede por IP de la red local (p. ej. ng serve --host 0.0.0.0),
+    // la API vive en el mismo host en el puerto 8080. Si el frontend se sirve
+    // desde el propio backend (mismo puerto), se usa el origen tal cual.
+    if (window.location.port && window.location.port !== '8080') {
+      return `http://${hostname}:8080`;
+    }
+
     return origin;
   }
 

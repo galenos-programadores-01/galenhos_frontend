@@ -24,6 +24,62 @@ export interface ICatalogoNombre {
   nombre: string;
 }
 
+export interface IServicioAtencion extends ICatalogoNombre {
+  idEspecialidad?: number;
+}
+
+export interface IEstablecimientoBusqueda {
+  idEstablecimiento: number;
+  codigo?: string;
+  nombre?: string;
+  distrito?: string;
+  provincia?: string;
+  departamento?: string;
+  nombreLargo?: string;
+}
+
+export interface IMedico {
+  idMedico: number;
+  nombreCompleto?: string;
+  especialidad?: string;
+  [columna: string]: unknown;
+}
+
+export interface ICamaDisponible {
+  idCama?: number;
+  estado?: string;
+  cama?: string;
+  nroHistoriaClinica?: string;
+  paciente?: string;
+}
+
+export interface IDiagnosticoBusqueda {
+  idDiagnostico: number;
+  codigoCIE10?: string;
+  descripcion?: string;
+  descripcionLarga?: string;
+}
+
+export interface ISubclasificacionDxItem {
+  idSubclasificacionDx: number;
+  descripcionCorta?: string;
+  descripcionLarga?: string;
+}
+
+// Respuesta de GET /api/v1/hospitalizacion/reporte-ticket/:idCuenta
+// (SP usp_go_GenererReporteTicketHospi): datos para el ticket de admisión.
+export interface IReporteTicketHospitalizacion {
+  paciente: string;
+  nroHistoriaClinica: string;
+  nroDocumento: string;
+  idCuentaAtencion: number;
+  servicio: string;
+  medico: string;
+  fecha: string | null;
+  hora: string;
+  iafa: string;
+}
+
 export interface IFuenteFinanciamiento {
   idFuenteFinanciamiento: number;
   descripcion?: string;

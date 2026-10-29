@@ -1,11 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '../api-client/api-client.service';
 import type {
+  ICamaDisponible,
   ICatalogoDescripcion,
   ICatalogoNombre,
+  IEstablecimientoBusqueda,
   IFilaBackend,
   IFuenteFinanciamiento,
+  IMedico,
   IReniecResultado,
+  IServicioAtencion,
 } from '../tipos/api-tipos';
 
 @Injectable({
@@ -129,6 +133,30 @@ export class MaestrosApiService {
   getServicios(idTipoServicio: number | string): Promise<ICatalogoNombre[]> {
     return this.apiClient.request<ICatalogoNombre[]>(
       `/api/v1/servicios/${idTipoServicio}`,
+    );
+  }
+  getOrigenesAtencion(
+    idTipoServicio: number | string,
+  ): Promise<ICatalogoDescripcion[]> {
+    return this.apiClient.request<ICatalogoDescripcion[]>(
+      `/api/v1/origenes/${idTipoServicio}`,
+    );
+  }
+  getMedicosPorEspecialidad(
+    idEspecialidad: number | string,
+  ): Promise<IMedico[]> {
+    return this.apiClient.request<IMedico[]>(
+      `/api/v1/triaje/medicos/${idEspecialidad}`,
+    );
+  }
+  getEstablecimientos(filtro: string): Promise<IEstablecimientoBusqueda[]> {
+    return this.apiClient.request<IEstablecimientoBusqueda[]>(
+      `/api/v1/establecimientos?q=${encodeURIComponent(filtro)}&tipo=0`,
+    );
+  }
+  getCamasPorServicio(idServicio: number | string): Promise<ICamaDisponible[]> {
+    return this.apiClient.request<ICamaDisponible[]>(
+      `/api/v1/camas/${idServicio}`,
     );
   }
   getServiciosPorPrioridad(

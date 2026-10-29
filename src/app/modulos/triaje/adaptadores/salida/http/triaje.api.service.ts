@@ -69,6 +69,17 @@ export interface PendientesAdmisionParams {
   idTipoServicio?: number;
 }
 
+// Filtros del endpoint /api/v1/triaje/atenciones-hospitalizacion (SP
+// usp_go_AtencionesHospPorCuentaPorHistoriaPorServicio). La fecha es
+// opcional: si no se envía, el backend manda NULL al @Fecha del SP.
+export interface AtencionesHospitalizacionParams {
+  fecha?: string;
+  idServicio?: number;
+  idCuenta?: number;
+  nroHistoria?: number;
+  nroDocumento?: string;
+}
+
 export interface CrearAdmisionPayload {
   idTriaje: number;
   idPacienteTriaje: number;
@@ -232,6 +243,21 @@ export class TriajeApiService {
       query.append('idTipoServicio', String(params.idTipoServicio));
     return this.apiClient.request<IFilaBackend[]>(
       `/api/v1/triaje/pendientes-admision?${query.toString()}`,
+    );
+  }
+
+  listarAtencionesHospitalizacion(
+    params: AtencionesHospitalizacionParams,
+  ): Promise<IFilaBackend[]> {
+    const query = new URLSearchParams();
+    if (params.fecha) query.append('fecha', params.fecha);
+    if (params.idServicio) query.append('idServicio', String(params.idServicio));
+    if (params.idCuenta) query.append('idCuenta', String(params.idCuenta));
+    if (params.nroHistoria)
+      query.append('nroHistoria', String(params.nroHistoria));
+    if (params.nroDocumento) query.append('nroDocumento', params.nroDocumento);
+    return this.apiClient.request<IFilaBackend[]>(
+      `/api/v1/triaje/atenciones-hospitalizacion?${query.toString()}`,
     );
   }
 

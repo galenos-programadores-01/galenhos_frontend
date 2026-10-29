@@ -78,7 +78,7 @@ export class RegistroTriajeObstetricoService {
     {
       value: '1',
       label: 'Prioridad I',
-      subtitulo: 'Riesgo de muerte inminente (atenci�n inmediata)',
+      subtitulo: 'Riesgo de muerte inminente (atención inmediata)',
       color: '#ef4444',
       opciones: [
         'Sangrado vaginal masivo o signos de shock hipovol�mico (palidez, hipotensi�n, taquicardia)',
@@ -91,7 +91,7 @@ export class RegistroTriajeObstetricoService {
     {
       value: '2',
       label: 'Prioridad II',
-      subtitulo: 'Urgencia mayor (espera m�x. 10 minutos)',
+      subtitulo: 'Urgencia mayor (espera max. 10 minutos)',
       color: '#f97316',
       opciones: [
         'Presión arterial mayor o igual a 140/90 con cefalea o visión borrosa (sospecha de preeclampsia)',
@@ -131,10 +131,10 @@ export class RegistroTriajeObstetricoService {
   opcionesSeleccionadas: Record<string, string[]> = {};
 
   unidadesTiempo = [
-    { value: 'A�os', label: 'A�os' },
+    { value: 'Años', label: 'Años' },
     { value: 'Meses', label: 'Meses' },
     { value: 'Semanas', label: 'Semanas' },
-    { value: 'D�as', label: 'D�as' },
+    { value: 'Días', label: 'Días' },
     { value: 'Horas', label: 'Horas' },
     { value: 'Minutos', label: 'Minutos' },
   ];

@@ -1,0 +1,557 @@
+<ventana-modal titulo="Nuevo Paciente" subtitulo="Busque al paciente por tipo y número de documento" [ancho]="1100" (alCerrar)="cerrar()">
+  <div class="flex flex-col gap-5">
+
+    @if (error) {
+      <div class="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg">
+        {{ error }}
+      </div>
+    }
+
+    <div class="flex items-end gap-4">
+      <label for="tipo-doc-buscar" class="flex flex-col gap-1 w-56">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo de documento</span>
+        <app-select-global id="tipo-doc-buscar" [(ngModel)]="idTipoDoc">
+          @for (t of tiposDocumento; track t.id) {
+            <option [value]="t.id">{{ t.descripcion }}</option>
+          }
+        </app-select-global>
+      </label>
+      @if (esAfiliacion) {
+        <div class="flex items-end gap-3">
+          <label for="afiliacion-disa" class="flex flex-col gap-1">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">DISA</span>
+            <input id="afiliacion-disa" [(ngModel)]="afiliacionDisa" (keydown.enter)="buscar()" maxlength="3" autocomplete="off" placeholder="Disa"
+              class="w-24 px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+          </label>
+          <label for="afiliacion-tipo-formato" class="flex flex-col gap-1">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo de formato</span>
+            <input id="afiliacion-tipo-formato" [(ngModel)]="afiliacionTipoFormato" (keydown.enter)="buscar()" maxlength="1" autocomplete="off" placeholder="Ej: E"
+              class="w-28 px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+          </label>
+          <label for="afiliacion-nro-contrato" class="flex flex-col gap-1">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">N.º de contrato</span>
+            <input id="afiliacion-nro-contrato" [(ngModel)]="afiliacionNroContrato" (keydown)="soloDigitos($event)" (keydown.enter)="buscar()" maxlength="15" autocomplete="off"
+              placeholder="N.º de contrato"
+              class="w-44 px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+          </label>
+        </div>
+      } @else {
+        <label for="nro-doc-buscar" class="flex flex-col gap-1 flex-1 max-w-xs">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">N.º de documento</span>
+          <input id="nro-doc-buscar" [(ngModel)]="nroDocumento" (keydown)="soloDigitos($event)" (keydown.enter)="buscar()" maxlength="12" autocomplete="off" placeholder="DNI, CE, etc."
+            class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+        </label>
+      }
+      <button type="button" (click)="buscar()" [disabled]="buscando"
+        class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 min-w-[110px]">
+        {{ buscando ? 'Buscando…' : 'Buscar' }}
+      </button>
+    </div>
+
+    @if (buscando) {
+      <div class="px-4 py-3 text-sm text-slate-500">Consultando registros…</div>
+    }
+
+    @if (resultado) {
+      <div class="flex items-center gap-2 pt-1">
+        <span class="text-sm font-bold text-slate-800 uppercase">{{ nombreCompleto || 'Paciente' }}</span>
+        @if (resultado.origen === 'reniec') {
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-semibold rounded border border-teal-200 leading-tight">
+            Datos RENIEC
+          </span>
+        } @else if (resultado.origen === 'afiliacion') {
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] font-semibold rounded border border-violet-200 leading-tight">
+            Afiliación SIS
+          </span>
+        } @else {
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-50 text-sky-700 text-[10px] font-semibold rounded border border-sky-200 leading-tight">
+            Base de datos
+          </span>
+        }
+        @if (resultado.historiaClinica) {
+          <span class="text-[11px] text-slate-500 ml-1">Hist. clínica: {{ resultado.historiaClinica }}</span>
+        }
+      </div>
+    }
+
+    @if (afiliacion && afiliacion.estado) {
+      <div class="bg-emerald-50 text-emerald-800 text-sm font-medium px-4 py-3 rounded-lg">
+        Afiliación SIS: {{ afiliacion.estado }}@if (afiliacion.descTipoSeguro) { · {{ afiliacion.descTipoSeguro }} }@if (afiliacion.regimen) { · {{ afiliacion.regimen }} }@if (afiliacion.descEESS) { · {{ afiliacion.descEESS }} }
+      </div>
+    }
+
+    <div class="flex gap-1 border-b border-slate-200">
+      <button type="button" (click)="cambiarTab('identificacion')"
+        [class]="tabActivo === 'identificacion' ? 'px-4 py-2 text-sm font-semibold text-teal-700 border-b-2 border-teal-600 -mb-px' : 'px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent -mb-px'">
+        Identificación
+      </button>
+      <button type="button" (click)="cambiarTab('ingreso')"
+        [class]="tabActivo === 'ingreso' ? 'px-4 py-2 text-sm font-semibold text-teal-700 border-b-2 border-teal-600 -mb-px' : 'px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent -mb-px'">
+        Datos de ingreso
+      </button>
+    </div>
+
+    @if (tabActivo === 'identificacion') {
+    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider pt-1">Identificación</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo de documento <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idDocIdentidad"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (td of tiposDocumento; track td.id) {
+            <option [value]="td.id">{{ td.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">N.º de documento <span class="text-red-500">*</span></span>
+        <input [(ngModel)]="form.nroDocumento" (keydown)="soloDigitos($event)" maxlength="12" autocomplete="off"
+          placeholder="DNI, CE, etc."
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido paterno <span class="text-red-500">*</span></span>
+        <input [(ngModel)]="form.apellidoPaterno" (change)="form.apellidoPaterno = normalizarNombre(form.apellidoPaterno)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido materno <span class="text-red-500">*</span></span>
+        <input [(ngModel)]="form.apellidoMaterno" (change)="form.apellidoMaterno = normalizarNombre(form.apellidoMaterno)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Primer nombre <span class="text-red-500">*</span></span>
+        <input [(ngModel)]="form.primerNombre" (change)="form.primerNombre = normalizarNombre(form.primerNombre)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Segundo nombre</span>
+        <input [(ngModel)]="form.segundoNombre" (change)="form.segundoNombre = normalizarNombre(form.segundoNombre)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tercer nombre</span>
+        <input [(ngModel)]="form.tercerNombre" (change)="form.tercerNombre = normalizarNombre(form.tercerNombre)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha de nacimiento <span class="text-red-500">*</span></span>
+        <input type="date" [(ngModel)]="form.fechaNacimiento" max="2100-12-31" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sexo <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idTipoSexo"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (sx of tiposSexo; track sx.id) {
+            <option [value]="sx.id">{{ sx.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado civil</span>
+        <select [(ngModel)]="form.idEstadoCivil"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (ec of estadosCivil; track ec.id) {
+            <option [value]="ec.id">{{ ec.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Grado de instrucción</span>
+        <select [(ngModel)]="form.idGradoInstruccion"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (gi of gradosInstruccion; track gi.id) {
+            <option [value]="gi.id">{{ gi.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ocupación</span>
+        <select [(ngModel)]="form.idTipoOcupacion"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (oc of ocupaciones; track oc.id) {
+            <option [value]="oc.id">{{ oc.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Etnia <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idEtnia"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (et of etnias; track et.id) {
+            <option [value]="et.id">{{ et.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Idioma <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idIdioma"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (idm of idiomas; track idm.id) {
+            <option [value]="idm.id">{{ idm.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre del padre</span>
+        <input [(ngModel)]="form.nombrePadre" (change)="form.nombrePadre = normalizarNombre(form.nombrePadre)" maxlength="50" autocomplete="off" style="text-transform: uppercase;"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+    </div>
+
+    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider pt-1">Madre tutor</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo de documento</span>
+        <select [(ngModel)]="form.madreTutorIdDocIdentidad"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (td of tiposDocumento; track td.id) {
+            <option [value]="td.id">{{ td.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">N.º de documento</span>
+        <input [(ngModel)]="form.madreTutorNroDocumento" (keydown)="soloDigitos($event)" maxlength="12" autocomplete="off"
+          placeholder="DNI, CE, etc."
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido paterno</span>
+        <input [(ngModel)]="form.madreTutorApellidoPaterno" maxlength="20" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apellido materno</span>
+        <input [(ngModel)]="form.madreTutorApellidoMaterno" maxlength="20" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Primer nombre</span>
+        <input [(ngModel)]="form.madreTutorPrimerNombre" maxlength="20" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Segundo nombre</span>
+        <input [(ngModel)]="form.madreTutorSegundoNombre" maxlength="20" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+    </div>
+
+    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider pt-1">Contacto</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</span>
+        <input [(ngModel)]="form.telefono" (keydown)="soloDigitos($event)" maxlength="15" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Celular</span>
+        <input [(ngModel)]="form.celular" (keydown)="soloDigitos($event)" maxlength="15" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Correo electrónico</span>
+        <input type="email" [(ngModel)]="form.email" maxlength="100" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+    </div>
+
+    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider pt-1">Domicilio</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
+      <label class="flex flex-col gap-1 md:col-span-4 sm:col-span-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dirección</span>
+        <input [(ngModel)]="form.direccionDomicilio" maxlength="200" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">País de domicilio <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idPaisDomicilio"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (pais of paises; track pais.id) {
+            <option [value]="pais.id">{{ pais.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Departamento <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idDepartamentoDomicilio" (change)="onCambioDepartamento()"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (dep of departamentos; track dep.id) {
+            <option [value]="dep.id">{{ dep.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Provincia <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idProvinciaDomicilio" (change)="onCambioProvincia()" [disabled]="!form.idDepartamentoDomicilio"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800 disabled:opacity-50">
+          <option value="">Seleccione…</option>
+          @for (prv of provincias; track prv.id) {
+            <option [value]="prv.id">{{ prv.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Distrito <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="form.idDistritoDomicilio" (change)="onCambioDistrito()" [disabled]="!form.idProvinciaDomicilio"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800 disabled:opacity-50">
+          <option value="">Seleccione…</option>
+          @for (dis of distritos; track dis.id) {
+            <option [value]="dis.id">{{ dis.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Centro poblado / comunidad</span>
+        <select [(ngModel)]="form.idCentroPobladoDomicilio" [disabled]="!form.idDistritoDomicilio"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800 disabled:opacity-50">
+          <option value="">Seleccione…</option>
+          @for (com of comunidades; track com.id) {
+            <option [value]="com.id">{{ com.nombre }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    }
+
+    @if (tabActivo === 'ingreso') {
+    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider pt-1">Datos de ingreso</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Origen <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="ingreso.idOrigen"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (origen of origenes; track origen.id) {
+            <option [value]="origen.id">{{ origen.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Servicio de ingreso <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="ingreso.idServicioIngreso" (ngModelChange)="onCambioServicioIngreso()"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+          <option value="">Seleccione…</option>
+          @for (serv of serviciosIngreso; track serv.id) {
+            <option [value]="serv.id">{{ serv.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1 md:col-span-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cama <span class="text-slate-400 normal-case">(opcional)</span></span>
+        <div class="flex items-center gap-2">
+          <input [(ngModel)]="ingreso.cama" readonly autocomplete="off" placeholder="Seleccione una cama disponible"
+            class="flex-1 px-0 py-2 border-b border-slate-300 bg-transparent text-sm outline-none transition-colors placeholder:text-slate-400 text-slate-800" />
+          <button type="button" (click)="abrirModalCamas()" [disabled]="!ingreso.idServicioIngreso"
+            class="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+            Ver camas
+          </button>
+        </div>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha de ingreso <span class="text-red-500">*</span></span>
+        <input type="date" [(ngModel)]="ingreso.fechaIngreso" max="2100-12-31" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hora de ingreso <span class="text-red-500">*</span></span>
+        <input type="time" [(ngModel)]="ingreso.horaIngreso" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Médico de ingreso <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="ingreso.idMedicoIngreso" [disabled]="!ingreso.idServicioIngreso"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800 disabled:opacity-50">
+          <option value="">Seleccione…</option>
+          @for (medico of medicosIngreso; track medico.idMedico) {
+            <option [value]="medico.idMedico">{{ medico.nombreCompleto || medico.idMedico }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fuente de financiamiento <span class="text-red-500">*</span></span>
+        <select [(ngModel)]="ingreso.idFuenteFinanciamiento" [disabled]="sisIntegrado"
+          [class]="sisIntegrado ? 'w-full px-0 py-2 border-b border-slate-300 bg-slate-100 text-sm outline-none transition-colors text-slate-800 cursor-not-allowed' : 'w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800'">
+          <option value="">Seleccione…</option>
+          @for (fuente of fuentesFinanciamiento; track fuente.idFuenteFinanciamiento) {
+            <option [value]="fuente.idFuenteFinanciamiento">{{ fuente.descripcion }}</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1 relative md:col-span-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Establecimiento de referencia @if (esOrigenReferencia) { <span class="text-red-500">*</span> }</span>
+        <input [(ngModel)]="busquedaEstablecimiento" (ngModelChange)="onBuscarEstablecimiento()" maxlength="120" autocomplete="off"
+          placeholder="Busque por nombre o código"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+        @if (mostrarEstablecimientos && establecimientos.length) {
+          <ul class="absolute top-full left-0 right-0 z-20 mt-1 max-h-56 overflow-auto bg-white border border-slate-200 rounded-lg shadow-lg">
+            @for (establecimiento of establecimientos; track establecimiento.idEstablecimiento) {
+              <li>
+                <button type="button" (click)="seleccionarEstablecimiento(establecimiento)"
+                  class="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">
+                  {{ establecimiento.nombreLargo || establecimiento.nombre }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </label>
+      <label class="flex flex-col gap-1 md:col-span-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">N.º de referencia @if (esOrigenReferencia) { <span class="text-red-500">*</span> }</span>
+        <input [(ngModel)]="ingreso.nroReferencia" maxlength="30" autocomplete="off"
+          class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors" />
+      </label>
+      <div class="md:col-span-4 flex flex-col sm:flex-row sm:items-end gap-3">
+        <label class="flex flex-col gap-1 relative flex-1">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Diagnóstico <span class="text-red-500">*</span></span>
+          <input [ngModel]="diagnosticoFiltro" (ngModelChange)="onDiagnosticoInput($event)" (blur)="cerrarSugerenciasDiagnostico()" autocomplete="off"
+            placeholder="Busque por código o descripción (CIE10)"
+            class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors placeholder:text-slate-400" />
+          @if (buscandoDiagnosticos) {
+            <span class="text-[11px] text-slate-400 pt-1">Buscando diagnósticos…</span>
+          }
+          @if (mostrarDiagnosticos && diagnosticos.length) {
+            <ul class="absolute top-full left-0 right-0 z-20 mt-1 max-h-56 overflow-auto bg-white border border-slate-200 rounded-lg shadow-lg">
+              @for (diag of diagnosticos; track diag.idDiagnostico) {
+                <li>
+                  <button type="button" (click)="seleccionarDiagnostico(diag)"
+                    class="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">
+                    <span class="font-semibold text-slate-800">{{ diag.codigoCIE10 }}</span>
+                    <span class="text-slate-600"> — {{ diag.descripcionLarga || diag.descripcion }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </label>
+        <label class="flex flex-col gap-1 flex-none sm:w-56">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo de diagnóstico</span>
+          <select [(ngModel)]="subclasificacionSeleccionada"
+            class="w-full px-0 py-2 border-b border-slate-300 bg-transparent text-sm focus:border-teal-500 outline-none transition-colors text-slate-800">
+            <option value="">Seleccione…</option>
+            @for (sub of subclasificacionesDx; track sub.idSubclasificacionDx) {
+              <option [value]="sub.idSubclasificacionDx">{{ sub.descripcionCorta || sub.descripcionLarga }}</option>
+            }
+          </select>
+        </label>
+        <div class="flex flex-col gap-1 justify-end flex-none">
+          <button type="button" (click)="agregarDiagnostico()"
+            class="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap">
+            Agregar
+          </button>
+        </div>
+      </div>
+      <div class="md:col-span-4">
+        @if (errorDiagnostico) {
+          <div class="mb-2 text-xs text-red-600 font-medium">{{ errorDiagnostico }}</div>
+        }
+        @if (diagnosticosAgregados.length) {
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="text-left font-semibold px-3 py-2">Código</th>
+                  <th class="text-left font-semibold px-3 py-2">Descripción</th>
+                  <th class="text-left font-semibold px-3 py-2">Tipo</th>
+                  <th class="text-right font-semibold px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (dx of diagnosticosAgregados; track $index) {
+                  <tr class="border-t border-slate-100">
+                    <td class="px-3 py-2 font-semibold text-slate-800">{{ dx.codigoCIE10 }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ dx.descripcion }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ dx.subclasificacion }}</td>
+                    <td class="px-3 py-2 text-right">
+                      <button type="button" (click)="quitarDiagnostico($index)"
+                        class="px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <span class="text-xs text-slate-400">Aún no hay diagnósticos agregados.</span>
+        }
+      </div>
+    </div>
+    }
+
+    @if (errorGuardar) {
+      <div class="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg">
+        {{ errorGuardar }}
+      </div>
+    }
+
+    <div class="flex justify-end gap-3 pt-2">
+      <button type="button" (click)="cerrar()"
+        class="px-4 py-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-colors">
+        Cerrar
+      </button>
+      <button type="button" (click)="guardar()" [disabled]="guardando"
+        class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 min-w-[170px]">
+        {{ guardando ? 'Registrando…' : 'Registrar admisión' }}
+      </button>
+    </div>
+
+  </div>
+</ventana-modal>
+
+@if (mostrarModalCamas) {
+  <ventana-modal titulo="Camas del servicio" subtitulo="Solo se puede seleccionar una cama disponible" [ancho]="760" (alCerrar)="cerrarModalCamas()">
+    <div class="flex flex-col gap-4">
+      @if (errorCamas) {
+        <div class="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg">{{ errorCamas }}</div>
+      }
+
+      @if (cargandoCamas) {
+        <div class="px-4 py-8 text-sm text-slate-500 text-center">Cargando camas…</div>
+      } @else if (!camas.length) {
+        <div class="px-4 py-8 text-sm text-slate-500 text-center">No hay camas registradas para este servicio.</div>
+      } @else {
+        <div class="overflow-hidden rounded-lg border border-slate-200">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+              <tr>
+                <th class="text-left px-4 py-2 font-semibold">Cama</th>
+                <th class="text-left px-4 py-2 font-semibold">Estado</th>
+                <th class="text-left px-4 py-2 font-semibold">Paciente</th>
+                <th class="text-left px-4 py-2 font-semibold">Hist. clínica</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cama of camas; track $index) {
+                <tr (click)="seleccionarCama(cama)"
+                  [class]="esCamaDisponible(cama) ? 'cursor-pointer hover:bg-teal-50 border-t border-slate-100' : 'border-t border-slate-100 opacity-50 cursor-not-allowed'">
+                  <td class="px-4 py-2 font-semibold text-slate-800">{{ cama.cama || '—' }}</td>
+                  <td class="px-4 py-2">
+                    <span [class]="esCamaDisponible(cama) ? 'inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200' : 'inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200'">
+                      {{ cama.estado || '—' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2 text-slate-700">{{ cama.paciente || '—' }}</td>
+                  <td class="px-4 py-2 text-slate-500">{{ cama.nroHistoriaClinica || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </ventana-modal>
+}

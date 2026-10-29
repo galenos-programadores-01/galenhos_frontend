@@ -48,6 +48,7 @@ export interface ListaEsperaQxReporteItem {
   nroDocumento: string;
   paciente: string;
   edad: number;
+  idTipoSexo: number;
   telefono: string;
   fechaOrden: string;
   especialidad: string;
@@ -134,6 +135,17 @@ export class ListaEsperaQxApiService {
       {
         method: 'PUT',
         body: JSON.stringify(payload),
+      },
+    );
+  }
+
+  // Marca el registro como HOSPITALIZADO (lo quita de la lista de espera
+  // quirurgica pendiente) invocando usp_go_ActualizarListaEsperaQx.
+  quitarDeLista(id: number): Promise<{ message: string }> {
+    return this.apiClient.request<{ message: string }>(
+      `/api/v1/lista-espera-qx/${id}/hospitalizado`,
+      {
+        method: 'PUT',
       },
     );
   }

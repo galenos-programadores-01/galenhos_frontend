@@ -19,6 +19,7 @@ import type {
   IFilaBackend,
   IPaciente,
 } from '../../../../../../compartido/tipos/api-tipos';
+import { ModalGlobalService } from '../../../../../../compartido/ui/modal-global/modal-global.service';
 import { VentanaModal } from '../../../../../../compartido/ui/ventana-modal/ventana-modal';
 import { PacientesApiService } from '../../../../../pacientes/adaptadores/salida/http/pacientes.api.service';
 import {
@@ -26,6 +27,7 @@ import {
   type EspecialidadItem,
   ListaEsperaQxApiService,
   type ListaEsperaQxParams,
+  type ListaEsperaQxReporteItem,
   type MedicoListaEspera,
 } from '../../../salida/http/lista-espera-qx.api.service';
 
@@ -113,6 +115,7 @@ export class ListaEsperaQxComponent implements OnInit {
   private readonly maestrosApi = inject(MaestrosApiService);
   private readonly pacientesApi = inject(PacientesApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly modalGlobal = inject(ModalGlobalService);
 
   fechaInicio = ((d) =>
     `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`)(
@@ -344,6 +347,35 @@ export class ListaEsperaQxComponent implements OnInit {
     }
   }
 
+  async quitarDeLista(item: IFilaBackend) {
+    const id = this.obtenerId(item);
+    if (!id) return;
+
+    const nombre = this.campo(item, ['Paciente', 'paciente']) || 'el paciente';
+    const confirmar = await this.modalGlobal.confirmar(
+      `¿Desea quitar de la lista de espera al paciente ${nombre}?`,
+      'Quitar de lista de espera',
+      'Sí',
+    );
+    if (!confirmar) return;
+
+    this.error = '';
+    try {
+      await this.apiService.quitarDeLista(id);
+      this.mensajeExito =
+        'Paciente quitado de la lista de espera quirurgica correctamente.';
+      setTimeout(() => (this.mensajeExito = ''), 5000);
+      this.cargarLista();
+    } catch (error: unknown) {
+      this.error =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'No se pudo quitar de la lista de espera al paciente.';
+    } finally {
+      this.cdr.detectChanges();
+    }
+  }
+
   cerrarModal() {
     this.modalAbierto = false;
     this.editingId = null;
@@ -564,28 +596,6 @@ export class ListaEsperaQxComponent implements OnInit {
       }
 
       const wb = XLSX.utils.book_new();
-      const wsData: (string | number)[][] = [];
-
-      if (this.hospitalLogo) {
-        wsData.push([]);
-      }
-      wsData.push(
-        [this.hospitalNombre],
-        [`RUC: ${this.hospitalRuc}`],
-        [
-          `Telefono: ${this.hospitalTelefono}  |  Direccion: ${this.hospitalDireccion}`,
-        ],
-        [],
-        ['REPORTE DE LISTA DE ESPERA QUIRURGICA'],
-        [`Fecha Inicio: ${this.fechaInicio}  |  Fecha Fin: ${this.fechaFin}`],
-      );
-      if (this.filtroEspecialidad) {
-        const esp = this.especialidades.find(
-          (e) => e.idEspecialidad === this.filtroEspecialidad,
-        );
-        wsData.push([`Especialidad: ${esp?.nombre ?? ''}`]);
-      }
-      wsData.push([]);
 
       const headers = [
         'Nro Historia',
@@ -604,57 +614,91 @@ export class ListaEsperaQxComponent implements OnInit {
         'Observacion',
         'Dias en espera',
       ];
-      wsData.push(headers);
 
-      for (const r of datos) {
-        wsData.push([
-          r.nroHistoriaClinica,
-          r.nroDocumento,
-          r.paciente,
-          r.edad,
-          r.telefono,
-          r.fechaOrden,
-          r.especialidad,
-          r.diagnostico,
-          r.fechaLab,
-          r.fechaICCardio,
-          r.fechaICNeumo,
-          r.fechaICAnestesio,
-          r.medico,
-          r.observacion,
-          r.diasTranscurridos,
-        ]);
-      }
+      const construirHoja = (filas: ListaEsperaQxReporteItem[]) => {
+        const wsData: (string | number)[][] = [];
 
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
+        if (this.hospitalLogo) {
+          wsData.push([]);
+        }
+        wsData.push(
+          [this.hospitalNombre],
+          [`RUC: ${this.hospitalRuc}`],
+          [
+            `Telefono: ${this.hospitalTelefono}  |  Direccion: ${this.hospitalDireccion}`,
+          ],
+          [],
+          ['REPORTE DE LISTA DE ESPERA QUIRURGICA'],
+          [`Fecha Inicio: ${this.fechaInicio}  |  Fecha Fin: ${this.fechaFin}`],
+        );
+        if (this.filtroEspecialidad) {
+          const esp = this.especialidades.find(
+            (e) => e.idEspecialidad === this.filtroEspecialidad,
+          );
+          wsData.push([`Especialidad: ${esp?.nombre ?? ''}`]);
+        }
+        wsData.push([]);
+        wsData.push(headers);
 
-      ws['!cols'] = [
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 40 },
-        { wch: 6 },
-        { wch: 15 },
-        { wch: 14 },
-        { wch: 25 },
-        { wch: 40 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 35 },
-        { wch: 30 },
-        { wch: 12 },
-      ];
+        for (const r of filas) {
+          wsData.push([
+            r.nroHistoriaClinica,
+            r.nroDocumento,
+            r.paciente,
+            r.edad,
+            r.telefono,
+            r.fechaOrden,
+            r.especialidad,
+            r.diagnostico,
+            r.fechaLab,
+            r.fechaICCardio,
+            r.fechaICNeumo,
+            r.fechaICAnestesio,
+            r.medico,
+            r.observacion,
+            r.diasTranscurridos,
+          ]);
+        }
 
-      const numHeaderRows = this.hospitalLogo ? 6 : 0;
-      ws['!merges'] = [
-        {
-          s: { r: numHeaderRows, c: 0 },
-          e: { r: numHeaderRows, c: headers.length - 1 },
-        },
-      ];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-      XLSX.utils.book_append_sheet(wb, ws, 'Lista Espera QX');
+        ws['!cols'] = [
+          { wch: 15 },
+          { wch: 15 },
+          { wch: 40 },
+          { wch: 6 },
+          { wch: 15 },
+          { wch: 14 },
+          { wch: 25 },
+          { wch: 40 },
+          { wch: 14 },
+          { wch: 14 },
+          { wch: 14 },
+          { wch: 14 },
+          { wch: 35 },
+          { wch: 30 },
+          { wch: 12 },
+        ];
+
+        const numHeaderRows = this.hospitalLogo ? 6 : 0;
+        ws['!merges'] = [
+          {
+            s: { r: numHeaderRows, c: 0 },
+            e: { r: numHeaderRows, c: headers.length - 1 },
+          },
+        ];
+
+        return ws;
+      };
+
+      // El SP del reporte devuelve IdTipoSexo (1 = hombre, 2 = mujer).
+      // Se generan dos hojas; lo que no sea 2 se agrupa en Hombres para no
+      // perder filas ante valores inesperados.
+      const hombres = datos.filter((r) => Number(r.idTipoSexo) !== 2);
+      const mujeres = datos.filter((r) => Number(r.idTipoSexo) === 2);
+
+      XLSX.utils.book_append_sheet(wb, construirHoja(hombres), 'Hombres');
+      XLSX.utils.book_append_sheet(wb, construirHoja(mujeres), 'Mujeres');
 
       const fechaArchivo = `${this.fechaInicio}_a_${this.fechaFin}`;
       const nombreArchivo = `ListaEsperaQX_${fechaArchivo}.xlsx`;

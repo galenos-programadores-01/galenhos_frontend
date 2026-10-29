@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import type { jsPDF } from 'jspdf';
 import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
 import {
   type ConsultaReferenciaDetalleResponse,
@@ -330,9 +331,11 @@ export class RefpacienteComponent {
         establecimientos,
         ubigeo,
       );
-      if (doc) {
-        doc.output('dataurlnewwindow');
+      if (!doc) {
+        this.error = 'No se encontraron los datos para generar la hoja.';
+        return;
       }
+      this.abrirPdfGenerado(doc);
     } catch (err) {
       console.error(
         '[Refpaciente] Error al generar la hoja de referencia:',
@@ -376,6 +379,21 @@ export class RefpacienteComponent {
     const blob = new Blob([bytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  // Abre el PDF generado localmente. No se usa doc.output('dataurlnewwindow')
+  // porque jsPDF mete el documento completo en un iframe con una data URL:
+  // con archivos de más de ~1 MB el navegador abre la ventana en blanco.
+  private abrirPdfGenerado(doc: jsPDF): void {
+    const datos = doc.output('arraybuffer');
+    const blob = new Blob([datos], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const ventana = window.open(url, '_blank');
+    if (!ventana) {
+      // El navegador bloqueó la ventana: se descarga el archivo.
+      doc.save('hoja-referencia.pdf');
+    }
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 

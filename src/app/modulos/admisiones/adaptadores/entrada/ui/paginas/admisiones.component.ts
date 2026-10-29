@@ -195,7 +195,7 @@ export class AdmisionesComponent implements OnInit {
     { campo: 'prioridadCustom', cabecera: 'Prioridad' },
     { campo: 'pacienteCustom', cabecera: 'Paciente' },
     { campo: 'servicioCustom', cabecera: 'Servicio', ancho: '200px' },
-    { campo: 'tipoIngresoCustom', cabecera: 'Tipo ingreso' },
+    { campo: 'fechaNacimientoCustom', cabecera: 'Fecha nacimiento' },
     { campo: 'fechaTriajeCustom', cabecera: 'Fecha triaje' },
     { campo: 'iafaCustom', cabecera: 'IAFA' },
     { campo: 'observacionCustom', cabecera: 'Observación', ancho: '200px' },
@@ -610,14 +610,15 @@ export class AdmisionesComponent implements OnInit {
     ]);
   }
 
-  // Tipo de documento traído del endpoint de la bandeja (campo TipoDoc).
-  // Se mapea con el catálogo de tipos de documento; si el valor ya es una
-  // descripción se muestra tal cual, y si no llega data se asume DNI.
+  // Tipo de documento traído del endpoint de la bandeja. El SP expone la
+  // descripción en TipoDocumento (tdoc.Descripcion); si no llega, se mapea el
+  // código (TipoDoc / IdTipoDocumento) con el catálogo y, en último caso, se
+  // asume DNI.
   tipoDocumento(item: IFilaBackend): string {
+    const descripcion = valorFila(item, 'TipoDocumento');
+    if (descripcion) return descripcion;
     const codigo =
-      valorFila(item, 'TipoDoc') ||
-      valorFila(item, 'TipoDocumento') ||
-      valorFila(item, 'IdTipoDocumento');
+      valorFila(item, 'TipoDoc') || valorFila(item, 'IdTipoDocumento');
     if (!codigo) return 'DNI';
     const tipo = this.tiposDocumentos.find(
       (t) => String(t.id) === String(codigo),
@@ -629,8 +630,24 @@ export class AdmisionesComponent implements OnInit {
     return campo(item, ['Servicio', 'servicio', 'Descripcion', 'descripcion']);
   }
 
-  tipoIngreso(item: IFilaBackend): string {
-    return campo(item, ['TipoIngreso', 'tipoIngreso']);
+  // Fecha de nacimiento del paciente (SP webGestionAtencion_E_H_BusquedaFiltrar,
+  // columna FechaNacimiento / tpt.FechaNacimiento).
+  fechaNacimiento(item: IFilaBackend): string {
+    let raw = campo(item, [
+      'FechaNacimiento',
+      'fechaNacimiento',
+      'Fecha_Nacimiento',
+      'fecha_Nacimiento',
+    ]);
+    if (!raw) return '—';
+    if (raw.endsWith('Z')) raw = raw.slice(0, -1);
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   }
 
   iafa(item: IFilaBackend): string {
