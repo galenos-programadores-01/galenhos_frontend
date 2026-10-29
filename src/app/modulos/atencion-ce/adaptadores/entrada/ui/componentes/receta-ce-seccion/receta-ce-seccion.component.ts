@@ -55,28 +55,76 @@ export class RecetaCeSeccionComponent {
     'condicional a dolor / fiebre',
   ];
 
-  async alEscribirMedicamento(): Promise<void> {
+  private temporizadorBusquedaMedicamento: ReturnType<
+    typeof setTimeout
+  > | null = null;
+  private identificadorPeticionMedicamento = 0;
+
+  alEscribirMedicamento(): void {
     const termino = this.textoBusqueda().trim();
+    if (this.temporizadorBusquedaMedicamento) {
+      clearTimeout(this.temporizadorBusquedaMedicamento);
+    }
+
     if (termino.length < 2) {
       this.resultadosMedicamentos.set([]);
       this.dropdownAbierto.set(false);
+      this.buscando.set(false);
       return;
     }
 
     this.buscando.set(true);
-    try {
-      const respuesta = await this.bienesService.listar({
-        filtro: termino,
-        page: 1,
-        pageSize: 10,
-      });
-      this.resultadosMedicamentos.set(respuesta.items);
-      this.dropdownAbierto.set(respuesta.items.length > 0);
-    } catch {
-      this.resultadosMedicamentos.set([]);
-    } finally {
-      this.buscando.set(false);
-    }
+    this.temporizadorBusquedaMedicamento = setTimeout(async () => {
+      const identificadorActual = ++this.identificadorPeticionMedicamento;
+      try {
+        const respuesta = await this.bienesService.listar({
+          filtro: termino,
+          page: 1,
+          pageSize: 20,
+        });
+        if (identificadorActual === this.identificadorPeticionMedicamento) {
+          const itemsOrdenados = this.ordenarMedicamentosPorRelevancia(
+            respuesta.items,
+            termino,
+          );
+          this.resultadosMedicamentos.set(itemsOrdenados);
+          this.dropdownAbierto.set(itemsOrdenados.length > 0);
+        }
+      } catch {
+        if (identificadorActual === this.identificadorPeticionMedicamento) {
+          this.resultadosMedicamentos.set([]);
+        }
+      } finally {
+        if (identificadorActual === this.identificadorPeticionMedicamento) {
+          this.buscando.set(false);
+        }
+      }
+    }, 250);
+  }
+
+  private ordenarMedicamentosPorRelevancia(
+    items: readonly IBienInsumoItem[],
+    termino: string,
+  ): readonly IBienInsumoItem[] {
+    const busqueda = termino.toUpperCase().trim();
+    return [...items].sort((a, b) => {
+      const nombreA = a.nombre.toUpperCase().trim();
+      const nombreB = b.nombre.toUpperCase().trim();
+      const codigoA = a.codigo.toUpperCase().trim();
+      const codigoB = b.codigo.toUpperCase().trim();
+
+      const exactoA = nombreA === busqueda || codigoA === busqueda ? 1 : 0;
+      const exactoB = nombreB === busqueda || codigoB === busqueda ? 1 : 0;
+      if (exactoA !== exactoB) return exactoB - exactoA;
+
+      const prefijoA =
+        nombreA.startsWith(busqueda) || codigoA.startsWith(busqueda) ? 1 : 0;
+      const prefijoB =
+        nombreB.startsWith(busqueda) || codigoB.startsWith(busqueda) ? 1 : 0;
+      if (prefijoA !== prefijoB) return prefijoB - prefijoA;
+
+      return nombreA.localeCompare(nombreB);
+    });
   }
 
   seleccionarMedicamento(item: IBienInsumoItem): void {
@@ -113,6 +161,22 @@ export class RecetaCeSeccionComponent {
     this.medicamentoSeleccionado.set(null);
     this.textoBusqueda.set('');
     this.indicaciones.set('');
+  }
+
+  actualizarItemReceta(
+    indice: number,
+    campo: keyof ItemRecetaPrescripcion,
+    valor: string | number,
+  ): void {
+    const lista = [...this.itemsReceta()];
+    if (indice >= 0 && indice < lista.length) {
+      lista[indice] = {
+        ...lista[indice],
+        [campo]: valor,
+      };
+      this.itemsRecetaCambio.emit(lista);
+      this.emitirTextoTratamiento(lista);
+    }
   }
 
   eliminarItem(indice: number): void {

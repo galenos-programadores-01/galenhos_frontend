@@ -1,6 +1,4 @@
 <div class="space-y-4">
-  
-  <!-- Encabezado de sección -->
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
@@ -10,10 +8,7 @@
     </div>
   </div>
 
-  <!-- Formulario de prescripción -->
   <div class="p-4 bg-slate-50 rounded border border-slate-200 space-y-3">
-    
-    <!-- Fila 1: Buscador de medicamento -->
     <div class="relative">
       <label for="buscador-receta-med" class="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
         Medicamento o Insumo SISMED:
@@ -35,16 +30,15 @@
         </div>
       }
 
-      <!-- Resultados desplegables -->
       @if (dropdownAbierto() && resultadosMedicamentos().length > 0) {
         <div class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded shadow-lg z-30 max-h-60 overflow-y-auto divide-y divide-slate-100">
-          @for (med of resultadosMedicamentos(); track med.idProducto) {
+          @for (med of resultadosMedicamentos(); track (med.idProducto ? (med.idProducto + '-' + $index) : $index)) {
             <button
               type="button"
               (click)="seleccionarMedicamento(med)"
               class="w-full text-left px-3.5 py-2.5 text-sm hover:bg-slate-100 flex items-center justify-between gap-3 transition-colors cursor-pointer">
               <div>
-                <span class="font-mono font-bold text-[#07153a] mr-2">[{{ med.codigo }}]</span>
+                <span class="font-bold text-[#07153a] mr-2">[{{ med.codigo }}]</span>
                 <span class="font-bold text-slate-900">{{ med.nombre }}</span>
                 <span class="text-xs text-slate-600 ml-1.5 font-medium">({{ med.concentracion }} - {{ med.formaFarmaceutica }})</span>
               </div>
@@ -55,7 +49,6 @@
       }
     </div>
 
-    <!-- Fila 2: Parámetros posológicos legibles -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
       <div>
         <label for="receta-dosis" class="font-bold text-slate-700 block mb-1">Dosis:</label>
@@ -115,7 +108,6 @@
       </div>
     </div>
 
-    <!-- Fila 3: Indicaciones y Botón Agregar -->
     <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 text-xs">
       <div class="flex-1">
         <label for="receta-indicaciones" class="font-bold text-slate-700 block mb-1">
@@ -141,7 +133,6 @@
 
   </div>
 
-  <!-- Tabla de medicamentos en receta (Sin scroll horizontal y tipografía cómoda) -->
   <div class="rounded border border-slate-200 overflow-hidden bg-white">
     @if (itemsReceta().length === 0) {
       <div class="text-center py-6 text-slate-500 text-sm font-medium">
@@ -162,32 +153,77 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            @for (item of itemsReceta(); track item.idProducto; let indice = $index) {
+            @for (item of itemsReceta(); track (item.idProducto ? (item.idProducto + '-' + indice) : indice); let indice = $index) {
               <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-3 py-2.5 font-mono font-bold text-[#07153a] text-xs whitespace-nowrap">
+                <td class="px-3 py-2.5 font-bold text-[#07153a] text-xs whitespace-nowrap">
                   {{ item.codigo }}
                 </td>
                 <td class="px-3 py-2.5">
-                  <span class="font-bold text-slate-900 block text-sm break-words">{{ item.nombre }}</span>
-                  <span class="text-xs text-slate-600 font-medium">{{ item.concentracion }} - {{ item.formaFarmaceutica }}</span>
+                  <span class="font-bold text-slate-900 block text-xs break-words">{{ item.nombre }}</span>
+                  <span class="text-[11px] text-slate-600 font-medium">{{ item.concentracion }} - {{ item.formaFarmaceutica }}</span>
                 </td>
-                <td class="px-3 py-2.5 text-slate-800 text-xs">
-                  <strong class="text-slate-900 text-sm">{{ item.dosis }}</strong> ({{ item.via }}), {{ item.frecuencia }}
+                <td class="px-2 py-2">
+                  <div class="flex flex-col gap-1.5">
+                    <div class="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        [ngModel]="item.dosis"
+                        (ngModelChange)="actualizarItemReceta(indice, 'dosis', $event)"
+                        placeholder="Dosis"
+                        title="Dosis del medicamento"
+                        class="h-7 px-2 py-0.5 text-xs font-bold border border-slate-300 rounded text-slate-900 w-24 focus:border-blue-600 focus:outline-none" />
+                      <select
+                        [ngModel]="item.via"
+                        (ngModelChange)="actualizarItemReceta(indice, 'via', $event)"
+                        title="Vía de administración"
+                        class="h-7 px-1.5 py-0.5 text-xs font-semibold border border-slate-300 rounded text-slate-900 bg-white focus:border-blue-600 focus:outline-none cursor-pointer">
+                        @for (viaOpcion of viasComunes; track viaOpcion) {
+                          <option [value]="viaOpcion">{{ viaOpcion }}</option>
+                        }
+                      </select>
+                    </div>
+                    <input
+                      type="text"
+                      [ngModel]="item.frecuencia"
+                      (ngModelChange)="actualizarItemReceta(indice, 'frecuencia', $event)"
+                      placeholder="Frecuencia (ej: cada 8 horas)"
+                      title="Frecuencia de administración"
+                      class="h-7 px-2 py-0.5 text-xs border border-slate-300 rounded text-slate-900 w-full focus:border-blue-600 focus:outline-none" />
+                  </div>
                 </td>
-                <td class="px-3 py-2.5 text-slate-700 text-xs font-semibold whitespace-nowrap">
-                  {{ item.duracion }}
+                <td class="px-2 py-2">
+                  <input
+                    type="text"
+                    [ngModel]="item.duracion"
+                    (ngModelChange)="actualizarItemReceta(indice, 'duracion', $event)"
+                    placeholder="7 días"
+                    title="Duración del tratamiento"
+                    class="h-7 px-2 py-0.5 text-xs font-semibold border border-slate-300 rounded text-slate-900 w-24 text-center focus:border-blue-600 focus:outline-none" />
                 </td>
-                <td class="px-3 py-2.5 text-right font-black text-slate-900 text-sm whitespace-nowrap">
-                  {{ item.cantidad }}
+                <td class="px-2 py-2 text-right">
+                  <input
+                    type="number"
+                    min="1"
+                    [ngModel]="item.cantidad"
+                    (ngModelChange)="actualizarItemReceta(indice, 'cantidad', +$event)"
+                    title="Cantidad total"
+                    class="h-7 px-2 py-0.5 text-xs font-black border border-slate-300 rounded text-slate-900 w-16 text-center focus:border-blue-600 focus:outline-none" />
                 </td>
-                <td class="px-3 py-2.5 text-xs text-slate-700 break-words font-medium">
-                  {{ item.indicaciones || 'Ninguna' }}
+                <td class="px-2 py-2">
+                  <input
+                    type="text"
+                    [ngModel]="item.indicaciones"
+                    (ngModelChange)="actualizarItemReceta(indice, 'indicaciones', $event)"
+                    placeholder="Indicaciones para el paciente..."
+                    title="Indicaciones adicionales"
+                    class="h-7 px-2 py-0.5 text-xs border border-slate-300 rounded text-slate-900 w-full focus:border-blue-600 focus:outline-none" />
                 </td>
                 <td class="px-3 py-2.5 text-right whitespace-nowrap">
                   <button
                     type="button"
                     (click)="eliminarItem(indice)"
-                    class="px-2.5 py-1 text-red-600 hover:text-red-800 text-xs font-bold rounded hover:bg-red-50 transition-colors cursor-pointer">
+                    class="px-2.5 py-1 bg-white hover:bg-red-700 text-slate-700 hover:text-white border border-slate-300 hover:border-red-700 rounded text-xs font-semibold cursor-pointer transition-colors"
+                    title="Eliminar medicamento">
                     Quitar
                   </button>
                 </td>

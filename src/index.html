@@ -25,6 +25,16 @@
       // Storage bloqueado: se usa el tema claro por defecto.
     }
   </script>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    var jqFirmaPeru = jQuery.noConflict(true);
+    window.jqFirmaPeru = jqFirmaPeru;
+    window.signatureInit = () => {};
+    window.signatureOk = () => {};
+    window.signatureCancel = () => {};
+  </script>
+  <script src="https://apps.firmaperu.gob.pe/web/clienteweb/firmaperu.min.js"></script>
 </head>
 
 <body class="bg-gray-50 text-gray-900 font-['Poppins'] dark:bg-[#0b1120] dark:text-slate-100">

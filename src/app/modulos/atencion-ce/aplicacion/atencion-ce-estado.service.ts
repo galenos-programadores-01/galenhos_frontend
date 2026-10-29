@@ -19,18 +19,14 @@ export class AtencionCeEstadoService {
     this.fechaSeleccionada.set(fechaValida);
     try {
       sessionStorage.setItem(CLAVE_STORAGE_FECHA, fechaValida);
-    } catch {
-      // Silenciar restricciones de entorno
-    }
+    } catch {}
   }
 
   establecerEstadoFiltro(nuevoEstado: string): void {
     this.estadoFiltro.set(nuevoEstado);
     try {
       sessionStorage.setItem(CLAVE_STORAGE_ESTADO, nuevoEstado);
-    } catch {
-      // Silenciar restricciones de entorno
-    }
+    } catch {}
   }
 
   establecerFiltroTexto(nuevoTexto: string): void {
@@ -51,9 +47,7 @@ export class AtencionCeEstadoService {
       if (fechaGuardada && /^\d{4}-\d{2}-\d{2}$/.test(fechaGuardada)) {
         return fechaGuardada;
       }
-    } catch {
-      // Fallback
-    }
+    } catch {}
     return this.obtenerFechaHoy();
   }
 

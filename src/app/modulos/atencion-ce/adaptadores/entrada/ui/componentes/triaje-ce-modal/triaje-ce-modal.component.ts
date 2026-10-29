@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ModalGlobalService } from '../../../../../../../compartido/ui/modal-global/modal-global.service';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import {
   TriajeApiService,
   type TriajeConsultaPayload,
@@ -25,6 +26,7 @@ import type { ColaPacienteCEItem } from '../../../../../tipos/atencion-ce.tipos'
 export class TriajeCeModalComponent {
   private readonly triajeApi = inject(TriajeApiService);
   private readonly modalGlobal = inject(ModalGlobalService);
+  private readonly authService = inject(AuthService);
 
   readonly visible = input<boolean>(false);
   readonly paciente = input<ColaPacienteCEItem | null>(null);
@@ -77,24 +79,24 @@ export class TriajeCeModalComponent {
     if (valor < 18.5) {
       return {
         texto: 'Bajo Peso',
-        clase: 'text-amber-700 bg-amber-50 border-amber-200',
+        clase: 'text-white bg-amber-600 border-amber-600',
       };
     }
     if (valor < 25.0) {
       return {
         texto: 'Normal',
-        clase: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        clase: 'text-white bg-slate-800 border-slate-800',
       };
     }
     if (valor < 30.0) {
       return {
         texto: 'Sobrepeso',
-        clase: 'text-orange-700 bg-orange-50 border-orange-200',
+        clase: 'text-white bg-amber-700 border-amber-700',
       };
     }
     return {
       texto: 'Obesidad',
-      clase: 'text-red-700 bg-red-50 border-red-200',
+      clase: 'text-white bg-red-700 border-red-700',
     };
   });
 
@@ -319,7 +321,6 @@ export class TriajeCeModalComponent {
     const hbStr = this.hemoglobina().trim();
     const obsStr = this.observaciones().trim();
 
-    // 1. Campo Obligatorio General: Requiere al menos un signo vital registrado
     const tieneSignosVitales =
       sistolicaStr ||
       diastolicaStr ||
@@ -337,7 +338,6 @@ export class TriajeCeModalComponent {
         'Registro obligatorio: Debe ingresar al menos un parámetro de signos vitales (P.A., Pulso, Temp, etc.).';
     }
 
-    // 2. Presión Arterial: Consistencia de campos y reglas condicionales
     if (sistolicaStr || diastolicaStr) {
       if (!sistolicaStr) {
         errores.paSistolica = 'Requerido: Ingrese la presión sistólica';
@@ -382,20 +382,17 @@ export class TriajeCeModalComponent {
       }
     }
 
-    // 3. Validación de Enteros Fisiológicos Reales
     this.validarEntero(pulsoStr, 'pulso', 30, 250, 'lpm', errores);
     this.validarEntero(fcStr, 'frecCardiaca', 30, 250, 'lpm', errores);
     this.validarEntero(frStr, 'frecRespiratoria', 6, 60, 'rpm', errores);
     this.validarEntero(satStr, 'satO2', 40, 100, '%', errores);
 
-    // 4. Validación de Decimales Fisiológicos Reales (Talla máx 250 cm, Peso máx 350 kg)
     this.validarDecimal(tempStr, 'temperatura', 32.0, 43.0, 1, '°C', errores);
-    this.validarDecimal(pesoStr, 'peso', 1.0, 350.0, 2, 'Kg', errores);
+    this.validarDecimal(pesoStr, 'peso', 1.0, 300.0, 2, 'Kg', errores);
     this.validarDecimal(tallaStr, 'talla', 20.0, 250.0, 1, 'cm', errores);
     this.validarDecimal(hbStr, 'hemoglobina', 3.0, 25.0, 1, 'g/dL', errores);
     this.validarDecimal(fio2Str, 'fiO2', 0.21, 1.0, 2, 'fracción', errores);
 
-    // 5. Regla Condicional de Negocio: Condición de Gestante vs Sexo
     const pacienteActual = this.paciente();
     if (this.esGestante() && pacienteActual) {
       const sexo = (pacienteActual.sexo || '').toUpperCase();
@@ -405,7 +402,6 @@ export class TriajeCeModalComponent {
       }
     }
 
-    // 6. Longitud Máxima en Observaciones
     if (obsStr.length > 300) {
       errores.observaciones =
         'Las observaciones no pueden superar los 300 caracteres.';
@@ -413,6 +409,11 @@ export class TriajeCeModalComponent {
 
     this.erroresValidacion.set(errores);
     return Object.keys(errores).length === 0;
+  }
+
+  private textoOpcional(valor: string): string | undefined {
+    const textoLimpio = valor.trim();
+    return textoLimpio === '' ? undefined : textoLimpio;
   }
 
   async guardarTriaje(): Promise<void> {
@@ -427,31 +428,36 @@ export class TriajeCeModalComponent {
 
     this.guardando.set(true);
 
-    let presionFinal = '';
+    let presionArterialFinal = '';
     const sistolica = this.paSistolica().trim();
     const diastolica = this.paDiastolica().trim();
     if (sistolica && diastolica) {
-      presionFinal = `${sistolica}/${diastolica}`;
+      presionArterialFinal = `${sistolica}/${diastolica}`;
     } else if (sistolica) {
-      presionFinal = sistolica;
+      presionArterialFinal = sistolica;
     }
+
+    const identificadorEmpleado =
+      this.authService.getIdEmpleado() ||
+      this.authService.userProfile()?.idEmpleado ||
+      1;
 
     const payload: TriajeConsultaPayload = {
       idAtencion: pacienteActual.idAtencion,
       idPaciente: pacienteActual.idPaciente,
-      idEmpleado: 0,
-      talla: this.talla().trim(),
-      peso: this.peso().trim(),
-      temperatura: this.temperatura().trim(),
-      pulso: this.pulso().trim(),
-      frecRespiratoria: this.frecRespiratoria().trim(),
-      frecCardiaca: this.frecCardiaca().trim(),
-      sat02: this.satO2().trim(),
-      fi02: this.fiO2().trim(),
-      presionArterial: presionFinal,
-      hemoglobina: this.hemoglobina().trim(),
-      observacion: this.observaciones().trim(),
-      imc: this.imc(),
+      idEmpleado: identificadorEmpleado,
+      talla: this.textoOpcional(this.talla()),
+      peso: this.textoOpcional(this.peso()),
+      temperatura: this.textoOpcional(this.temperatura()),
+      pulso: this.textoOpcional(this.pulso()),
+      frecRespiratoria: this.textoOpcional(this.frecRespiratoria()),
+      frecCardiaca: this.textoOpcional(this.frecCardiaca()),
+      sat02: this.textoOpcional(this.satO2()),
+      fi02: this.textoOpcional(this.fiO2()),
+      presionArterial: this.textoOpcional(presionArterialFinal),
+      hemoglobina: this.textoOpcional(this.hemoglobina()),
+      observacion: this.textoOpcional(this.observaciones()),
+      imc: this.textoOpcional(this.imc()),
       gestante: this.esGestante() ? '1' : '0',
     };
 
@@ -491,7 +497,6 @@ export class TriajeCeModalComponent {
         this.cargarDatosExistentes(triajeExistente);
       }
     } catch {
-      // Si no existe, se mantiene formulario limpio para nuevo registro
     } finally {
       this.cargandoDatos.set(false);
     }
@@ -521,7 +526,6 @@ export class TriajeCeModalComponent {
         if (v !== null && v !== undefined) {
           let s = String(v).trim();
           if (s !== '') {
-            // Decodificación de emergencia Base64 en caso de buffer binario heredado
             if (
               /^[A-Za-z0-9+/=]+$/.test(s) &&
               s.length % 4 === 0 &&
@@ -532,9 +536,7 @@ export class TriajeCeModalComponent {
                 if (!Number.isNaN(Number(dec))) {
                   s = dec;
                 }
-              } catch {
-                // No es Base64
-              }
+              } catch {}
             }
             return s;
           }

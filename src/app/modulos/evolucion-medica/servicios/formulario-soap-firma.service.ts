@@ -432,9 +432,8 @@ export class FormularioSoapFirmaService {
       {
         motivo: 'Soy el Autor',
         rol: cargoFirma,
-        logoPngBase64:
-          institucion?.logoHospi || institucion?.logoMinsa || undefined,
-        positionX: 430,
+        stampPage: 1,
+        positionX: 435,
         positionY: 10,
       },
     );

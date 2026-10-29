@@ -21,6 +21,7 @@ export interface DetalleResultadoLab {
   unidad: string;
   valorReferencial: string;
   metodo: string;
+  interpretacion?: string;
 }
 
 export interface DetalleResultadoImagen {
@@ -29,6 +30,15 @@ export interface DetalleResultadoImagen {
   nombreExamen: string;
   fechaInforme: string;
   informeTexto: string;
+  sugerencias?: string;
+  realizaPrueba?: string;
+  fechaExamen?: string;
+  medicoSolicitante?: string;
+  procedencia?: string;
+  diagnostico?: string;
+  responsable?: string;
+  estado?: string;
+  observacion?: string;
 }
 
 interface ResultadoBackend {

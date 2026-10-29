@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
   inject,
   input,
   type OnInit,
@@ -8,6 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { SelectGlobalComponent } from '../../../../../../../compartido/ui/select-global/select-global';
 import {
   obtenerReglaLabDiagnostico,
@@ -27,7 +29,12 @@ import {
 @Component({
   selector: 'app-diagnosticos-ce-seccion',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectGlobalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SelectGlobalComponent,
+    PaginacionComponent,
+  ],
   templateUrl: './diagnosticos-ce-seccion.component.html',
 })
 export class DiagnosticosCeSeccionComponent implements OnInit {
@@ -44,10 +51,34 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
 
   readonly catalogoLabs = signal<readonly CatalogoLabHISItem[]>([]);
 
+  readonly opcionesLabsCompletas = computed(() => {
+    const opcionesEspeciales: readonly CatalogoLabHISItem[] = [
+      { codigo: -1, valor: '1', descripcion: 'Control 1' },
+      { codigo: -2, valor: '2', descripcion: 'Control 2' },
+      { codigo: -3, valor: '3', descripcion: 'Control 3' },
+      { codigo: -4, valor: '4', descripcion: 'Control 4' },
+      { codigo: -5, valor: '5', descripcion: 'Control 5' },
+      { codigo: -6, valor: '6', descripcion: 'Control 6' },
+      { codigo: -12, valor: '12', descripcion: 'Semana 12' },
+      { codigo: -24, valor: '24', descripcion: 'Semana 24' },
+      { codigo: -36, valor: '36', descripcion: 'Semana 36' },
+    ];
+    return [...opcionesEspeciales, ...this.catalogoLabs()];
+  });
+
+  esOpcionCatalogo(valor: string | undefined): boolean {
+    if (!valor || !valor.trim()) return true;
+    const normalizado = valor.trim().toUpperCase();
+    return this.opcionesLabsCompletas().some(
+      (item) => item.valor.toUpperCase() === normalizado,
+    );
+  }
+
   readonly textoBusqueda = signal<string>('');
   readonly resultadosBusqueda = signal<readonly DiagnosticoBusquedaItem[]>([]);
   readonly buscando = signal<boolean>(false);
   readonly dropdownAbierto = signal<boolean>(false);
+  readonly sinResultados = signal<boolean>(false);
   readonly diagnosticoSeleccionado = signal<DiagnosticoBusquedaItem | null>(
     null,
   );
@@ -58,7 +89,53 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
   readonly lab3Seleccionado = signal<string>('');
   readonly reglaDiagnosticoActivo = signal<ReglaLabDiagnostico | null>(null);
 
+  private temporizadorBusquedaDiagnostico: ReturnType<
+    typeof setTimeout
+  > | null = null;
+  private identificadorPeticionDiagnostico = 0;
+
+  readonly paginaDiagnosticos = signal<number>(1);
+  readonly elementosPorPaginaDiagnosticos = 5;
+
+  readonly totalPaginasDiagnosticos = computed(() =>
+    Math.max(
+      1,
+      Math.ceil(
+        this.diagnosticos().length / this.elementosPorPaginaDiagnosticos,
+      ),
+    ),
+  );
+
+  readonly diagnosticosPaginados = computed(() => {
+    const inicio =
+      (this.paginaDiagnosticos() - 1) * this.elementosPorPaginaDiagnosticos;
+    return this.diagnosticos().slice(
+      inicio,
+      inicio + this.elementosPorPaginaDiagnosticos,
+    );
+  });
+
   // Búsqueda y Registro de Procedimientos Médicos (CPMS / CPT)
+  readonly paginaProcedimientos = signal<number>(1);
+  readonly elementosPorPaginaProcedimientos = 5;
+
+  readonly totalPaginasProcedimientos = computed(() =>
+    Math.max(
+      1,
+      Math.ceil(
+        (this.procedimientos()?.length || 0) /
+          this.elementosPorPaginaProcedimientos,
+      ),
+    ),
+  );
+
+  readonly procedimientosPaginados = computed(() => {
+    const lista = this.procedimientos() || [];
+    const inicio =
+      (this.paginaProcedimientos() - 1) * this.elementosPorPaginaProcedimientos;
+    return lista.slice(inicio, inicio + this.elementosPorPaginaProcedimientos);
+  });
+
   readonly textoBusquedaProcedimiento = signal<string>('');
   readonly resultadosProcedimientos = signal<
     readonly ProcedimientoBusquedaItem[]
@@ -68,6 +145,10 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
   readonly procedimientoSeleccionado = signal<ProcedimientoBusquedaItem | null>(
     null,
   );
+  private temporizadorBusquedaProcedimiento: ReturnType<
+    typeof setTimeout
+  > | null = null;
+  private identificadorPeticionProcedimiento = 0;
 
   readonly idDiagnosticoAsociado = signal<number>(0);
   readonly cantidadProcedimiento = signal<number>(1);
@@ -94,32 +175,131 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
     }
   }
 
-  // --- Búsqueda de Diagnósticos ---
+  alEscribirBusqueda(): void {
+    if (this.temporizadorBusquedaDiagnostico) {
+      clearTimeout(this.temporizadorBusquedaDiagnostico);
+    }
 
-  async alEscribirBusqueda(): Promise<void> {
     const texto = this.textoBusqueda().trim();
     if (texto.length < 2) {
       this.resultadosBusqueda.set([]);
       this.dropdownAbierto.set(false);
+      this.sinResultados.set(false);
+      this.buscando.set(false);
       return;
     }
 
     this.buscando.set(true);
+    this.sinResultados.set(false);
+    this.dropdownAbierto.set(true);
+
+    this.temporizadorBusquedaDiagnostico = setTimeout(() => {
+      this.ejecutarBusquedaDiagnostico(texto);
+    }, 250);
+  }
+
+  buscarDiagnosticoInmediato(): void {
+    if (this.temporizadorBusquedaDiagnostico) {
+      clearTimeout(this.temporizadorBusquedaDiagnostico);
+    }
+    const texto = this.textoBusqueda().trim();
+    if (texto.length < 2) {
+      return;
+    }
+    this.ejecutarBusquedaDiagnostico(texto);
+  }
+
+  async ejecutarBusquedaDiagnostico(termino: string): Promise<void> {
+    const texto = termino.trim();
+    if (texto.length < 2) {
+      this.resultadosBusqueda.set([]);
+      this.dropdownAbierto.set(false);
+      this.sinResultados.set(false);
+      this.buscando.set(false);
+      return;
+    }
+
+    this.buscando.set(true);
+    this.sinResultados.set(false);
+    this.dropdownAbierto.set(true);
+    const identificadorActual = ++this.identificadorPeticionDiagnostico;
+
     try {
       const items = await this.apiService.buscarDiagnosticos(texto);
-      this.resultadosBusqueda.set(items);
-      this.dropdownAbierto.set(items.length > 0);
+      if (identificadorActual === this.identificadorPeticionDiagnostico) {
+        const itemsOrdenados = this.ordenarDiagnosticosPorRelevancia(
+          items,
+          texto,
+        );
+        this.resultadosBusqueda.set(itemsOrdenados);
+        this.sinResultados.set(itemsOrdenados.length === 0);
+        this.dropdownAbierto.set(true);
+      }
     } catch {
-      this.resultadosBusqueda.set([]);
+      if (identificadorActual === this.identificadorPeticionDiagnostico) {
+        this.resultadosBusqueda.set([]);
+        this.sinResultados.set(true);
+      }
     } finally {
-      this.buscando.set(false);
+      if (identificadorActual === this.identificadorPeticionDiagnostico) {
+        this.buscando.set(false);
+      }
     }
+  }
+
+  limpiarBusqueda(): void {
+    if (this.temporizadorBusquedaDiagnostico) {
+      clearTimeout(this.temporizadorBusquedaDiagnostico);
+    }
+    this.textoBusqueda.set('');
+    this.resultadosBusqueda.set([]);
+    this.sinResultados.set(false);
+    this.dropdownAbierto.set(false);
+    this.buscando.set(false);
+  }
+
+  cerrarDropdown(): void {
+    setTimeout(() => {
+      this.dropdownAbierto.set(false);
+    }, 200);
+  }
+
+  private ordenarDiagnosticosPorRelevancia(
+    items: readonly DiagnosticoBusquedaItem[],
+    termino: string,
+  ): readonly DiagnosticoBusquedaItem[] {
+    const busqueda = termino.toUpperCase().trim();
+    return [...items].sort((a, b) => {
+      const codigoA = a.codigoCIE10.toUpperCase().trim();
+      const codigoB = b.codigoCIE10.toUpperCase().trim();
+      const descripcionA = a.descripcion.toUpperCase().trim();
+      const descripcionB = b.descripcion.toUpperCase().trim();
+
+      const exactoCodigoA = codigoA === busqueda ? 1 : 0;
+      const exactoCodigoB = codigoB === busqueda ? 1 : 0;
+      if (exactoCodigoA !== exactoCodigoB) return exactoCodigoB - exactoCodigoA;
+
+      const prefijoCodigoA = codigoA.startsWith(busqueda) ? 1 : 0;
+      const prefijoCodigoB = codigoB.startsWith(busqueda) ? 1 : 0;
+      if (prefijoCodigoA !== prefijoCodigoB)
+        return prefijoCodigoB - prefijoCodigoA;
+
+      const prefijoDescripcionA = descripcionA.startsWith(busqueda) ? 1 : 0;
+      const prefijoDescripcionB = descripcionB.startsWith(busqueda) ? 1 : 0;
+      if (prefijoDescripcionA !== prefijoDescripcionB)
+        return prefijoDescripcionB - prefijoDescripcionA;
+
+      return descripcionA.localeCompare(descripcionB);
+    });
   }
 
   seleccionarDiagnostico(item: DiagnosticoBusquedaItem): void {
     this.diagnosticoSeleccionado.set(item);
-    this.textoBusqueda.set(`${item.codigoCIE10} - ${item.descripcion}`);
+    this.textoBusqueda.set(
+      `${item.codigoCIE10.trim()} - ${item.descripcion.trim()}`,
+    );
     this.dropdownAbierto.set(false);
+    this.sinResultados.set(false);
 
     const regla = obtenerReglaLabDiagnostico(item.codigoCIE10);
     this.reglaDiagnosticoActivo.set(regla);
@@ -139,6 +319,15 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
       this.lab2Seleccionado.set('');
       this.lab3Seleccionado.set('');
     }
+  }
+
+  deseleccionarDiagnostico(): void {
+    this.diagnosticoSeleccionado.set(null);
+    this.limpiarBusqueda();
+    this.lab1Seleccionado.set('');
+    this.lab2Seleccionado.set('');
+    this.lab3Seleccionado.set('');
+    this.reglaDiagnosticoActivo.set(null);
   }
 
   registrarDiagnostico(): void {
@@ -165,10 +354,10 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
       idClasificacionDx,
       clasificacion: this.tipoSeleccionado(),
       idSubclasificacionDx: listaActual.length === 0 ? 1 : 2,
-      labConfHIS: this.lab1Seleccionado(),
-      labConfHIS1: this.lab2Seleccionado(),
-      labConfHIS2: this.lab3Seleccionado(),
-      labConfHIS3: '',
+      labConfHIS: this.tipoSeleccionado(),
+      labConfHIS1: this.lab1Seleccionado(),
+      labConfHIS2: this.lab2Seleccionado(),
+      labConfHIS3: this.lab3Seleccionado(),
     };
 
     listaActual.push(nuevoDx);
@@ -204,6 +393,14 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
     }
     this.diagnosticosCambio.emit(lista);
 
+    const maxPagina = Math.max(
+      1,
+      Math.ceil(lista.length / this.elementosPorPaginaDiagnosticos),
+    );
+    if (this.paginaDiagnosticos() > maxPagina) {
+      this.paginaDiagnosticos.set(maxPagina);
+    }
+
     if (this.idDiagnosticoAsociado() === dxEliminado?.idDiagnostico) {
       this.idDiagnosticoAsociado.set(lista[0]?.idDiagnostico || 0);
     }
@@ -231,6 +428,7 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
     const lista = [...this.diagnosticos()];
     lista[indice].clasificacion = nuevoTipo;
     lista[indice].idClasificacionDx = this.resolverIdClasificacion(nuevoTipo);
+    lista[indice].labConfHIS = nuevoTipo;
     this.diagnosticosCambio.emit(lista);
   }
 
@@ -242,7 +440,7 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
 
   actualizarLabFila(
     indice: number,
-    campo: 'labConfHIS' | 'labConfHIS1' | 'labConfHIS2',
+    campo: 'labConfHIS' | 'labConfHIS1' | 'labConfHIS2' | 'labConfHIS3',
     valor: unknown,
   ): void {
     const texto = typeof valor === 'string' ? valor.trim().toUpperCase() : '';
@@ -254,30 +452,67 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
     this.diagnosticosCambio.emit(lista);
   }
 
+  cambiarClasificacionFila(indice: number, nuevaClasificacion: unknown): void {
+    const valor =
+      typeof nuevaClasificacion === 'string'
+        ? (nuevaClasificacion.toUpperCase() as 'P' | 'D' | 'R')
+        : 'D';
+    const lista = [...this.diagnosticos()];
+    if (indice >= 0 && indice < lista.length) {
+      let idClasificacion = 1;
+      if (valor === 'D') {
+        idClasificacion = 2;
+      } else if (valor === 'R') {
+        idClasificacion = 3;
+      }
+      lista[indice] = {
+        ...lista[indice],
+        clasificacion: valor,
+        idClasificacionDx: idClasificacion,
+        labConfHIS: valor,
+      };
+      this.diagnosticosCambio.emit(lista);
+    }
+  }
+
   actualizarInformacionComplementaria(texto: string): void {
     this.inforCompDiagMedCambio.emit(texto);
   }
 
   // --- Procedimientos Médicos (CPMS / CPT) ---
 
-  async alEscribirBusquedaProcedimiento(): Promise<void> {
+  alEscribirBusquedaProcedimiento(): void {
     const texto = this.textoBusquedaProcedimiento().trim();
+    if (this.temporizadorBusquedaProcedimiento) {
+      clearTimeout(this.temporizadorBusquedaProcedimiento);
+    }
+
     if (texto.length < 2) {
       this.resultadosProcedimientos.set([]);
       this.dropdownProcedimientosAbierto.set(false);
+      this.buscandoProcedimientos.set(false);
       return;
     }
 
     this.buscandoProcedimientos.set(true);
-    try {
-      const items = await this.apiService.buscarProcedimientos(texto);
-      this.resultadosProcedimientos.set(items);
-      this.dropdownProcedimientosAbierto.set(items.length > 0);
-    } catch {
-      this.resultadosProcedimientos.set([]);
-    } finally {
-      this.buscandoProcedimientos.set(false);
-    }
+    this.temporizadorBusquedaProcedimiento = setTimeout(async () => {
+      const identificadorActual = ++this.identificadorPeticionProcedimiento;
+      try {
+        const items = await this.apiService.buscarProcedimientos(texto);
+        if (identificadorActual === this.identificadorPeticionProcedimiento) {
+          this.resultadosProcedimientos.set(items);
+          this.dropdownProcedimientosAbierto.set(items.length > 0);
+        }
+      } catch {
+        if (identificadorActual === this.identificadorPeticionProcedimiento) {
+          this.resultadosProcedimientos.set([]);
+        }
+      } finally {
+        if (identificadorActual === this.identificadorPeticionProcedimiento) {
+          this.buscandoProcedimientos.set(false);
+        }
+      }
+    }, 250);
   }
 
   seleccionarProcedimiento(item: ProcedimientoBusquedaItem): void {
@@ -362,6 +597,14 @@ export class DiagnosticosCeSeccionComponent implements OnInit {
     const lista = [...(this.procedimientos() || [])];
     lista.splice(indice, 1);
     this.procedimientosCambio.emit(lista);
+
+    const maxPagina = Math.max(
+      1,
+      Math.ceil(lista.length / this.elementosPorPaginaProcedimientos),
+    );
+    if (this.paginaProcedimientos() > maxPagina) {
+      this.paginaProcedimientos.set(maxPagina);
+    }
   }
 
   verDetalleProcedimiento(proc: AtencionProcedimientoCEItem): void {

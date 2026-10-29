@@ -9,12 +9,19 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MaestrosApiService } from '../../../../../../../compartido/api/maestros.api.service';
-import type { ICatalogoNombre } from '../../../../../../../compartido/tipos/api-tipos';
+import { PaginacionComponent } from '../../../../../../../compartido/ui/paginacion/paginacion';
 import { SelectGlobalComponent } from '../../../../../../../compartido/ui/select-global/select-global';
+import { AuthService } from '../../../../../../auth/aplicacion/auth.service';
 import { AtencionCeEstadoService } from '../../../../../aplicacion/atencion-ce-estado.service';
-import type { ColaPacienteCEItem } from '../../../../../tipos/atencion-ce.tipos';
+import type {
+  ColaPacienteCEItem,
+  ServicioMedicoItem,
+} from '../../../../../tipos/atencion-ce.tipos';
 import { AtencionCEApiService } from '../../../../salida/http/atencion-ce.api.service';
+import {
+  HistorialAtencionesModalComponent,
+  type PacienteHistorialDatos,
+} from '../../componentes/historial-atenciones-modal/historial-atenciones-modal.component';
 import { TriajeCeModalComponent } from '../../componentes/triaje-ce-modal/triaje-ce-modal.component';
 
 @Component({
@@ -23,14 +30,16 @@ import { TriajeCeModalComponent } from '../../componentes/triaje-ce-modal/triaje
   imports: [
     CommonModule,
     FormsModule,
+    PaginacionComponent,
     TriajeCeModalComponent,
+    HistorialAtencionesModalComponent,
     SelectGlobalComponent,
   ],
   templateUrl: './atencion-ce-cola.component.html',
 })
 export class AtencionCeColaComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(AtencionCEApiService);
-  private readonly maestrosApi = inject(MaestrosApiService);
+  private readonly authService = inject(AuthService);
   private readonly estadoService = inject(AtencionCeEstadoService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -47,11 +56,19 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   readonly estadoFiltro = signal<string>(this.estadoService.estadoFiltro());
   readonly turnoFiltro = signal<string>('');
   readonly servicioFiltro = signal<number>(0);
-  readonly servicios = signal<readonly ICatalogoNombre[]>([]);
+  readonly servicios = signal<readonly ServicioMedicoItem[]>([]);
 
   readonly modalTriajeVisible = signal<boolean>(false);
   readonly modalTriajeSoloLectura = signal<boolean>(false);
   readonly pacienteSeleccionadoTriaje = signal<ColaPacienteCEItem | null>(null);
+
+  readonly modalHistorialVisible = signal<boolean>(false);
+  readonly pacienteSeleccionadoHistorial =
+    signal<PacienteHistorialDatos | null>(null);
+
+  readonly paginaActual = signal<number>(1);
+  readonly elementosPorPagina = signal<number>(10);
+  readonly opcionesElementosPorPagina: readonly number[] = [10, 20, 50, 100];
 
   readonly totalCitados = computed(() => this.pacientesCola().length);
 
@@ -94,12 +111,58 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
       );
     }
 
-    const idServ = this.servicioFiltro();
-    if (idServ > 0) {
-      lista = lista.filter((p) => p.idServicioIngreso === idServ);
+    const idServicio = Number(this.servicioFiltro()) || 0;
+    if (idServicio > 0) {
+      lista = lista.filter((p) => Number(p.idServicioIngreso) === idServicio);
+    }
+
+    const texto = this.filtroTexto().trim().toLowerCase();
+    if (texto) {
+      lista = lista.filter((p) => {
+        const nombre = (p.pacienteNombre || '').toLowerCase();
+        const documento = (p.nroDocumento || '').toLowerCase();
+        const historia = String(p.nroHistoriaClinica || '').toLowerCase();
+        const cuenta = String(p.idCuentaAtencion || '').toLowerCase();
+        const telefono = (p.telefono || '').toLowerCase();
+        return (
+          nombre.includes(texto) ||
+          documento.includes(texto) ||
+          historia.includes(texto) ||
+          cuenta.includes(texto) ||
+          telefono.includes(texto)
+        );
+      });
     }
 
     return lista;
+  });
+
+  readonly totalFiltrados = computed(() => this.pacientesFiltrados().length);
+
+  readonly totalPaginas = computed(() => {
+    const total = this.totalFiltrados();
+    const tamano = this.elementosPorPagina();
+    return Math.max(1, Math.ceil(total / tamano));
+  });
+
+  readonly indiceInicio = computed(() => {
+    if (this.totalFiltrados() === 0) return 0;
+    return (this.paginaActual() - 1) * this.elementosPorPagina() + 1;
+  });
+
+  readonly indiceFin = computed(() => {
+    return Math.min(
+      this.paginaActual() * this.elementosPorPagina(),
+      this.totalFiltrados(),
+    );
+  });
+
+  readonly pacientesPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.elementosPorPagina();
+    return this.pacientesFiltrados().slice(
+      inicio,
+      inicio + this.elementosPorPagina(),
+    );
   });
 
   readonly esFechaHoy = computed(() => {
@@ -128,9 +191,9 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
     }
 
     if (queryServicio) {
-      const idS = parseInt(queryServicio, 10);
-      if (!Number.isNaN(idS) && idS > 0) {
-        this.servicioFiltro.set(idS);
+      const idServicioParametro = parseInt(queryServicio, 10);
+      if (!Number.isNaN(idServicioParametro) && idServicioParametro > 0) {
+        this.servicioFiltro.set(idServicioParametro);
       }
     }
 
@@ -145,7 +208,14 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
 
   async cargarServicios(): Promise<void> {
     try {
-      const items = await this.maestrosApi.getServicios(2);
+      const idEmpleado =
+        this.authService.getIdEmpleado() ||
+        this.authService.userProfile()?.idEmpleado ||
+        -100;
+      let items = await this.apiService.listarServiciosMedico(idEmpleado, 1);
+      if (!items || items.length === 0) {
+        items = await this.apiService.listarServiciosMedico(-100, 1);
+      }
       if (Array.isArray(items)) {
         this.servicios.set(items);
       }
@@ -159,10 +229,11 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     try {
       const texto = this.filtroTexto().trim();
+      const idServicio = Number(this.servicioFiltro()) || 0;
       const items = await this.apiService.listarCola({
-        fecha: texto ? undefined : this.fechaSeleccionada(),
+        fecha: this.fechaSeleccionada(),
         filtro: texto || undefined,
-        idServicio: this.servicioFiltro() || undefined,
+        idServicio: idServicio > 0 ? idServicio : undefined,
       });
       if (idPeticion === this.idPeticionActual) {
         this.pacientesCola.set(items);
@@ -181,15 +252,14 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   alEscribirFiltro(nuevoTexto: string): void {
     this.filtroTexto.set(nuevoTexto);
     this.estadoService.establecerFiltroTexto(nuevoTexto);
+    this.paginaActual.set(1);
     if (this.temporizadorBusqueda) {
       clearTimeout(this.temporizadorBusqueda);
     }
-    this.temporizadorBusqueda = setTimeout(async () => {
-      await this.cargarCola();
-    }, 400);
   }
 
   async alBuscar(): Promise<void> {
+    this.paginaActual.set(1);
     if (this.temporizadorBusqueda) {
       clearTimeout(this.temporizadorBusqueda);
     }
@@ -199,6 +269,7 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   async alLimpiarBusqueda(): Promise<void> {
     this.filtroTexto.set('');
     this.estadoService.establecerFiltroTexto('');
+    this.paginaActual.set(1);
     if (this.temporizadorBusqueda) {
       clearTimeout(this.temporizadorBusqueda);
     }
@@ -210,6 +281,7 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
     this.estadoService.establecerFecha(nuevaFecha);
     this.filtroTexto.set('');
     this.estadoService.establecerFiltroTexto('');
+    this.paginaActual.set(1);
     await this.sincronizarParametrosRuta({ fecha: nuevaFecha });
     await this.cargarCola();
   }
@@ -222,21 +294,56 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   alCambiarEstado(nuevoEstado: string): void {
     this.estadoFiltro.set(nuevoEstado);
     this.estadoService.establecerEstadoFiltro(nuevoEstado);
+    this.paginaActual.set(1);
     void this.sincronizarParametrosRuta({
       estado: nuevoEstado || null,
     });
   }
 
-  async alCambiarServicio(nuevoIdServicio: number): Promise<void> {
-    this.servicioFiltro.set(nuevoIdServicio);
+  async alCambiarServicio(nuevoIdServicio: unknown): Promise<void> {
+    const idServicioNumerico = Number(nuevoIdServicio) || 0;
+    this.servicioFiltro.set(idServicioNumerico);
+    this.paginaActual.set(1);
     await this.sincronizarParametrosRuta({
-      servicio: nuevoIdServicio > 0 ? String(nuevoIdServicio) : null,
+      servicio: idServicioNumerico > 0 ? String(idServicioNumerico) : null,
     });
     await this.cargarCola();
   }
 
   alCambiarTurno(nuevoTurno: string): void {
     this.turnoFiltro.set(nuevoTurno);
+    this.paginaActual.set(1);
+  }
+
+  cambiarPagina(nuevaPagina: number): void {
+    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPaginas()) {
+      this.paginaActual.set(nuevaPagina);
+    }
+  }
+
+  cambiarElementosPorPagina(nuevoTamano: unknown): void {
+    const tamanoNumerico = Number(nuevoTamano) || 10;
+    this.elementosPorPagina.set(tamanoNumerico);
+    this.paginaActual.set(1);
+  }
+
+  abrirHistorialPaciente(item: ColaPacienteCEItem): void {
+    const datosPaciente: PacienteHistorialDatos = {
+      idPaciente: item.idPaciente,
+      idAtencion: item.idAtencion,
+      pacienteNombre: item.pacienteNombre,
+      nroHistoriaClinica: item.nroHistoriaClinica,
+      nroDocumento: item.nroDocumento,
+      edad: item.edad,
+      sexo: item.sexo,
+    };
+    this.pacienteSeleccionadoHistorial.set(datosPaciente);
+    this.modalHistorialVisible.set(true);
+  }
+
+  cerrarModalHistorial(): void {
+    this.modalHistorialVisible.set(false);
+    this.pacienteSeleccionadoHistorial.set(null);
   }
 
   abrirTriaje(item: ColaPacienteCEItem, soloLectura = false): void {
@@ -264,6 +371,15 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
     });
   }
 
+  verFichaPaciente(item: ColaPacienteCEItem): void {
+    this.router.navigate(['/atencion-ce', item.idAtencion], {
+      queryParams: {
+        fecha: this.fechaSeleccionada(),
+        estado: this.estadoFiltro() || undefined,
+      },
+    });
+  }
+
   obtenerIniciales(nombre: string): string {
     if (!nombre) return 'PX';
     const partes = nombre.trim().split(/\s+/);
@@ -274,11 +390,11 @@ export class AtencionCeColaComponent implements OnInit, OnDestroy {
   obtenerClaseEstado(estado: string): string {
     switch (estado) {
       case 'ATENDIDO':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-slate-800 text-white border-slate-800';
       case 'EN_ATENCION':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-700 text-white border-blue-700';
       default:
-        return 'bg-amber-50 text-amber-700 border-amber-200';
+        return 'bg-amber-600 text-white border-amber-600';
     }
   }
 

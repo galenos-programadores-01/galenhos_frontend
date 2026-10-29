@@ -6,7 +6,6 @@ import {
   type OnInit,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { MaestrosApiService } from '../../../../../../compartido/api/maestros.api.service';
 import { ApiRequestError } from '../../../../../../compartido/api-client/api-client.service';
@@ -664,7 +663,12 @@ export class ListaEsperaQxComponent implements OnInit {
       const blob = new Blob([wbOut], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      saveAs(blob, nombreArchivo);
+      const enlaceDescarga = document.createElement('a');
+      const enlaceUrlTemporal = URL.createObjectURL(blob);
+      enlaceDescarga.href = enlaceUrlTemporal;
+      enlaceDescarga.download = nombreArchivo;
+      enlaceDescarga.click();
+      URL.revokeObjectURL(enlaceUrlTemporal);
     } catch (error: unknown) {
       this.error =
         error instanceof ApiRequestError

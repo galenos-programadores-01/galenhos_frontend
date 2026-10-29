@@ -1,0 +1,33 @@
+import type { DatosInstitucionPdf } from '../../../../compartido/pdf/pdf.tipos';
+import type { DocumentoFirmaPa } from '../firma/primera-atencion-firma.tipos';
+import { generarPdfDocumentoFirmaPa } from '../pdf/primera-atencion-pdf-satelite.util';
+import type { PrimeraAtencionPdfData } from '../pdf/primera-atencion-pdf.tipos';
+
+/** Origen del PDF mostrado/descargado en el visor de ficha. */
+export type OrigenPdfFichaPa = 'firmado' | 'copia';
+
+/**
+ * Regenera un PDF del encuentro (PA / examen / meds) desde datos clínicos.
+ * Usado cuando el FTP no está disponible; no sustituye el documento firmado.
+ */
+export async function generarBlobCopiaDocumentoFichaPa(
+  lote: readonly DocumentoFirmaPa[],
+  claveDocumento: string,
+  datosPa: PrimeraAtencionPdfData,
+  institucion: DatosInstitucionPdf | null,
+  nombreUsuario: string,
+  fechaImpresion: string,
+): Promise<{ blob: Blob; documento: DocumentoFirmaPa }> {
+  const documento = lote.find((d) => d.clave === claveDocumento);
+  if (!documento) {
+    throw new Error('No se encontró el documento en el lote de la ficha.');
+  }
+  const pdf = await generarPdfDocumentoFirmaPa(
+    documento,
+    datosPa,
+    institucion,
+    nombreUsuario,
+    fechaImpresion,
+  );
+  return { blob: pdf.output('blob'), documento };
+}

@@ -14,6 +14,10 @@ export interface FirmaPeruOpciones {
   logoPngBase64?: string;
   positionX?: number;
   positionY?: number;
+  stampPage?: number;
+  stampTextSize?: number;
+  stampWordWrap?: number;
+  signatureStyle?: number;
 }
 
 export interface FirmaPeruDocumento {
@@ -130,17 +134,21 @@ async function asegurarJQueryFirmaPeru(): Promise<void> {
     return;
   }
 
-  await cargarScriptExterno(JQUERY_URL);
-
   const objetoGlobal = window as unknown as {
-    jQuery?: { noConflict: (eliminarTodos: boolean) => unknown };
+    jQuery?: { noConflict: (eliminarTodos?: boolean) => unknown };
+    jqFirmaPeru?: unknown;
   };
-  if (typeof objetoGlobal.jQuery?.noConflict !== 'function') {
-    throw new Error('jQuery no está disponible para el servicio Firma Perú.');
+
+  if (!objetoGlobal.jQuery) {
+    await cargarScriptExterno(JQUERY_URL);
   }
 
-  const instanciaSinConflicto = objetoGlobal.jQuery.noConflict(true);
-  obtenerVentanaFirmaPeru().jqFirmaPeru = instanciaSinConflicto;
+  if (typeof objetoGlobal.jQuery?.noConflict === 'function') {
+    const instanciaSinConflicto = objetoGlobal.jQuery.noConflict(true);
+    ventana.jqFirmaPeru = instanciaSinConflicto;
+    (window as unknown as { jqFirmaPeru?: unknown }).jqFirmaPeru =
+      instanciaSinConflicto;
+  }
 }
 
 export function asegurarContenedorFirmaPeru(): void {
@@ -305,7 +313,9 @@ function esperarFirmaConFirmador(
     ventana.signatureOk = () => {};
     ventana.signatureCancel = () => {
       finalizarConError(
-        new Error('El proceso de firma fue cancelado por el usuario.'),
+        new Error(
+          'El proceso de firma fue cancelado en la aplicación Firma Perú.',
+        ),
       );
     };
 
@@ -315,7 +325,9 @@ function esperarFirmaConFirmador(
       finalizarConError(
         errorInvocacion instanceof Error
           ? errorInvocacion
-          : new Error('Error al invocar startSignature de Firma Perú.'),
+          : new Error(
+              'Error al invocar la aplicación oficial Firma Perú en el puerto 48596.',
+            ),
       );
       return;
     }
@@ -340,6 +352,40 @@ function esperarFirmaConFirmador(
       }
     })();
   });
+}
+
+export async function verificarServicioFirmaPeruActivo(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  const urlsVerificacion = [
+    `http://127.0.0.1:${FIRMA_PERU_PORT}/firmaperu/sign`,
+  ];
+  for (const urlEndpoint of urlsVerificacion) {
+    try {
+      const controladorAborto = new AbortController();
+      const temporizadorLimite = setTimeout(() => {
+        controladorAborto.abort();
+      }, 1000);
+
+      const respuesta = await fetch(urlEndpoint, {
+        method: 'GET',
+        signal: controladorAborto.signal,
+        cache: 'no-store',
+      });
+      clearTimeout(temporizadorLimite);
+
+      if (respuesta.ok) {
+        const cuerpo = (await respuesta.json().catch(() => null)) as {
+          status?: string;
+        } | null;
+        if (cuerpo?.status === 'ok') {
+          return true;
+        }
+      }
+    } catch {}
+  }
+  return false;
 }
 
 export async function iniciarFirmaDocumento(
@@ -369,6 +415,18 @@ export async function iniciarFirmaDocumento(
   }
   if (typeof opciones.positionY === 'number') {
     formularioDatos.append('positiony', String(opciones.positionY));
+  }
+  if (typeof opciones.stampPage === 'number' && opciones.stampPage > 0) {
+    formularioDatos.append('stampPage', String(opciones.stampPage));
+  }
+  if (typeof opciones.stampTextSize === 'number' && opciones.stampTextSize > 0) {
+    formularioDatos.append('stampTextSize', String(opciones.stampTextSize));
+  }
+  if (typeof opciones.stampWordWrap === 'number' && opciones.stampWordWrap > 0) {
+    formularioDatos.append('stampWordWrap', String(opciones.stampWordWrap));
+  }
+  if (typeof opciones.signatureStyle === 'number' && opciones.signatureStyle >= 0) {
+    formularioDatos.append('signatureStyle', String(opciones.signatureStyle));
   }
 
   const respuestaApi = await ejecutarPeticionApi<{
@@ -429,6 +487,18 @@ export async function iniciarFirmaLote(
   }
   if (typeof opciones.positionY === 'number') {
     formularioDatos.append('positiony', String(opciones.positionY));
+  }
+  if (typeof opciones.stampPage === 'number' && opciones.stampPage > 0) {
+    formularioDatos.append('stampPage', String(opciones.stampPage));
+  }
+  if (typeof opciones.stampTextSize === 'number' && opciones.stampTextSize > 0) {
+    formularioDatos.append('stampTextSize', String(opciones.stampTextSize));
+  }
+  if (typeof opciones.stampWordWrap === 'number' && opciones.stampWordWrap > 0) {
+    formularioDatos.append('stampWordWrap', String(opciones.stampWordWrap));
+  }
+  if (typeof opciones.signatureStyle === 'number' && opciones.signatureStyle >= 0) {
+    formularioDatos.append('signatureStyle', String(opciones.signatureStyle));
   }
 
   const respuestaApi = await ejecutarPeticionApi<{

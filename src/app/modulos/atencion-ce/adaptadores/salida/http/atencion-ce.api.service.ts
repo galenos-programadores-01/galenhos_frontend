@@ -7,7 +7,13 @@ import type {
   ColaPacienteCEItem,
   DestinoAtencionItem,
   FichaAtencionCEDetalle,
+  HistorialAtencionDetalle,
+  HistorialAtencionItem,
+  HistorialProcedimientoItem,
+  HistorialReporteOperatorioItem,
   PacienteDatosAdicionalesCE,
+  PacienteHistorialTriajeItem,
+  ServicioMedicoItem,
   TriajeConsultaSignosVitales,
 } from '../../../tipos/atencion-ce.tipos';
 
@@ -131,8 +137,9 @@ export class AtencionCEApiService {
   ): Promise<DiagnosticoBusquedaItem[]> {
     if (!termino || termino.trim().length < 2) return [];
     try {
+      const terminoLimpio = encodeURIComponent(termino.trim());
       return await this.apiClient.request<DiagnosticoBusquedaItem[]>(
-        `/api/v1/diagnosticos/search?q=${encodeURIComponent(termino.trim())}`,
+        `/api/v1/diagnosticos/search?filtro=${terminoLimpio}&q=${terminoLimpio}`,
         { method: 'GET' },
       );
     } catch {
@@ -145,10 +152,11 @@ export class AtencionCEApiService {
   ): Promise<ProcedimientoBusquedaItem[]> {
     if (!termino || termino.trim().length < 2) return [];
     try {
+      const terminoLimpio = encodeURIComponent(termino.trim());
       const respuesta = await this.apiClient.request<{
         items: ProcedimientoBusquedaItem[];
       }>(
-        `/api/v1/servicios-catalogo?filtro=${encodeURIComponent(termino.trim())}&pageSize=20`,
+        `/api/v1/servicios-catalogo?filtro=${terminoLimpio}&q=${terminoLimpio}&pageSize=30`,
         { method: 'GET' },
       );
       return respuesta?.items || [];
@@ -190,13 +198,38 @@ export class AtencionCEApiService {
 
   async buscarExamenesApoyo(
     termino: string,
+    idTipoFinanciamiento: number = 2,
   ): Promise<ExamenApoyoBusquedaItem[]> {
     if (!termino || termino.trim().length < 2) return [];
     try {
-      return await this.apiClient.request<ExamenApoyoBusquedaItem[]>(
-        `/api/v1/catalogos/examenes?q=${encodeURIComponent(termino.trim())}`,
+      const terminoLimpio = encodeURIComponent(termino.trim());
+      const respuesta = await this.apiClient.request<
+        Array<{
+          idProducto?: number;
+          IdProducto?: number;
+          codigo?: string;
+          Codigo?: string;
+          nombre?: string;
+          Nombre?: string;
+          tipo?: string;
+          Tipo?: string;
+          servicio?: string;
+          puntoCarga?: string;
+          esCPT?: boolean;
+          EsCPT?: boolean;
+        }>
+      >(
+        `/api/v1/catalogos/examenes?q=${terminoLimpio}&idTipoFinanciamiento=${idTipoFinanciamiento}`,
         { method: 'GET' },
       );
+      if (!respuesta || !Array.isArray(respuesta)) return [];
+      return respuesta.map((item) => ({
+        idProducto: Number(item.idProducto ?? item.IdProducto ?? 0),
+        codigo: String(item.codigo ?? item.Codigo ?? '').trim(),
+        nombre: String(item.nombre ?? item.Nombre ?? '').trim(),
+        tipo: String(item.tipo ?? item.Tipo ?? item.servicio ?? item.puntoCarga ?? 'LABORATORIO').trim(),
+        esCPT: Boolean(item.esCPT ?? item.EsCPT ?? false),
+      }));
     } catch {
       return [];
     }
@@ -232,6 +265,161 @@ export class AtencionCEApiService {
       return [];
     }
   }
+
+  async obtenerHistorialAtenciones(
+    idPaciente: number,
+  ): Promise<HistorialAtencionItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<HistorialAtencionItem[]>(
+        `/api/v1/atencion-ce/historial-paciente/${idPaciente}`,
+        { method: 'GET' },
+      );
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialAtencionDetalle(
+    idAtencion: number,
+  ): Promise<HistorialAtencionDetalle | null> {
+    try {
+      return await this.apiClient.request<HistorialAtencionDetalle>(
+        `/api/v1/atencion-ce/historial-atencion-detalle/${idAtencion}`,
+        { method: 'GET' },
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  async obtenerHistorialQuirurgico(
+    idPaciente: number,
+  ): Promise<HistorialReporteOperatorioItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        HistorialReporteOperatorioItem[]
+      >(`/api/v1/atencion-ce/historial-quirurgico-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialProcedimientos(
+    idPaciente: number,
+  ): Promise<HistorialProcedimientoItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        HistorialProcedimientoItem[]
+      >(`/api/v1/atencion-ce/historial-procedimientos-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerHistorialTriajePaciente(
+    idPaciente: number,
+  ): Promise<PacienteHistorialTriajeItem[]> {
+    try {
+      const respuesta = await this.apiClient.request<
+        PacienteHistorialTriajeItem[]
+      >(`/api/v1/atencion-ce/historial-triaje-paciente/${idPaciente}`, {
+        method: 'GET',
+      });
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async listarServiciosMedico(
+    idEmpleado: number,
+    idTipoServicio: number = 1,
+  ): Promise<ServicioMedicoItem[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.set('idEmpleado', String(idEmpleado || -100));
+      queryParams.set('idTipoServicio', String(idTipoServicio || 1));
+      const respuesta = await this.apiClient.request<ServicioMedicoItem[]>(
+        `/api/v1/atencion-ce/servicios-medico?${queryParams.toString()}`,
+        {
+          method: 'GET',
+        },
+      );
+      return respuesta || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async obtenerFormatoImpresionReceta(
+    identificadorReceta: number,
+    identificadorCuentaAtencion?: number,
+    identificadorAtencion?: number,
+  ): Promise<FormatoImpresionRecetaDto | null> {
+    try {
+      const parametros = new URLSearchParams();
+      if (identificadorCuentaAtencion) {
+        parametros.set('idCuentaAtencion', String(identificadorCuentaAtencion));
+      }
+      if (identificadorAtencion) {
+        parametros.set('idAtencion', String(identificadorAtencion));
+      }
+      const consulta = parametros.toString();
+      const ruta = `/api/v1/ordenes/receta/${identificadorReceta}/formato-impresion${consulta ? `?${consulta}` : ''}`;
+      return await this.apiClient.request<FormatoImpresionRecetaDto>(ruta, {
+        method: 'GET',
+      });
+    } catch {
+      return null;
+    }
+  }
+}
+
+export interface FormatoImpresionRecetaDto {
+  readonly idReceta: number;
+  readonly numeroReceta: string;
+  readonly idCuentaAtencion: number;
+  readonly idAtencion: number;
+  readonly pacienteNombre: string;
+  readonly direccion: string;
+  readonly numeroFua: string;
+  readonly tipoAtencion: string;
+  readonly tipoFinanciamiento: string;
+  readonly telefono: string;
+  readonly especialidadMedico: string;
+  readonly consultorio: string;
+  readonly nroHistoriaClinica: string;
+  readonly edad: string;
+  readonly cuentaAtencion: string;
+  readonly fechaAtencion: string;
+  readonly documentoIdentidad: string;
+  readonly peso: string;
+  readonly talla: string;
+  readonly medicoNombre: string;
+  readonly medicoColegiatura: string;
+  readonly medicoRNE: string;
+  readonly usuario: string;
+  readonly diagnosticos: readonly {
+    readonly codigoCIE10: string;
+    readonly descripcion: string;
+    readonly tipo: string;
+  }[];
+  readonly diagnosticoTexto: string;
+  readonly medicamentos: readonly {
+    readonly item: number;
+    readonly codigo: string;
+    readonly nombre: string;
+    readonly formaFarmaceutica: string;
+    readonly dosis: string;
+    readonly cantidad: number;
+  }[];
 }
 
 export interface ProcedimientoBusquedaItem {

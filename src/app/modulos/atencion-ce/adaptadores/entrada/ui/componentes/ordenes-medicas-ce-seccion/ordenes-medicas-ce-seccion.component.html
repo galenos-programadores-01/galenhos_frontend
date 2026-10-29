@@ -1,87 +1,69 @@
-<div class="space-y-4">
+﻿<div class="space-y-4">
 
-  <!-- ============================================================== -->
-  <!-- SUB-BARRA DE PESTAÑAS: FARMACIA / APOYO / INTERCONSULTA / PROC -->
-  <!-- ============================================================== -->
-  <div class="flex items-center gap-1 border-b border-slate-200 bg-slate-50 px-2 pt-2 rounded-t text-xs font-bold overflow-x-auto whitespace-nowrap">
-    
-    <!-- SUB-PESTAÑA: FARMACIA -->
+  
+  <div class="flex items-center gap-1 border-b border-slate-200 bg-slate-50/80 px-2 pt-2 rounded-t-md text-xs font-semibold overflow-x-auto whitespace-nowrap">
     <button
       type="button"
       (click)="cambiarSubPestana('farmacia')"
-      class="px-4 py-2 border-b-2 transition-colors flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-      [ngClass]="subPestanaActiva() === 'farmacia' ? 'border-emerald-600 text-emerald-800 bg-white font-black' : 'border-transparent text-slate-600 hover:text-slate-900'">
+      class="px-4 py-2 border-b-2 transition-all flex items-center gap-2 cursor-pointer uppercase tracking-wider active:scale-[0.98]"
+      [ngClass]="subPestanaActiva() === 'farmacia' ? 'border-blue-600 text-blue-700 bg-white font-bold' : 'border-transparent text-slate-600 hover:text-slate-900'">
       Farmacia
       @if ((itemsReceta() || []).length > 0) {
-        <span class="px-1.5 py-0.2 rounded text-[10px] bg-emerald-600 text-white font-bold">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-blue-600 text-white font-bold">
           {{ (itemsReceta() || []).length }}
         </span>
       }
     </button>
-
-    <!-- SUB-PESTAÑA: APOYO AL DIAGNÓSTICO -->
     <button
       type="button"
       (click)="cambiarSubPestana('apoyo')"
-      class="px-4 py-2 border-b-2 transition-colors flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-      [ngClass]="subPestanaActiva() === 'apoyo' ? 'border-emerald-600 text-emerald-800 bg-white font-black' : 'border-transparent text-slate-600 hover:text-slate-900'">
+      class="px-4 py-2 border-b-2 transition-all flex items-center gap-2 cursor-pointer uppercase tracking-wider active:scale-[0.98]"
+      [ngClass]="subPestanaActiva() === 'apoyo' ? 'border-blue-600 text-blue-700 bg-white font-bold' : 'border-transparent text-slate-600 hover:text-slate-900'">
       Apoyo al Diagnóstico
       @if ((ordenesApoyo() || []).length > 0) {
-        <span class="px-1.5 py-0.2 rounded text-[10px] bg-blue-600 text-white font-bold">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-blue-600 text-white font-bold">
           {{ (ordenesApoyo() || []).length }}
         </span>
       }
     </button>
-
-    <!-- SUB-PESTAÑA: INTERCONSULTAS -->
     <button
       type="button"
       (click)="cambiarSubPestana('interconsultas')"
-      class="px-4 py-2 border-b-2 transition-colors flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-      [ngClass]="subPestanaActiva() === 'interconsultas' ? 'border-emerald-600 text-emerald-800 bg-white font-black' : 'border-transparent text-slate-600 hover:text-slate-900'">
+      class="px-4 py-2 border-b-2 transition-all flex items-center gap-2 cursor-pointer uppercase tracking-wider active:scale-[0.98]"
+      [ngClass]="subPestanaActiva() === 'interconsultas' ? 'border-blue-600 text-blue-700 bg-white font-bold' : 'border-transparent text-slate-600 hover:text-slate-900'">
       Interconsultas
       @if ((interconsultas() || []).length > 0) {
-        <span class="px-1.5 py-0.2 rounded text-[10px] bg-purple-600 text-white font-bold">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-slate-700 text-white font-bold">
           {{ (interconsultas() || []).length }}
         </span>
       }
     </button>
-
-    <!-- SUB-PESTAÑA: PROCEDIMIENTOS -->
     <button
       type="button"
       (click)="cambiarSubPestana('procedimientos')"
-      class="px-4 py-2 border-b-2 transition-colors flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-      [ngClass]="subPestanaActiva() === 'procedimientos' ? 'border-emerald-600 text-emerald-800 bg-white font-black' : 'border-transparent text-slate-600 hover:text-slate-900'">
+      class="px-4 py-2 border-b-2 transition-all flex items-center gap-2 cursor-pointer uppercase tracking-wider active:scale-[0.98]"
+      [ngClass]="subPestanaActiva() === 'procedimientos' ? 'border-blue-600 text-blue-700 bg-white font-bold' : 'border-transparent text-slate-600 hover:text-slate-900'">
       Procedimientos
       @if ((ordenesProcedimientos() || []).length > 0) {
-        <span class="px-1.5 py-0.2 rounded text-[10px] bg-teal-600 text-white font-bold">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-slate-700 text-white font-bold">
           {{ (ordenesProcedimientos() || []).length }}
         </span>
       }
     </button>
-
   </div>
 
-  <!-- ============================================================== -->
-  <!-- 1. SUB-PESTAÑA: FARMACIA (SCREENSHOT 1)                         -->
-  <!-- ============================================================== -->
   @if (subPestanaActiva() === 'farmacia') {
     <div class="space-y-3">
-      
-      <!-- Fila 1: Botón Gestión de Paquetes (Alineado a la izquierda según captura) -->
       <div>
         <button
           type="button"
           (click)="abrirGestionPaquetes()"
-          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shadow-xs">
+          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs">
           Gestión de Paquetes
         </button>
       </div>
-
-      <!-- Fila 2: Selector de Diagnóstico Asociado -->
       <div class="w-full max-w-md">
-        <label for="select-dx-farmacia" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+        <label for="select-dx-farmacia" class="block text-xs font-bold uppercase text-slate-700 mb-1">
           Diagnóstico:
         </label>
         <app-select-global
@@ -97,14 +79,10 @@
           }
         </app-select-global>
       </div>
-
-      <!-- Formulario de Inserción Rápida de Medicamento -->
-      <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-2.5">
+      <div class="space-y-2.5 pt-1">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
-          
-          <!-- Buscador de Medicamentos -->
           <div class="md:col-span-4 relative">
-            <label for="input-buscar-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5">
+            <label for="input-buscar-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5">
               Medicamento:
             </label>
             <div class="relative">
@@ -114,7 +92,7 @@
                 placeholder="-- BUSCAR MEDICAMENTO (EJ: LOSARTAN, AMLODIPINO) --"
                 [ngModel]="textoBusquedaMedicamento()"
                 (ngModelChange)="textoBusquedaMedicamento.set($event); alEscribirMedicamento()"
-                class="w-full h-8 px-2.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+                class="w-full h-8 px-2.5 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none uppercase transition-colors" />
 
               @if (buscandoMedicamento()) {
                 <div class="absolute right-2.5 top-2">
@@ -122,29 +100,25 @@
                 </div>
               }
             </div>
-
-            <!-- Dropdown de Medicamentos Encontrados -->
             @if (dropdownMedicamentoAbierto() && resultadosMedicamentos().length > 0) {
-              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100">
-                @for (med of resultadosMedicamentos(); track med.idProducto) {
+              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-0 zoom-in-95">
+                @for (med of resultadosMedicamentos(); track (med.idProducto ? (med.idProducto + '-' + $index) : $index)) {
                   <button
                     type="button"
                     (click)="seleccionarMedicamento(med)"
-                    class="w-full text-left p-2 hover:bg-emerald-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
+                    class="w-full text-left p-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs active:scale-[0.99]">
                     <div>
                       <span class="font-bold text-slate-900 block">{{ med.nombre }} {{ med.concentracion }}</span>
-                      <span class="text-[10px] text-slate-500">{{ med.formaFarmaceutica || 'MEDICAMENTO' }}</span>
+                      <span class="text-xs text-slate-500">{{ med.formaFarmaceutica || 'MEDICAMENTO' }}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-emerald-700 uppercase">Elegir</span>
+                    <span class="text-xs font-bold text-blue-600 uppercase">Elegir</span>
                   </button>
                 }
               </div>
             }
           </div>
-
-          <!-- Dosis -->
           <div class="md:col-span-1">
-            <label for="input-dosis-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
+            <label for="input-dosis-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
               Dosis:
             </label>
             <input
@@ -152,12 +126,10 @@
               type="text"
               [ngModel]="dosisMed()"
               (ngModelChange)="dosisMed.set($event)"
-              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-center text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
-
-          <!-- Unidad -->
           <div class="md:col-span-1">
-            <label for="select-unidad-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
+            <label for="select-unidad-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
               Unidad:
             </label>
             <app-select-global
@@ -170,10 +142,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- Frecuencia -->
           <div class="md:col-span-2">
-            <label for="select-frec-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5">
+            <label for="select-frec-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5">
               Frecuencia:
             </label>
             <app-select-global
@@ -186,10 +156,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- Vía -->
           <div class="md:col-span-1">
-            <label for="select-via-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
+            <label for="select-via-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
               Vía:
             </label>
             <app-select-global
@@ -202,10 +170,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- Duración -->
           <div class="md:col-span-1">
-            <label for="input-dur-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
+            <label for="input-dur-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
               Duración:
             </label>
             <input
@@ -213,13 +179,11 @@
               type="text"
               [ngModel]="duracionMed()"
               (ngModelChange)="duracionMed.set($event)"
-              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-center text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
-
-          <!-- Cantidad -->
           <div class="md:col-span-1">
-            <label for="input-cant-med" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
-              Cant:
+            <label for="input-cant-med" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
+              Cantidad:
             </label>
             <input
               id="input-cant-med"
@@ -228,37 +192,33 @@
               [ngModel]="cantidadMed()"
               (keydown)="filtrarTeclasEntero($event)"
               (ngModelChange)="cantidadMed.set(+$event)"
-              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none" />
+              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-center text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
-
-          <!-- Botón Agregar -->
           <div class="md:col-span-1">
             <button
               type="button"
               (click)="agregarMedicamento()"
               [disabled]="!medicamentoSeleccionado()"
-              class="w-full h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 cursor-pointer shadow-xs">
+              class="w-full h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs">
               Agregar
             </button>
           </div>
 
         </div>
       </div>
-
-      <!-- Tabla de Medicamentos Prescritos (Screenshot 1) -->
-      <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
+      <div class="rounded-md border border-slate-200 overflow-hidden bg-white shadow-xs">
         <table class="w-full text-left border-collapse text-xs">
-          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
             <tr>
-              <th class="px-2 py-2 w-10 text-center"></th>
-              <th class="px-3 py-2">Medicamentos</th>
-              <th class="px-3 py-2 text-center w-28">Diagnóstico</th>
-              <th class="px-3 py-2 text-center w-20">Cantidad</th>
-              <th class="px-3 py-2 text-center w-16">Dosis</th>
-              <th class="px-3 py-2 text-center w-16">Unidad</th>
-              <th class="px-3 py-2 text-center w-28">Frecuencia</th>
-              <th class="px-3 py-2 text-center w-20">Vía</th>
-              <th class="px-3 py-2 text-center w-24">Duración</th>
+              <th class="px-2 py-2.5 w-10 text-center"></th>
+              <th class="px-3 py-2.5">Medicamentos</th>
+              <th class="px-3 py-2.5 text-center w-28">Diagnóstico</th>
+              <th class="px-3 py-2.5 text-center w-20">Cantidad</th>
+              <th class="px-3 py-2.5 text-center w-16">Dosis</th>
+              <th class="px-3 py-2.5 text-center w-16">Unidad</th>
+              <th class="px-3 py-2.5 text-center w-28">Frecuencia</th>
+              <th class="px-3 py-2.5 text-center w-20">Vía</th>
+              <th class="px-3 py-2.5 text-center w-24">Duración</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -269,15 +229,14 @@
                 </td>
               </tr>
             } @else {
-              @for (med of itemsReceta(); track med.idProducto; let idx = $index) {
-                <tr class="bg-[#e8f4fa] hover:bg-sky-100/60 transition-colors border-b border-sky-100">
-                  
-                  <!-- Botón Quitar Circular Rojo -->
+              @for (med of itemsRecetaPaginados(); track (med.idProducto ? (med.idProducto + '-' + idx) : idx); let idx = $index) {
+                @let idxReal = (paginaFarmacia() - 1) * elementosPorPaginaFarmacia + idx;
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
                   <td class="px-2 py-2 text-center">
                     <button
                       type="button"
-                      (click)="eliminarMedicamento(idx)"
-                      class="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white inline-flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                      (click)="eliminarMedicamento(idxReal)"
+                      class="w-7 h-7 rounded-md bg-white hover:bg-red-700 text-slate-600 hover:text-white border border-slate-300 hover:border-red-700 inline-flex items-center justify-center cursor-pointer transition-all active:scale-[0.95]"
                       title="Eliminar medicamento"
                       aria-label="Eliminar medicamento">
                       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" role="img" aria-label="Eliminar">
@@ -286,79 +245,110 @@
                       </svg>
                     </button>
                   </td>
-
-                  <!-- Medicamentos -->
                   <td class="px-3 py-2">
-                    <strong class="text-blue-900 font-bold uppercase text-xs block">
+                    <strong class="text-slate-900 font-bold uppercase text-xs block">
                       {{ med.nombre }} {{ med.concentracion }}
                     </strong>
-                    <span class="text-[10px] text-slate-500 uppercase">{{ med.formaFarmaceutica || med.unidadMedida }}</span>
+                    <span class="text-[11px] text-slate-500 uppercase">{{ med.formaFarmaceutica || med.unidadMedida }}</span>
                   </td>
-
-                  <!-- Diagnóstico (CIE-10) -->
-                  <td class="px-3 py-2 text-center font-mono font-bold text-blue-900">
+                  <td class="px-2 py-1.5 text-center font-bold text-blue-700 text-xs">
                     {{ med.codigoCIE10 || '--' }}
                   </td>
-
-                  <!-- Cantidad -->
-                  <td class="px-3 py-2 text-center font-bold text-slate-900">
-                    {{ med.cantidad }}
+                  <td class="px-2 py-1.5 text-center">
+                    <input
+                      type="number"
+                      min="1"
+                      [ngModel]="med.cantidad"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'cantidad', +$event)"
+                      title="Cantidad total"
+                      class="h-7 w-16 px-1.5 py-0.5 text-center font-bold text-xs border border-slate-300 rounded text-slate-900 focus:border-blue-600 focus:outline-none" />
                   </td>
-
-                  <!-- Dosis -->
-                  <td class="px-3 py-2 text-center font-semibold text-slate-800">
-                    {{ med.dosis }}
+                  <td class="px-2 py-1.5 text-center">
+                    <input
+                      type="text"
+                      [ngModel]="med.dosis"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'dosis', $event)"
+                      title="Dosis"
+                      class="h-7 w-20 px-1.5 py-0.5 text-center font-semibold text-xs border border-slate-300 rounded text-slate-900 focus:border-blue-600 focus:outline-none" />
                   </td>
-
-                  <!-- Unidad -->
-                  <td class="px-3 py-2 text-center font-bold font-mono text-slate-700">
-                    {{ med.unidadMedida || 'TAB' }}
+                  <td class="px-2 py-1.5 text-center">
+                    <app-select-global
+                      [ngModel]="med.unidadMedida || 'TABLETA'"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'unidadMedida', $event)"
+                      customClass="!h-7 !py-0.5 !text-[11px] !font-bold text-center">
+                      @if (med.unidadMedida && !unidadesComunes.includes(med.unidadMedida)) {
+                        <option [value]="med.unidadMedida">{{ med.unidadMedida }}</option>
+                      }
+                      @for (u of unidadesComunes; track u) {
+                        <option [value]="u">{{ u }}</option>
+                      }
+                    </app-select-global>
                   </td>
-
-                  <!-- Frecuencia -->
-                  <td class="px-3 py-2 text-center font-semibold text-slate-700 uppercase">
-                    {{ med.frecuencia }}
+                  <td class="px-2 py-1.5 text-center">
+                    <app-select-global
+                      [ngModel]="med.frecuencia"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'frecuencia', $event)"
+                      customClass="!h-7 !py-0.5 !text-[11px] font-semibold text-center">
+                      @if (med.frecuencia && !frecuenciasComunes.includes(med.frecuencia)) {
+                        <option [value]="med.frecuencia">{{ med.frecuencia }}</option>
+                      }
+                      @for (f of frecuenciasComunes; track f) {
+                        <option [value]="f">{{ f }}</option>
+                      }
+                    </app-select-global>
                   </td>
-
-                  <!-- Vía -->
-                  <td class="px-3 py-2 text-center font-bold text-slate-800 uppercase">
-                    {{ med.via }}
+                  <td class="px-2 py-1.5 text-center">
+                    <app-select-global
+                      [ngModel]="med.via"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'via', $event)"
+                      customClass="!h-7 !py-0.5 !text-[11px] !font-bold text-center">
+                      @for (v of viasComunes; track v) {
+                        <option [value]="v">{{ v }}</option>
+                      }
+                    </app-select-global>
                   </td>
-
-                  <!-- Duración -->
-                  <td class="px-3 py-2 text-center font-semibold text-slate-700 uppercase">
-                    {{ med.duracion }}
+                  <td class="px-2 py-1.5 text-center">
+                    <input
+                      type="text"
+                      [ngModel]="med.duracion"
+                      (ngModelChange)="actualizarMedicamento(idxReal, 'duracion', $event)"
+                      title="Duración"
+                      class="h-7 w-20 px-1.5 py-0.5 text-center text-xs border border-slate-300 rounded text-slate-900 focus:border-blue-600 focus:outline-none" />
                   </td>
-
                 </tr>
               }
             }
           </tbody>
         </table>
+
+        @if ((itemsReceta() || []).length > elementosPorPaginaFarmacia) {
+          <div class="px-4 py-2 border-t border-slate-200 bg-white">
+            <app-paginacion
+              [page]="paginaFarmacia()"
+              [totalPages]="totalPaginasFarmacia()"
+              [totalItems]="(itemsReceta() || []).length"
+              [showTotal]="true"
+              (pageChange)="paginaFarmacia.set($event)" />
+          </div>
+        }
       </div>
 
     </div>
   }
 
-  <!-- ============================================================== -->
-  <!-- 2. SUB-PESTAÑA: APOYO AL DIAGNÓSTICO (SCREENSHOT 2)            -->
-  <!-- ============================================================== -->
+  
   @if (subPestanaActiva() === 'apoyo') {
     <div class="space-y-3">
-      
-      <!-- Fila 1: Botón Gestión de Paquetes -->
       <div>
         <button
           type="button"
           (click)="abrirGestionPaquetes()"
-          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shadow-xs">
+          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs">
           Gestión de Paquetes
         </button>
       </div>
-
-      <!-- Fila 2: Selector de Diagnóstico Asociado -->
       <div class="w-full max-w-md">
-        <label for="select-dx-apoyo" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+        <label for="select-dx-apoyo" class="block text-xs font-bold uppercase text-slate-700 mb-1">
           Diagnóstico:
         </label>
         <app-select-global
@@ -374,14 +364,10 @@
           }
         </app-select-global>
       </div>
-
-      <!-- Formulario de Inserción de Examen / Procedimiento de Apoyo -->
-      <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-2.5">
+      <div class="space-y-2.5 pt-1">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
-          
-          <!-- Buscador de Procedimientos / Exámenes -->
           <div class="md:col-span-5 relative">
-            <label for="input-buscar-apoyo" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5">
+            <label for="input-buscar-apoyo" class="block text-xs font-bold uppercase text-slate-700 mb-0.5">
               Procedimiento / Examen Auxiliar:
             </label>
             <div class="relative">
@@ -391,7 +377,7 @@
                 placeholder="-- BUSCAR EXAMEN (EJ: HEMOGRAMA, PERFIL LIPÍDICO, RX TÓRAX) --"
                 [ngModel]="textoBusquedaExamen()"
                 (ngModelChange)="textoBusquedaExamen.set($event); alEscribirExamen()"
-                class="w-full h-8 px-2.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+                class="w-full h-8 px-2.5 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none uppercase transition-colors" />
 
               @if (buscandoExamen()) {
                 <div class="absolute right-2.5 top-2">
@@ -399,29 +385,25 @@
                 </div>
               }
             </div>
-
-            <!-- Dropdown de Exámenes Encontrados -->
             @if (dropdownExamenAbierto() && resultadosExamenes().length > 0) {
-              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100">
-                @for (ex of resultadosExamenes(); track ex.idProducto) {
+              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-0 zoom-in-95">
+                @for (ex of resultadosExamenes(); track (ex.idProducto ? (ex.idProducto + '-' + $index) : $index)) {
                   <button
                     type="button"
                     (click)="seleccionarExamen(ex)"
-                    class="w-full text-left p-2 hover:bg-blue-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
+                    class="w-full text-left p-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs active:scale-[0.99]">
                     <div>
                       <span class="font-bold text-slate-900 block">{{ ex.nombre }}</span>
-                      <span class="text-[10px] text-blue-700 font-mono">{{ ex.codigo }} • {{ ex.tipo }}</span>
+                      <span class="text-xs text-blue-700 font-semibold">{{ ex.codigo }} • {{ ex.tipo }}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-blue-700 uppercase">Elegir</span>
+                    <span class="text-xs font-bold text-blue-600 uppercase">Elegir</span>
                   </button>
                 }
               </div>
             }
           </div>
-
-          <!-- Servicio de Apoyo -->
           <div class="md:col-span-3">
-            <label for="select-servicio-apoyo" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5">
+            <label for="select-servicio-apoyo" class="block text-xs font-bold uppercase text-slate-700 mb-0.5">
               Servicio:
             </label>
             <app-select-global
@@ -434,10 +416,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- Cantidad -->
           <div class="md:col-span-1">
-            <label for="input-cant-apoyo" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5 text-center">
+            <label for="input-cant-apoyo" class="block text-xs font-bold uppercase text-slate-700 mb-0.5 text-center">
               Cant:
             </label>
             <input
@@ -447,12 +427,10 @@
               [ngModel]="cantidadApoyo()"
               (keydown)="filtrarTeclasEntero($event)"
               (ngModelChange)="cantidadApoyo.set(+$event)"
-              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none" />
+              class="w-full h-8 px-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-center text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
-
-          <!-- Justificación Clínica -->
           <div class="md:col-span-3">
-            <label for="input-justif-apoyo" class="block text-[11px] font-bold uppercase text-slate-700 mb-0.5">
+            <label for="input-justif-apoyo" class="block text-xs font-bold uppercase text-slate-700 mb-0.5">
               Justificación Clínica:
             </label>
             <input
@@ -461,15 +439,13 @@
               placeholder="Motivo o justificación médica..."
               [ngModel]="justificacionApoyo()"
               (ngModelChange)="justificacionApoyo.set($event)"
-              class="w-full h-8 px-2 bg-white border border-slate-300 rounded text-xs text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+              class="w-full h-8 px-2 bg-white border border-slate-300 rounded-md text-xs text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
 
         </div>
-
-        <!-- Fila Inferior con Observación y Botón Agregar -->
         <div class="flex items-end gap-2.5 pt-1">
           <div class="flex-1">
-            <label for="input-obs-apoyo" class="block text-[11px] font-bold uppercase text-slate-600 mb-0.5">
+            <label for="input-obs-apoyo" class="block text-xs font-bold uppercase text-slate-600 mb-0.5">
               Observación / Indicaciones de Preparación (opcional):
             </label>
             <input
@@ -478,31 +454,29 @@
               placeholder="Ej: En ayunas 8 horas, traer muestra matutina, vejiga llena..."
               [ngModel]="observacionApoyo()"
               (ngModelChange)="observacionApoyo.set($event)"
-              class="w-full h-8 px-2.5 bg-white border border-slate-200 rounded text-xs text-slate-800 focus:ring-1 focus:ring-blue-500 outline-none" />
+              class="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
 
           <button
             type="button"
             (click)="agregarExamenApoyo()"
             [disabled]="!examenSeleccionado() && !textoBusquedaExamen().trim()"
-            class="h-8 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 cursor-pointer shadow-xs whitespace-nowrap">
+            class="h-8 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs whitespace-nowrap">
             Agregar
           </button>
         </div>
       </div>
-
-      <!-- Tabla de Exámenes de Apoyo al Diagnóstico (Screenshot 2) -->
-      <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
+      <div class="rounded-md border border-slate-200 overflow-hidden bg-white shadow-xs">
         <table class="w-full text-left border-collapse text-xs">
-          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
             <tr>
-              <th class="px-2 py-2 w-10 text-center"></th>
-              <th class="px-3 py-2">Procedimientos</th>
-              <th class="px-3 py-2 w-36">Servicio</th>
-              <th class="px-3 py-2 text-center w-28">Diagnóstico</th>
-              <th class="px-3 py-2 text-center w-20">Cantidad</th>
-              <th class="px-3 py-2">Justificación</th>
-              <th class="px-3 py-2">Observación</th>
+              <th class="px-2 py-2.5 w-10 text-center"></th>
+              <th class="px-3 py-2.5">Procedimientos</th>
+              <th class="px-3 py-2.5 w-36">Servicio</th>
+              <th class="px-3 py-2.5 text-center w-28">Diagnóstico</th>
+              <th class="px-3 py-2.5 text-center w-20">Cantidad</th>
+              <th class="px-3 py-2.5">Justificación</th>
+              <th class="px-3 py-2.5">Observación</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -513,15 +487,14 @@
                 </td>
               </tr>
             } @else {
-              @for (orden of ordenesApoyo(); track orden.idProducto; let idx = $index) {
-                <tr class="bg-[#e8f4fa] hover:bg-sky-100/60 transition-colors border-b border-sky-100">
-                  
-                  <!-- Botón Quitar Circular Rojo -->
+              @for (orden of ordenesApoyoPaginadas(); track (orden.idProducto ? (orden.idProducto + '-' + idx) : idx); let idx = $index) {
+                @let idxReal = (paginaApoyo() - 1) * elementosPorPaginaApoyo + idx;
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
                   <td class="px-2 py-2 text-center">
                     <button
                       type="button"
-                      (click)="eliminarExamenApoyo(idx)"
-                      class="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white inline-flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                      (click)="eliminarExamenApoyo(idxReal)"
+                      class="w-7 h-7 rounded-md bg-white hover:bg-red-700 text-slate-600 hover:text-white border border-slate-300 hover:border-red-700 inline-flex items-center justify-center cursor-pointer transition-all active:scale-[0.95]"
                       title="Eliminar procedimiento"
                       aria-label="Eliminar procedimiento">
                       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" role="img" aria-label="Eliminar">
@@ -530,62 +503,60 @@
                       </svg>
                     </button>
                   </td>
-
-                  <!-- Procedimientos -->
-                  <td class="px-3 py-2 font-bold text-blue-900 uppercase">
+                  <td class="px-3 py-2 font-bold text-slate-900 uppercase">
                     {{ orden.nombreProcedimiento }}
                   </td>
-
-                  <!-- Servicio -->
                   <td class="px-3 py-2 font-semibold text-slate-700 uppercase">
                     {{ orden.servicio }}
                   </td>
-
-                  <!-- Diagnóstico (CIE-10) -->
-                  <td class="px-3 py-2 text-center font-mono font-bold text-blue-900">
+                  <td class="px-3 py-2 text-center font-bold text-blue-700">
                     {{ orden.codigoCIE10 || '--' }}
                   </td>
-
-                  <!-- Cantidad -->
                   <td class="px-3 py-2 text-center font-bold text-slate-900">
                     {{ orden.cantidad }}
                   </td>
-
-                  <!-- Justificación -->
                   <td class="px-3 py-2 text-slate-800 uppercase">
                     {{ orden.justificacion || '--' }}
                   </td>
-
-                  <!-- Observación -->
                   <td class="px-3 py-2 text-slate-600">
                     {{ orden.observacion || '--' }}
                   </td>
-
                 </tr>
               }
             }
           </tbody>
         </table>
+
+        @if ((ordenesApoyo() || []).length > elementosPorPaginaApoyo) {
+          <div class="px-4 py-2 border-t border-slate-200 bg-white">
+            <app-paginacion
+              [page]="paginaApoyo()"
+              [totalPages]="totalPaginasApoyo()"
+              [totalItems]="(ordenesApoyo() || []).length"
+              [showTotal]="true"
+              (pageChange)="paginaApoyo.set($event)" />
+          </div>
+        }
       </div>
 
     </div>
   }
 
-  <!-- ============================================================== -->
-  <!-- 3. SUB-PESTAÑA: INTERCONSULTAS (SCREENSHOT 1)                  -->
-  <!-- ============================================================== -->
+  
   @if (subPestanaActiva() === 'interconsultas') {
     <div class="space-y-3">
-
-      <!-- Formulario de Interconsulta -->
-      <div class="p-3.5 bg-slate-50 rounded border border-slate-200 space-y-3">
-        
-        <!-- Fila 1: DIAGNÓSTICO, ESPECIALIDAD, FECHA PROPUESTA -->
+      <div>
+        <button
+          type="button"
+          (click)="abrirGestionPaquetes('interconsultas')"
+          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs">
+          Gestión de Paquetes
+        </button>
+      </div>
+      <div class="space-y-3 pt-1">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-          
-          <!-- DIAGNÓSTICO -->
           <div class="md:col-span-5">
-            <label for="select-dx-interconsulta" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+            <label for="select-dx-interconsulta" class="block text-xs font-bold uppercase text-slate-700 mb-1">
               Diagnóstico:
             </label>
             <app-select-global
@@ -601,10 +572,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- ESPECIALIDAD -->
           <div class="md:col-span-5">
-            <label for="select-esp-interconsulta" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+            <label for="select-esp-interconsulta" class="block text-xs font-bold uppercase text-slate-700 mb-1">
               Especialidad:
             </label>
             <app-select-global
@@ -620,25 +589,21 @@
               }
             </app-select-global>
           </div>
-
-          <!-- FECHA PROPUESTA -->
           <div class="md:col-span-2">
-            <label for="input-fecha-interconsulta" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
-              Fecha Propuesta:
+            <label for="input-fecha-interconsulta" class="block text-xs font-bold uppercase text-slate-700 mb-1">
+              Fecha Solicitud:
             </label>
             <input
               id="input-fecha-interconsulta"
               type="date"
               [ngModel]="fechaPropuestaInterconsulta()"
               (ngModelChange)="fechaPropuestaInterconsulta.set($event)"
-              class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none" />
+              class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
 
         </div>
-
-        <!-- Fila 2: MOTIVO -->
         <div>
-          <label for="input-motivo-interconsulta" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+          <label for="input-motivo-interconsulta" class="block text-xs font-bold uppercase text-slate-700 mb-1">
             Motivo:
           </label>
           <input
@@ -647,12 +612,10 @@
             placeholder="OPINIÓN DIAGNÓSTICO Y SUGERENCIA"
             [ngModel]="motivoInterconsulta()"
             (ngModelChange)="motivoInterconsulta.set($event)"
-            class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+            class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
         </div>
-
-        <!-- Fila 3: RESUMEN DE LA ENFERMEDAD ACTUAL -->
         <div>
-          <label for="textarea-resumen-interconsulta" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+          <label for="textarea-resumen-interconsulta" class="block text-xs font-bold uppercase text-slate-700 mb-1">
             Resumen de la Enfermedad Actual:
           </label>
           <textarea
@@ -661,53 +624,47 @@
             placeholder="Ingrese el relato o resumen clínico del paciente para el médico especialista interconsultado..."
             [ngModel]="resumenEnfermedadInterconsulta()"
             (ngModelChange)="resumenEnfermedadInterconsulta.set($event)"
-            class="w-full p-2.5 bg-white border border-slate-300 rounded text-xs text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none resize-y"></textarea>
+            class="w-full p-2.5 bg-white border border-slate-300 rounded-md text-xs text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none resize-y transition-colors"></textarea>
         </div>
-
-        <!-- Fila 4: Botón AGREGAR a la derecha -->
         <div class="flex justify-end pt-1">
           <button
             type="button"
             (click)="agregarInterconsulta()"
             [disabled]="!idEspecialidadInterconsulta()"
-            class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 cursor-pointer shadow-xs">
+            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs">
             Agregar
           </button>
         </div>
 
       </div>
-
-      <!-- Tabla de Interconsultas (Captura 1) -->
-      <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
+      <div class="rounded-md border border-slate-200 overflow-hidden bg-white shadow-xs">
         <table class="w-full text-left border-collapse text-xs">
-          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
             <tr>
-              <th class="px-2 py-2 w-10 text-center"></th>
-              <th class="px-3 py-2">Resumen</th>
-              <th class="px-3 py-2">Motivo</th>
-              <th class="px-3 py-2">Especialidad</th>
-              <th class="px-3 py-2 text-center w-24">CIE10</th>
-              <th class="px-3 py-2 text-center w-28">Fecha Propuesta</th>
-              <th class="px-3 py-2 text-center w-24">Fecha Cita</th>
-              <th class="px-3 py-2 text-center w-20">Hora Cita</th>
-              <th class="px-3 py-2 text-center w-28">Médico</th>
+              <th class="px-2 py-2.5 w-10 text-center"></th>
+              <th class="px-3 py-2.5">Especialidad Destino</th>
+              <th class="px-3 py-2.5 text-center w-24">CIE-10</th>
+              <th class="px-3 py-2.5">Motivo</th>
+              <th class="px-3 py-2.5">Resumen Clínico</th>
+              <th class="px-3 py-2.5 text-center w-28">Fecha Solicitud</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             @if (!interconsultas() || interconsultas().length === 0) {
               <tr>
-                <td colspan="9" class="px-4 py-8 text-center text-slate-400 font-medium">
+                <td colspan="6" class="px-4 py-8 text-center text-slate-400 font-medium">
                   No hay interconsultas solicitadas registradas para esta atención médica.
                 </td>
               </tr>
             } @else {
-              @for (inter of interconsultas(); track inter.idEspecialidad; let idx = $index) {
-                <tr class="bg-[#e8f4fa] hover:bg-sky-100/60 transition-colors border-b border-sky-100">
+              @for (inter of interconsultasPaginadas(); track (inter.idEspecialidad ? (inter.idEspecialidad + '-' + idx) : idx); let idx = $index) {
+                @let idxReal = (paginaInterconsultas() - 1) * elementosPorPaginaInterconsultas + idx;
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
                   <td class="px-2 py-2 text-center">
                     <button
                       type="button"
-                      (click)="eliminarInterconsulta(idx)"
-                      class="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white inline-flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                      (click)="eliminarInterconsulta(idxReal)"
+                      class="w-7 h-7 rounded-md bg-white hover:bg-red-700 text-slate-600 hover:text-white border border-slate-300 hover:border-red-700 inline-flex items-center justify-center cursor-pointer transition-all active:scale-[0.95]"
                       title="Eliminar interconsulta"
                       aria-label="Eliminar interconsulta">
                       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" role="img" aria-label="Eliminar">
@@ -716,55 +673,57 @@
                       </svg>
                     </button>
                   </td>
-                  <td class="px-3 py-2 text-slate-800">
-                    {{ inter.resumenEnfermedad || '--' }}
+                  <td class="px-3 py-2 font-bold text-slate-900 uppercase">
+                    {{ inter.nombreEspecialidad }}
+                  </td>
+                  <td class="px-3 py-2 text-center font-bold text-blue-700">
+                    {{ inter.codigoCIE10 || '--' }}
                   </td>
                   <td class="px-3 py-2 font-semibold text-slate-800 uppercase">
                     {{ inter.motivo }}
                   </td>
-                  <td class="px-3 py-2 font-bold text-blue-900 uppercase">
-                    {{ inter.nombreEspecialidad }}
+                  <td class="px-3 py-2 text-slate-800">
+                    {{ inter.resumenEnfermedad || '--' }}
                   </td>
-                  <td class="px-3 py-2 text-center font-mono font-bold text-blue-900">
-                    {{ inter.codigoCIE10 || '--' }}
-                  </td>
-                  <td class="px-3 py-2 text-center font-mono text-slate-800">
+                  <td class="px-3 py-2 text-center font-semibold text-slate-800">
                     {{ inter.fechaPropuesta }}
-                  </td>
-                  <td class="px-3 py-2 text-center font-mono text-slate-600">
-                    {{ inter.fechaCita || '--' }}
-                  </td>
-                  <td class="px-3 py-2 text-center font-mono text-slate-600">
-                    {{ inter.horaCita || '--' }}
-                  </td>
-                  <td class="px-3 py-2 text-center text-slate-700">
-                    {{ inter.medico || 'Por Asignar' }}
                   </td>
                 </tr>
               }
             }
           </tbody>
         </table>
+
+        @if ((interconsultas() || []).length > elementosPorPaginaInterconsultas) {
+          <div class="px-4 py-2 border-t border-slate-200 bg-white">
+            <app-paginacion
+              [page]="paginaInterconsultas()"
+              [totalPages]="totalPaginasInterconsultas()"
+              [totalItems]="(interconsultas() || []).length"
+              [showTotal]="true"
+              (pageChange)="paginaInterconsultas.set($event)" />
+          </div>
+        }
       </div>
 
     </div>
   }
 
-  <!-- ============================================================== -->
-  <!-- 4. SUB-PESTAÑA: PROCEDIMIENTOS CLÍNICOS (SCREENSHOT 2)         -->
-  <!-- ============================================================== -->
+  
   @if (subPestanaActiva() === 'procedimientos') {
     <div class="space-y-3">
-
-      <!-- Formulario de Procedimientos -->
-      <div class="p-3.5 bg-slate-50 rounded border border-slate-200 space-y-3">
-        
-        <!-- Fila 1: DIAGNÓSTICO, PROCEDIMIENTOS, CANTIDAD -->
+      <div>
+        <button
+          type="button"
+          (click)="abrirGestionPaquetes('procedimientos')"
+          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs">
+          Gestión de Paquetes
+        </button>
+      </div>
+      <div class="space-y-3 pt-1">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-          
-          <!-- DIAGNÓSTICO -->
           <div class="md:col-span-4">
-            <label for="select-dx-proc-orden" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+            <label for="select-dx-proc-orden" class="block text-xs font-bold uppercase text-slate-700 mb-1">
               Diagnóstico:
             </label>
             <app-select-global
@@ -780,10 +739,8 @@
               }
             </app-select-global>
           </div>
-
-          <!-- PROCEDIMIENTOS (Buscador / Selector) -->
           <div class="md:col-span-6 relative">
-            <label for="input-buscar-proc-orden" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+            <label for="input-buscar-proc-orden" class="block text-xs font-bold uppercase text-slate-700 mb-1">
               Procedimientos:
             </label>
             <div class="relative">
@@ -793,7 +750,7 @@
                 placeholder="-- SELECCIONAR O BUSCAR PROCEDIMIENTO (EJ: ECOCARDIOGRAFÍA) --"
                 [ngModel]="textoBusquedaProcedimiento()"
                 (ngModelChange)="textoBusquedaProcedimiento.set($event); alEscribirProcedimiento()"
-                class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+                class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-900 placeholder-slate-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
 
               @if (buscandoProcedimiento()) {
                 <div class="absolute right-2.5 top-2.5">
@@ -801,29 +758,25 @@
                 </div>
               }
             </div>
-
-            <!-- Dropdown de Procedimientos Encontrados -->
             @if (dropdownProcedimientoAbierto() && resultadosProcedimientos().length > 0) {
-              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-300 rounded shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100">
-                @for (proc of resultadosProcedimientos(); track proc.idProducto) {
+              <div class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in-0 zoom-in-95">
+                @for (proc of resultadosProcedimientos(); track (proc.idProducto ? (proc.idProducto + '-' + $index) : $index)) {
                   <button
                     type="button"
                     (click)="seleccionarProcedimiento(proc)"
-                    class="w-full text-left p-2 hover:bg-emerald-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs">
+                    class="w-full text-left p-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2 cursor-pointer text-xs active:scale-[0.99]">
                     <div>
                       <span class="font-bold text-slate-900 block">{{ proc.nombre }}</span>
-                      <span class="text-[10px] text-emerald-700 font-mono">{{ proc.codigo }} • {{ proc.tipo }}</span>
+                      <span class="text-xs text-blue-700 font-semibold">{{ proc.codigo }} • {{ proc.tipo }}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-emerald-700 uppercase">Elegir</span>
+                    <span class="text-xs font-bold text-blue-600 uppercase">Elegir</span>
                   </button>
                 }
               </div>
             }
           </div>
-
-          <!-- CANTIDAD -->
           <div class="md:col-span-2">
-            <label for="input-cant-proc-orden" class="block text-[11px] font-bold uppercase text-slate-700 mb-1 text-center">
+            <label for="input-cant-proc-orden" class="block text-xs font-bold uppercase text-slate-700 mb-1 text-center">
               Cantidad:
             </label>
             <input
@@ -833,15 +786,13 @@
               [ngModel]="cantidadProcedimiento()"
               (keydown)="filtrarTeclasEntero($event)"
               (ngModelChange)="cantidadProcedimiento.set(+$event)"
-              class="w-full h-9 px-2 bg-white border border-slate-300 rounded text-xs font-bold text-center text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none" />
+              class="w-full h-9 px-2 bg-white border border-slate-300 rounded-md text-xs font-bold text-center text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
 
         </div>
-
-        <!-- Fila 2: OBSERVACIÓN y PROCESO: AGREGAR -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
           <div class="md:col-span-10">
-            <label for="input-obs-proc-orden" class="block text-[11px] font-bold uppercase text-slate-700 mb-1">
+            <label for="input-obs-proc-orden" class="block text-xs font-bold uppercase text-slate-700 mb-1">
               Observación:
             </label>
             <input
@@ -850,46 +801,42 @@
               placeholder="Observación clínica o indicación (ej: HTA, Control semestral...)"
               [ngModel]="observacionProcedimiento()"
               (ngModelChange)="observacionProcedimiento.set($event)"
-              class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded text-xs text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none uppercase" />
+              class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-md text-xs text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 outline-none transition-colors" />
           </div>
 
           <div class="md:col-span-2 flex flex-col justify-end">
-            <span class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Proceso:</span>
+            <span class="block text-xs font-bold uppercase text-slate-500 mb-1">Proceso:</span>
             <button
               type="button"
               (click)="agregarOrdenProcedimiento()"
               [disabled]="!procedimientoSeleccionado() && !textoBusquedaProcedimiento().trim()"
-              class="w-full h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 cursor-pointer shadow-xs">
+              class="w-full h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-xs">
               Agregar
             </button>
           </div>
         </div>
-
-        <!-- Sugerencias Frecuentes Rápidas -->
-        <div class="pt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-          <span class="font-bold text-slate-600 uppercase text-[10px]">Procedimientos Frecuentes:</span>
-          @for (pf of procedimientosFrecuentes.slice(0, 5); track pf.idProducto) {
+        <div class="pt-1 flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+          <span class="font-bold text-slate-600 uppercase text-xs">Procedimientos Frecuentes:</span>
+          @for (pf of procedimientosFrecuentes.slice(0, 5); track (pf.idProducto ? (pf.idProducto + '-' + $index) : $index)) {
             <button
               type="button"
               (click)="seleccionarProcedimientoFrecuente(pf.idProducto)"
-              class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-[10px] font-semibold cursor-pointer transition-colors">
+              class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-md text-xs font-semibold cursor-pointer transition-all active:scale-[0.98]">
               {{ pf.nombre.slice(0, 32) }}...
             </button>
           }
         </div>
 
       </div>
-
-      <!-- Tabla de Procedimientos (Captura 2) -->
-      <div class="rounded border border-slate-200 overflow-hidden bg-white shadow-xs">
+      <div class="rounded-md border border-slate-200 overflow-hidden bg-white shadow-xs">
         <table class="w-full text-left border-collapse text-xs">
-          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
             <tr>
-              <th class="px-2 py-2 w-10 text-center"></th>
-              <th class="px-3 py-2">Procedimiento</th>
-              <th class="px-3 py-2 text-center w-28">Diagnóstico</th>
-              <th class="px-3 py-2 text-center w-20">Cantidad</th>
-              <th class="px-3 py-2">Observación</th>
+              <th class="px-2 py-2.5 w-10 text-center"></th>
+              <th class="px-3 py-2.5">Procedimiento</th>
+              <th class="px-3 py-2.5 text-center w-28">Diagnóstico</th>
+              <th class="px-3 py-2.5 text-center w-20">Cantidad</th>
+              <th class="px-3 py-2.5">Observación</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -900,13 +847,14 @@
                 </td>
               </tr>
             } @else {
-              @for (op of ordenesProcedimientos(); track op.idProducto; let idx = $index) {
-                <tr class="bg-[#e8f4fa] hover:bg-sky-100/60 transition-colors border-b border-sky-100">
+              @for (op of ordenesProcedimientosPaginadas(); track (op.idProducto ? (op.idProducto + '-' + idx) : idx); let idx = $index) {
+                @let idxReal = (paginaProcedimientos() - 1) * elementosPorPaginaProcedimientos + idx;
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
                   <td class="px-2 py-2 text-center">
                     <button
                       type="button"
-                      (click)="eliminarOrdenProcedimiento(idx)"
-                      class="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white inline-flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                      (click)="eliminarOrdenProcedimiento(idxReal)"
+                      class="w-7 h-7 rounded-md bg-white hover:bg-red-700 text-slate-600 hover:text-white border border-slate-300 hover:border-red-700 inline-flex items-center justify-center cursor-pointer transition-all active:scale-[0.95]"
                       title="Eliminar procedimiento"
                       aria-label="Eliminar procedimiento">
                       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" role="img" aria-label="Eliminar">
@@ -915,10 +863,10 @@
                       </svg>
                     </button>
                   </td>
-                  <td class="px-3 py-2 font-bold text-blue-900 uppercase">
+                  <td class="px-3 py-2 font-bold text-slate-900 uppercase">
                     {{ op.nombreProcedimiento }}
                   </td>
-                  <td class="px-3 py-2 text-center font-mono font-bold text-blue-900">
+                  <td class="px-3 py-2 text-center font-bold text-blue-700">
                     {{ op.codigoCIE10 || '--' }}
                   </td>
                   <td class="px-3 py-2 text-center font-bold text-slate-900">
@@ -932,59 +880,140 @@
             }
           </tbody>
         </table>
+
+        @if ((ordenesProcedimientos() || []).length > elementosPorPaginaProcedimientos) {
+          <div class="px-4 py-2 border-t border-slate-200 bg-white">
+            <app-paginacion
+              [page]="paginaProcedimientos()"
+              [totalPages]="totalPaginasProcedimientos()"
+              [totalItems]="(ordenesProcedimientos() || []).length"
+              [showTotal]="true"
+              (pageChange)="paginaProcedimientos.set($event)" />
+          </div>
+        }
       </div>
 
     </div>
   }
 
-  <!-- ============================================================== -->
-  <!-- MODAL DE GESTIÓN DE PAQUETES (PREDEFINIDOS PARA CONSULTA)       -->
-  <!-- ============================================================== -->
   @if (modalPaquetesVisible()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div class="bg-white rounded-lg shadow-2xl border border-slate-200 w-full max-w-2xl p-5 space-y-4">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-xs p-4 animate-in fade-in-0 duration-150">
+      <div class="bg-white rounded-md shadow-2xl border border-slate-200 w-full max-w-3xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
         
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h4 class="text-sm font-black text-emerald-900 uppercase tracking-wide">
-            Gestión de Paquetes Médicos Preconfigurados
-          </h4>
+          <div>
+            <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+              Gestión de Paquetes Médicos y Plantillas Clínicas
+            </h4>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Incorpore medicamentos, exámenes, interconsultas o procedimientos en un solo paso contextualizado al diagnóstico.
+            </p>
+          </div>
           <button
             type="button"
             (click)="cerrarGestionPaquetes()"
-            class="text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer">
-            &times;
+            class="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors active:scale-[0.95] cursor-pointer"
+            aria-label="Cerrar modal">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <p class="text-xs text-slate-600">
-          Seleccione un paquete predefinido para incorporar sus medicamentos o exámenes clínicos en un solo clic a la atención médica actual.
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              (click)="filtroTipoPaquete.set('todos')"
+              class="px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroTipoPaquete() === 'todos' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Todos
+            </button>
+            <button
+              type="button"
+              (click)="filtroTipoPaquete.set('farmacia')"
+              class="px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroTipoPaquete() === 'farmacia' ? 'bg-blue-700 text-white border-blue-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Farmacia
+            </button>
+            <button
+              type="button"
+              (click)="filtroTipoPaquete.set('apoyo')"
+              class="px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroTipoPaquete() === 'apoyo' ? 'bg-blue-700 text-white border-blue-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Apoyo Diagnóstico
+            </button>
+            <button
+              type="button"
+              (click)="filtroTipoPaquete.set('interconsultas')"
+              class="px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroTipoPaquete() === 'interconsultas' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Interconsultas
+            </button>
+            <button
+              type="button"
+              (click)="filtroTipoPaquete.set('procedimientos')"
+              class="px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroTipoPaquete() === 'procedimientos' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Procedimientos
+            </button>
+          </div>
 
-        <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
-          @for (paq of paquetesDisponibles; track paq.id) {
-            <div class="p-3 rounded border border-slate-200 bg-slate-50 hover:bg-emerald-50/50 transition-colors flex items-center justify-between gap-3">
-              <div class="space-y-1 text-xs">
-                <div class="flex items-center gap-2">
-                  <strong class="text-slate-900 font-bold uppercase">{{ paq.titulo }}</strong>
-                  <span
-                    class="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase"
-                    [ngClass]="paq.tipo === 'farmacia' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'">
-                    {{ paq.tipo === 'farmacia' ? 'Farmacia' : 'Apoyo Diagnóstico' }}
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              (click)="filtroSoloSugeridos.set(true)"
+              class="px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="filtroSoloSugeridos() ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Sugeridos por Diagnóstico
+            </button>
+            <button
+              type="button"
+              (click)="filtroSoloSugeridos.set(false)"
+              class="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border"
+              [ngClass]="!filtroSoloSugeridos() ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'">
+              Ver Catálogo Completo
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-3 max-h-96 overflow-y-auto pr-1 divide-y divide-slate-100">
+          @if (paquetesFiltrados().length === 0) {
+            <div class="text-center py-8 text-slate-500 text-xs font-medium">
+              No se encontraron paquetes para los criterios de filtrado seleccionados.
+            </div>
+          } @else {
+            @for (paq of paquetesFiltrados(); track paq.id) {
+              @let dxCoincidente = obtenerDiagnosticoCoincidenteParaPaquete(paq);
+              <div class="pt-3 first:pt-0 p-3 rounded-md border border-slate-200 bg-slate-50/80 hover:bg-slate-100/70 transition-colors flex items-center justify-between gap-3">
+                <div class="space-y-1 text-xs flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <strong class="text-slate-900 font-bold uppercase">{{ paq.titulo }}</strong>
+                    <span
+                      class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide text-white"
+                      [ngClass]="paq.tipo === 'farmacia' ? 'bg-[#07153a]' : paq.tipo === 'apoyo' ? 'bg-blue-700' : 'bg-slate-800'">
+                      {{ paq.tipo === 'farmacia' ? 'Farmacia' : paq.tipo === 'apoyo' ? 'Apoyo Diagnóstico' : paq.tipo === 'interconsultas' ? 'Interconsulta' : 'Procedimiento' }}
+                    </span>
+                    @if (dxCoincidente) {
+                      <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-700 text-white">
+                        Sugerido para [{{ dxCoincidente.codigoCIE10 }}] {{ dxCoincidente.descripcion }}
+                      </span>
+                    }
+                  </div>
+                  <p class="text-slate-600 text-xs font-medium">{{ paq.descripcion }}</p>
+                  <span class="text-xs text-slate-500 font-medium block">
+                    Contenido: {{ (paq.itemsFarmacia?.length || paq.itemsApoyo?.length || paq.itemsInterconsulta?.length || paq.itemsProcedimientos?.length || 0) }} ítem(s) listados
                   </span>
                 </div>
-                <p class="text-slate-600 text-[11px]">{{ paq.descripcion }}</p>
-                <span class="text-[10px] text-slate-400 font-mono block">
-                  Contiene {{ (paq.itemsFarmacia?.length || paq.itemsApoyo?.length || 0) }} ítems listados
-                </span>
-              </div>
 
-              <button
-                type="button"
-                (click)="aplicarPaquete(paq)"
-                class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-xs shrink-0">
-                Aplicar Paquete
-              </button>
-            </div>
+                <button
+                  type="button"
+                  (click)="aplicarPaquete(paq)"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-xs shrink-0">
+                  Aplicar Paquete
+                </button>
+              </div>
+            }
           }
         </div>
 
@@ -992,7 +1021,7 @@
           <button
             type="button"
             (click)="cerrarGestionPaquetes()"
-            class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-xs font-bold transition-colors cursor-pointer">
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-md text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer">
             Cerrar
           </button>
         </div>
