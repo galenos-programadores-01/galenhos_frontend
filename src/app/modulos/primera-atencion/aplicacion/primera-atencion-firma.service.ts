@@ -23,6 +23,7 @@ export interface ContextoFirmaPa {
   cargoFirma: string;
   /** Si se omite, se arma solo PA (sin satélites). */
   documentos?: DocumentoFirmaPa[];
+  motivoRectificacion?: string;
 }
 
 export interface ResultadoFirmaPa {
@@ -141,6 +142,7 @@ export class PrimeraAtencionFirmaService {
     try {
       const cierre = await this.api.cerrarFirma(contexto.idAtencion, {
         uuidFirma: resultadoFirma.uuid,
+        motivoRectificacion: contexto.motivoRectificacion || undefined,
         documentos: pdfs.map((p) => ({
           tipoDocumento:
             p.documento.tipo === 'pa'

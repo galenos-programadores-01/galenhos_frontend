@@ -54,6 +54,7 @@ export interface DocumentoFirmadoCierreBody {
 
 export interface PrimeraAtencionCerrarFirmaBody {
   uuidFirma: string;
+  motivoRectificacion?: string;
   documentos?: DocumentoFirmadoCierreBody[];
 }
 

@@ -895,6 +895,10 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
   isSigning = false;
   /** Edición de una atención ya firmada. El PDF vigente no cambia hasta re-firmar. */
   modoRectificacion = false;
+  motivoRectificacion = '';
+  motivoRectificacionAbierto = false;
+  motivoRectificacionTexto = '';
+  private filaRectificacion: IFilaBackend | null = null;
   private recetasTocadasRectificacion = new Set<number>();
 
   /** Posición fixed de la lista de sugerencias activa (evita clip por overflow-x). */
@@ -907,6 +911,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     { campo: 'esperaCustom', cabecera: 'Espera', ancho: '100px' },
     { campo: 'consultorioCustom', cabecera: 'Consultorio / Médico' },
     { campo: 'estadoCustom', cabecera: 'Estado', ancho: '120px' },
+    { campo: 'opcionCustom', cabecera: 'Opción', ancho: '92px', alineacion: 'center' },
     { campo: 'accionCustom', cabecera: 'Acción', alineacion: 'right' },
   ];
 
@@ -1429,10 +1434,37 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
     void this.abrirAtencion(item, 'continuar');
   }
 
-  editarAtencionFirmada(item: IFilaBackend) {
+  abrirMotivoRectificacion(item: IFilaBackend): void {
+    this.filaRectificacion = item;
+    this.motivoRectificacionTexto = '';
+    this.motivoRectificacionAbierto = true;
+  }
+
+  cancelarMotivoRectificacion(): void {
+    this.motivoRectificacionAbierto = false;
+    this.filaRectificacion = null;
+    this.motivoRectificacionTexto = '';
+  }
+
+  confirmarMotivoRectificacion(): void {
+    const motivo = this.motivoRectificacionTexto.trim();
+    if (!motivo || !this.filaRectificacion) {
+      return;
+    }
+    this.motivoRectificacion = motivo;
     this.modoRectificacion = true;
     this.recetasTocadasRectificacion.clear();
-    void this.abrirAtencion(item, 'continuar');
+    const fila = this.filaRectificacion;
+    this.motivoRectificacionAbierto = false;
+    this.filaRectificacion = null;
+    void this.abrirAtencion(fila, 'continuar');
+  }
+
+  avisarReevaluacion(): void {
+    this.modalGlobal.info(
+      'La reevaluación tiene su propio formato. Se abre desde Reevaluación, en el menú de Emergencia. No modifica los PDF -1, -2 de la rectificación.',
+      'Reevaluación',
+    );
   }
 
   private tocarRecetaRectificacion(idReceta: number | null | undefined): void {
@@ -5037,6 +5069,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
         nombreUsuario: this.authService.username() ?? '',
         cargoFirma: this.cargoCompletoFirmantePa,
         documentos: loteFirma,
+        motivoRectificacion: this.modoRectificacion ? this.motivoRectificacion : '',
       });
 
       if (!resultado.exito) {
