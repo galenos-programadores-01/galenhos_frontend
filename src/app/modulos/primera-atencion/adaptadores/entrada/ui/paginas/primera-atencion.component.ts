@@ -1462,7 +1462,7 @@ export class PrimeraAtencionComponent implements OnInit, OnDestroy {
 
   avisarReevaluacion(): void {
     this.modalGlobal.info(
-      'La reevaluación tiene su propio formato. Se abre desde Reevaluación, en el menú de Emergencia. No modifica los PDF -1, -2 de la rectificación.',
+      'En desarrollo...',
       'Reevaluación',
     );
   }

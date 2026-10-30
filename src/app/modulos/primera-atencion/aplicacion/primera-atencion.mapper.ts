@@ -55,7 +55,7 @@ export function codigoCondicionEgreso(
 export interface PrimeraAtencionGuardarPayload {
   fechaAtencion?: string;
   tipoAnamnesis?: 'D' | 'I';
-  tiempoEnfermedad?: number | null;
+  tiempoEnfermedad?: string | null;
   idTiempoEnfermedad?: number | null;
   signosSintomas?: string | null;
   relatoCronologico?: string | null;
@@ -835,11 +835,9 @@ function leerNum(row: PrimeraAtencionDetalle, keys: string[]): number | '' {
   return '';
 }
 
-function parseTiempoEnfermedad(texto: string): number | null {
-  const m = texto.trim().match(/^(\d+)/);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isNaN(n) ? null : n;
+function textoTiempoEnfermedad(texto: string): string | null {
+  const v = texto.trim();
+  return v === '' ? null : v;
 }
 
 function toIsoLocal(d: Date): string {
@@ -862,7 +860,7 @@ export function formToGuardarPayload(
   return {
     fechaAtencion: fechaHoraAtencion ? toIsoLocal(fechaHoraAtencion) : undefined,
     tipoAnamnesis: tipo,
-    tiempoEnfermedad: parseTiempoEnfermedad(form.tiempoEnfermedad),
+    tiempoEnfermedad: textoTiempoEnfermedad(form.tiempoEnfermedad),
     signosSintomas: form.signosSintomas || null,
     relatoCronologico: form.relatoCronologico || null,
     antecedentes: form.antecedentes || null,
@@ -892,7 +890,7 @@ export function detalleToForm(
   }
 
   const idPrimera = leerNum(row, ['IdPrimeraAtencion', 'idPrimeraAtencion']);
-  const tiempo = leerNum(row, ['TiempoEnfermedad', 'tiempoEnfermedad']);
+  const tiempo = leerTexto(row, ['TiempoEnfermedad', 'tiempoEnfermedad']);
   const fechaEgresoRaw = leerTexto(row, ['FechaEgreso', 'fechaEgreso']);
 
   let fechaEgreso = '';
@@ -908,7 +906,7 @@ export function detalleToForm(
 
   const form: FormPrimeraAtencion = {
     anamnesisTipo: tipoRaw === 'I' ? 'indirecta' : 'directa',
-    tiempoEnfermedad: tiempo === '' ? '' : String(tiempo),
+    tiempoEnfermedad: tiempo,
     signosSintomas: leerTexto(row, ['SignosSintomas', 'signosSintomas']),
     relatoCronologico: leerTexto(row, ['RelatoCronologico', 'relatoCronologico']),
     antecedentes: leerTexto(row, ['Antecedentes', 'antecedentes']),
